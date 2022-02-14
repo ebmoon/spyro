@@ -59,28 +59,6 @@ generator stack stackGen(stack s1, stack s2, stack s3, stack s4) {
     if (t == 3) { return s4; }
 }
 
-generator boolean integrityGen(
-    stack push_input_stack, int push_input_val, stack push_out_stack, 
-    stack pop_input_stack, int pop_out_val, stack pop_out_stack
-) {
-    int t = ??;
-    int leftInt = intGen(push_input_val, pop_out_val);
-    int rightInt = intGen(push_input_val, pop_out_val);    
-
-    if(t == 0) { return leftInt == rightInt; }
-
-    stack leftStack = stackGen(
-        push_input_stack, push_out_stack, 
-        pop_input_stack, pop_out_stack
-    );
-    stack rightStack = stackGen(
-        push_input_stack, push_out_stack, 
-        pop_input_stack, pop_out_stack
-    );
-
-    if(t == 1) { return stack_equal(leftStack, rightStack); }    
-}
-
 generator boolean propertyGen(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
     stack pop_input_stack, int pop_out_val, stack pop_out_stack
@@ -123,83 +101,19 @@ boolean stack_spec(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
     stack pop_input_stack, int pop_out_val, stack pop_out_stack
 ) {
-    boolean integrity = integrityGen(
-        push_input_stack, push_input_val, push_out_stack, 
-        pop_input_stack, pop_out_val, pop_out_stack
-    );
     boolean property = propertyGen(
         push_input_stack, push_input_val, push_out_stack, 
         pop_input_stack, pop_out_val, pop_out_stack
     );
     
-    return !integrity || property;
+    return property;
 }
-
-harness void positive_example_1() {
-    node top1 = new node(next = null, val = 0);
-    node top2 = new node(next = top1, val = 0);
-
-    stack s0 = new stack(top = null);
-    stack s1 = new stack(top = top1);
-    stack s2 = new stack(top = top2);
-
-    assert stack_spec(s1, 0, s2, s1, 0, s0);
-}
-
-harness void positive_example_2() {
-    node next = null;
-    node top = new node(next=next, val=6);
-    stack s = new stack(top=top);
-    stack push_out_stack = push(s, 0);
-    node next_0 = null;
-    node top_0 = new node(next=next_0, val=1);
-    stack stack__0 = new stack(top=top_0);
-    stack pop_out_stack = null;
-    int pop_out_val_s20 = pop(stack__0, pop_out_stack);
-
-    assert stack_spec(s, 0, push_out_stack, stack__0, pop_out_val_s20, pop_out_stack);
-}
-
-harness void positive_example_3() {
-  node top = new node(next=null, val=0);
-  stack stack_ = new stack(top=top);
-  stack push_out_stack = push(stack_, 1);
-  node top_0 = new node(next=null, val=2);
-  stack stack__0 = new stack(top=top_0);
-  stack pop_out_stack;
-  int pop_out_val = pop(stack__0, pop_out_stack);
-
-  assert stack_spec(stack_, 1, push_out_stack, stack__0, pop_out_val, pop_out_stack);
-}
-
-harness void negative_example_1() {
-    node node_ = new node(val=7);
-    node top = new node(next=node_, val=0);
-    stack s1 = new stack(top=top);
-    node node__0 = new node(val=0);
-    node top_0 = new node(next=node__0, val=0);
-    stack s2 = new stack(top=top_0);
-    node node__1 = new node(val=4);
-    node top_1 = new node(next=node__1, val=8);
-    stack s3 = new stack(top=top_1);
-    node node__2 = new node(val=29);
-    node top_2 = new node(next=node__2, val=0);
-    stack s4 = new stack(top=top_2);
-
-    assert !stack_spec(s1, 8, s2, s3, 12, s4);
-}
-
 
 boolean stack_spec_obtained(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
     stack pop_input_stack, int pop_out_val, stack pop_out_stack
 ) {
-    // return false; added positive example 1
-    // return !false || (push_input_val < push_input_val); added negative example 1
-    // return (!(push_input_val == push_input_val)) || (pop_out_val <= push_input_val); added positive example 2
-    return (push_input_val == push_input_val) && (!(push_input_val == 0));
-
-
+    return false;
 }
 
 boolean check_soundness = false;
@@ -238,17 +152,16 @@ harness void precision() {
     int pop_out_val_correct = pop(pop_input_stack, pop_out_stack_correct);
 
     if (check_precision) {
-        // new negative example c is included in [[ phi ]]
+        // new negative example c is in [[ phi ]]
         assert stack_spec_obtained(
             push_input_stack, push_input_val, push_out_stack,
             pop_input_stack, pop_out_val, pop_out_stack
         );
 
-        // new negative example c is not included in [[ P ]]
-        assert !(
-            stack_equal(push_out_stack, push_out_stack_correct)
-            && pop_out_val == pop_out_val_correct
-            && stack_equal(pop_out_stack, pop_out_stack_correct)
+        // new negative example c is not in [[ phi' ]]
+        assert !stack_spec(
+            push_input_stack, push_input_val, push_out_stack,
+            pop_input_stack, pop_out_val, pop_out_stack
         );
     }
 }
