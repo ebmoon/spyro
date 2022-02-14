@@ -1,0 +1,15 @@
+//@Description Sketch to swap two bit arrays without using extra storage.
+
+int W = 32;
+
+void swap(ref bit[W] x, ref bit[W] y){		    
+    minrepeat{
+        if(??){ x = x ^ y;}else{ y = x ^ y; } 
+    }
+}
+
+harness void main(bit[W] x, bit[W] y){
+    bit[W] tx = x; bit[W] ty = y;
+    swap(x, y);
+    assert x==ty && y == tx;
+}

@@ -1,0 +1,33 @@
+pragma options "--bnd-intbits 32";
+
+struct Box{
+	int v;	
+}
+
+
+generator Box moo(Box i){ /* automatically rewritten */
+	assert i.v > i.v-1;
+	return i;		
+}
+
+generator Box voo(Box i){ /* automatically rewritten */
+	assert i.v < i.v - 1;
+	return i;	
+}
+
+
+int spec(int i) {
+	return i;	
+}
+
+int foo(int i) implements spec{
+	Box t = new Box();
+	t.v = i;
+	if(i < i + 1){
+		Box m = moo(t);
+		return m.v;
+	}
+	
+	Box m = voo(t);
+	return m.v;	
+}

@@ -1,0 +1,52 @@
+include "generators.skh";
+
+package generators;
+
+generator int do_op(int cop, int a, int b){
+    if(cop==PLUS){
+        return a + b;
+    }
+    if(cop==MINUS){            
+        return a - b;
+    }
+    if(cop==TIMES){
+        return a * b;
+    }
+    if(cop==DIV){
+        return a / b;
+    }
+    if(cop==MOD){
+        return a % b;
+    }
+}
+
+/**
+ * 
+ * Generate an expression based on the N operands and T operators
+ * given.
+ * 
+ */
+generator int expr2(int N, int[N] pars, int T, int[T] ops, int len) {
+	int[N+len] operands;
+	if (len == 0) {
+		return pars[??];
+	}
+	int i = 0;
+	repeat(N) {
+		operands[i] = pars[i];
+		i++;
+	}
+	repeat(len) {
+		int x = ??;
+		assert x < i;
+		int y = ??;
+		assert x < i;
+		int op = ops[??];
+		if (op == PLUS || op == TIMES) {
+			assert x <= y;
+		}
+		operands[i] = do_op(op, operands[x], operands[y]);
+		i++;
+	}
+	return operands[N+len-1];
+}

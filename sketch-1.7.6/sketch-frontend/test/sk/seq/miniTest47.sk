@@ -1,0 +1,17 @@
+int N = 4;
+
+
+bit sort(bit[N] input){
+	bit k = 1;
+	if( input[0] ) k = 0;
+	k = k & input[0];
+	int x = 3;
+	if( k) x = 2;
+	return input[x];
+}
+
+
+bit MergeSort(bit[N] input)implements sort{
+	return input[3];
+}
+

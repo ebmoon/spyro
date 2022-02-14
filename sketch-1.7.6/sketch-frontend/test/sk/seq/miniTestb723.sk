@@ -1,0 +1,17 @@
+// Local variable construct use to find variables of type int
+// as index of arrays
+
+bit reverseSketch(bit[4] in) implements reverse {	
+	bit t=0;
+	int i=0;
+	int j = 0;
+	repeat(??){
+		t = in[$(int)];
+		i = $(int)+??;
+	}
+	return t;
+}
+
+bit reverse (bit[4] in) {
+	return in[2];
+}

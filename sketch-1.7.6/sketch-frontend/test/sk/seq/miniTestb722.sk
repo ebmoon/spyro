@@ -1,0 +1,17 @@
+// Local variableconstruct to finding variables of type int
+
+harness void main(int x, int y) 
+{
+  bit a = 0;
+  int b = 1;
+  int c = 2;
+  int d = 3;
+       
+  int t = $(int)*?? + $(int);
+  
+  int e = 4;
+  
+  int w = $(int);
+  
+  assert (t == x + x + 1);
+}

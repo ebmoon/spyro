@@ -1,0 +1,13 @@
+// Multiple lambda functions have local variables in their bodies
+
+int apply(int x, fun f1, fun f2) {
+	return f1(x) + f2(x);
+}
+
+harness void main(){	
+    int a = 1;
+    int b = 2;
+              
+    assert apply(2, (x) -> x + a, (y) -> b + y + a) == 8;
+  
+}

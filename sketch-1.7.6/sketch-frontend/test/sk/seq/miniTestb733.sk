@@ -1,0 +1,12 @@
+// Lambda expression uses a local variable
+
+int apply(fun f, int x) {
+	return f(x);
+}
+
+harness void main(){	
+    int t = 1;
+
+    assert apply((x) -> x + t, 7) == 8;
+    
+}

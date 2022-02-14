@@ -1,0 +1,36 @@
+pragma options "--be:showDAG";
+
+@Native("{ _out = (i+11)*h; }")
+int moo(int i, int h);
+
+model int foo(int i, int h){
+    int rv = moo(i, h);
+    if(h>0){
+        assert rv > 10;
+        assert rv >= i;
+        assert rv % h == 0;
+    }
+    return rv;
+}
+
+
+
+harness void main(int i, int j){
+    
+    int pp = ??;
+    assert pp == 3;
+    int x = foo(i, pp);
+    int y = foo(j, pp);
+    int q = ??;
+    minimize(q);
+    if(i==j){
+        assert x == y;
+    }
+    if(i>j){
+        assert x >= j;
+    }
+    
+    assert x > 20-q;
+    assert y > 20-q;
+    assert x % ?? == ??;
+}

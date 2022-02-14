@@ -1,0 +1,25 @@
+ 
+; EXPECT: unsat
+; COMMAND-LINE: --lang=sygus2 --sygus-si=all --sygus-out=status
+(set-logic LIA)
+
+(synth-fun findSum_spec ( (y1 Int) (y2 Int) (o Int) ) Bool 
+    
+    ((B Bool) (I Int)) 
+    
+    (
+        (B Bool ((and B B) (or B B) (not B) (=> B B) (< I I) (<= I I) (> I I) (>= I I)))
+        (I Int (0 5 y1 y2 o (+ I I)))
+    )
+)
+
+(declare-var x1 Int)
+(declare-var x2 Int)
+(declare-var o Int)
+
+(constraint (= 
+    (findSum_spec x1 x2 o) 
+    (= o (let ((_let_1 (+ x2 x1))) (ite (< 5 _let_1) _let_1 0)))
+))
+
+(check-synth)

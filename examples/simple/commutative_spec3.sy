@@ -1,0 +1,40 @@
+(set-logic LIA)
+
+(define-fun comm ((x Int) (y Int)) Int (+ x y))
+
+(define-fun comm_prob ((x Int) (y Int) (o1 Int) (o2 Int)) Bool
+    (and 
+        (= o1 (comm x y))
+        (= o2 (comm y x))
+    )
+)
+
+(synth-fun comm_spec ((x Int) (y Int) (o1 Int) (o2 Int)) Bool
+    ;; Declare the non-terminals that would be used in the grammar
+    ((B Bool) (I Int))
+
+    ;; Define the grammar for specification
+    ((B Bool ((and B B) (or B B) (not B) (= I I) (> I I) (>= I I)))
+     (I Int (x y o1 o2)))
+)
+
+(declare-var x Int)
+(declare-var y Int)
+(declare-var o1 Int)
+(declare-var o2 Int)
+
+;; Problem Part
+(constraint (=> (comm_prob x y o1 o2) (comm_spec x y o1 o2)))
+
+;; Iterative Solving
+(constraint 
+   (exists 
+        ((x Int) (y Int) (o1 Int) (o2 Int))
+        (not (=> 
+            (= o1 o2)
+            (comm_spec x y o1 o2)
+        ))
+    )
+)
+
+(check-synth)

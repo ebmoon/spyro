@@ -1,0 +1,16 @@
+int W = 7;
+
+bit[W] debug(bit[W] in) implements swap {
+	bit[W] tmp = (in ^ !in);
+	return (tmp << 5);
+}
+
+
+
+bit[W] swap (bit[W] in) {
+	return ((in ^ !in)<<5);
+}
+
+
+
+

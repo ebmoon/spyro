@@ -1,0 +1,10 @@
+int moo(int x); 	/* Uninterpreted function.*/ /* automatically rewritten */
+
+
+int foo(int x){
+	return moo(x + x + x);		
+}
+
+int fooSK(int x) implements foo{
+	return moo(??*x);		
+}

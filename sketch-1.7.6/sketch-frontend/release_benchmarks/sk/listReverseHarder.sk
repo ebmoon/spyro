@@ -1,0 +1,87 @@
+//pragma options "--unrollamnt 4";
+int MAXN = 8;
+
+struct node{
+    node next;
+    bit val;    
+}
+
+struct list{
+    node head;
+}
+
+list newList(){
+    list l = new list();
+    l.head = null;
+    return l;
+}
+
+node newNode(){
+    node t = new node();
+    t.next = null;
+    t.val = 0;
+    return t;
+}
+
+
+
+
+void reverseSK(ref list l){        
+    node tmp1 = null; node tmp2 = null;
+    int t=??; assert t<3;
+    repeat(t){
+        {| (tmp1 | tmp2 | l.head)(.next)? |} = {| (tmp1 | tmp2 | l.head)(.next)? |};  
+    }
+    while({| (tmp1 | tmp2 | l.head)(.next)? (== | !=) null |}){
+        int q = ??; assert q < 5;
+        repeat(q){
+            {| (tmp1 | tmp2 | l.head)(.next)? |} = {| (tmp1 | tmp2 | l.head)(.next)? |};  
+        }
+    }   
+}
+
+
+void popList(int n, list l, ref node[n] nodes){
+    node tail= null;
+    for(int i=0; i<n;++i){
+        node t = newNode();
+        if(i>0){
+            tail.next = t;
+        }else{
+            l.head = t;
+        }
+        tail = t;
+        nodes[i] = t; 
+    }
+}
+
+ 
+void check(int n, list l, node[n] nodes){
+    node cur = l.head;
+    int i=0;
+    while(cur != null){
+        assert cur == nodes[n-1-i];
+        cur = cur.next;     
+        i = i+1;
+    }
+    assert i == n;
+    if(n > 0){
+        assert l.head == nodes[n-1];
+    }else{
+        assert l.head == null;
+    }
+}
+
+harness void main(int n){
+    if(n >= MAXN){ n = MAXN-1; }
+    node[n] nodes = null;
+    list l = newList();
+    
+    popList(n, l, nodes);   
+    
+    reverseSK(l);
+        
+    
+    check(n, l, nodes);
+    
+}

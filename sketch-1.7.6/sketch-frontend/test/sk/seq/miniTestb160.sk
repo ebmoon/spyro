@@ -1,0 +1,15 @@
+
+int test(int a, int b, int c) implements spec{
+	int x = a % 5;
+	int y = b % 5;
+	int z = x + y;
+	return z % 8; 		
+}
+
+int spec(int a, int b, int c){
+	int x = a % 5;
+	int y = b % 5;
+	int z = x + (y %5);
+	z = z % 8;
+	return z % 8;	
+}

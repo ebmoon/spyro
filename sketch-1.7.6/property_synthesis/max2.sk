@@ -1,0 +1,109 @@
+//@Description Toy benchmarks to show complex recursive generators.
+
+int max2(int x, int y){
+    int ret;
+
+    if (x > y) {
+        ret = x;
+    } else {
+        ret = y;
+    }
+
+    return ret;
+}
+
+generator boolean boolGen(int x, int y, int o){ /* automatically rewritten */
+    int t = ??;
+
+    int leftInt = intGen(x, y, o);
+    int rightInt = intGen(x, y, o);
+
+    if(t == 0) { return leftInt < rightInt; }
+    if(t == 1) { return leftInt <= rightInt; }
+    if(t == 2) { return leftInt == rightInt; }
+
+    boolean leftBool = boolGen(x, y, o);
+    boolean rightBool = boolGen(x, y, o);
+
+    if(t == 3) { return leftBool && rightBool; }
+    if(t == 4) { return leftBool || rightBool; }
+    if(t == 5) { return !leftBool; }
+}
+
+generator int intGen(int x, int y, int o) {
+   int t = ??;
+   if(t == 0){
+     return x;
+   }
+
+   if(t == 1){
+     return y;
+   }
+
+   if(t == 2){
+     return o;
+   }
+}
+
+
+boolean max2_spec( int x, int y, int o ){
+   return boolGen(x, y, o);
+}
+
+
+harness void positive_examples() {
+    assert max2_spec(0, 0, 0);
+    assert max2_spec(2, 0, 2);
+    assert max2_spec(0, 1, 1);
+    assert max2_spec(2, 3, 3);
+    assert max2_spec(16, 6, 16);
+    assert max2_spec(2, 5, 5);
+}
+
+harness void negative_examples() {
+    assert !max2_spec(16, 8, 0);
+    assert !max2_spec(20, 0, 5);
+    assert !max2_spec(8, 25, 16);
+    assert !max2_spec(0, 1, 0);
+    assert !max2_spec(0, 1, 2);
+    assert !max2_spec(25, 20, 27);
+    assert !max2_spec(1, 0, 0);
+}
+
+
+boolean max2_spec_obtained(int x, int y, int o){
+    //return x <= 0;
+    //return !(0 < y);
+    //return (x <= o);
+    //return (x <= o) || (y <= o);
+    //return !((o == x) && (o <= y)) || !(o < y);
+    //return (y == o) || (x <= o) && (y <= 0);
+    //return ((y == 0) && (x == o)) || (y == o);
+    //return (y == o) || ((x == o) && (0 < x));
+    //return ((y < x) && (y <= o)) && ((o <= x) || (o <= y)) && (x <= o);
+    return ((y <= x) && (x == o)) || ((x <= y) && (y == o));
+}
+
+
+/*
+harness void soundness() {
+    int x = ??;
+    int y = ??;
+    int o = max2(x, y);
+
+    assert !max2_spec_obtained(x, y, o);
+}
+
+
+
+harness void precision() {
+    int x = ??;
+    int y = ??;
+    int o = ??;
+
+    assert max2_spec_obtained(x, y, o);
+    assert !(max2(x, y) == o);
+}
+
+*/
+
