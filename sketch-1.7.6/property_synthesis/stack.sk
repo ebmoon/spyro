@@ -113,11 +113,270 @@ boolean stack_spec_obtained(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
     stack pop_input_stack, int pop_out_val, stack pop_out_stack
 ) {
-    return false;
+    // return false; pos 1
+    // return push_input_val <= push_input_val; neg 1
+    // return stack_equal(push_input_stack, pop_input_stack); pos 2
+    // return !(pop_out_val < push_input_val); pos 3
+    // return (pop_out_val == push_input_val) || (0 == pop_out_val); pos 4
+    // return ((pop_out_val == 0) || (push_input_val <= pop_out_val)); pos 5
+    // return !stack_equal(pop_out_stack, push_out_stack); pos 6
+    // return !(stack_equal(pop_out_stack, push_out_stack) && (0 < pop_out_val)); pos 7
+    // return !(stack_equal(pop_out_stack, push_out_stack) && (0 < pop_out_val) && (0 < push_input_val)); pos 8
+    // return !(stack_equal(pop_out_stack, push_out_stack) && (0 < pop_out_val) && (pop_out_val < push_input_val)); pos 9, maxsat
+    // return true;
+    // return !stack_equal(pop_input_stack, pop_out_stack);
+    // return (((pop_out_val == 0) || (0 < push_input_val)) || stack_equal(push_out_stack, pop_out_stack));
+    // return !stack_equal(pop_input_stack, pop_out_stack);
+    // return !stack_equal(pop_input_stack, push_out_stack);
+    // return !((!(push_input_val <= pop_out_val)) && stack_equal(pop_input_stack, push_out_stack));
+    return !stack_equal(push_out_stack, pop_input_stack) || stack_equal(push_input_stack, pop_out_stack);
 }
 
-boolean check_soundness = false;
+int cnt = 0;
+
+harness void positive_example_1() {
+    node next = null;
+    node top = new node(next=next, val=0);
+    stack stack_ = new stack(top=top);
+    stack push_out_stack_s30 = push(stack_, 0);
+
+    node next_0 = null;
+    node top_0 = new node(next=next_0, val=0);
+    stack stack__0 = new stack(top=top_0);
+    stack pop_out_stack = null;
+    int pop_out_val_s32 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 0, push_out_stack_s30, stack__0, pop_out_val_s32, pop_out_stack);
+}
+
+harness void positive_example_2() {
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top = new node(next=next, val=0);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s29 = push(stack_, 8);
+
+    node@ANONYMOUS next_0 = null;
+    node@ANONYMOUS top_0 = new node(next=next_0, val=8);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s31 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 8, push_out_stack_s29, stack__0, pop_out_val_s31, pop_out_stack);
+}
+
+harness void positive_example_3() {
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top = new node(next=next, val=8);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s27 = push(stack_, 4);
+
+    node@ANONYMOUS next_0 = null;
+    node@ANONYMOUS top_0 = new node(next=next_0, val=0);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s29 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 4, push_out_stack_s27, stack__0, pop_out_val_s29, pop_out_stack);
+}
+
+harness void positive_example_4() {
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top = new node(next=next, val=0);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s27 = push(stack_, 9);
+
+    node@ANONYMOUS next_0 = null;
+    node@ANONYMOUS top_0 = new node(next=next_0, val=28);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s29 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 9, push_out_stack_s27, stack__0, pop_out_val_s29, pop_out_stack);
+}
+
+harness void positive_example_5() {
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top = new node(next=next, val=6);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s27 = push(stack_, 2);
+
+    node@ANONYMOUS next_0 = null;
+    node@ANONYMOUS top_0 = new node(next=next_0, val=1);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s29 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 2, push_out_stack_s27, stack__0, pop_out_val_s29, pop_out_stack);
+}
+
+harness void positive_example_6() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s29 = push(stack_, 12);
+
+    node@ANONYMOUS node_ = new node(val=12);
+    node@ANONYMOUS top_0 = new node(next=node_, val=0);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s31 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 12, push_out_stack_s29, stack__0, pop_out_val_s31, pop_out_stack);
+}
+
+harness void positive_example_7() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s30 = push(stack_, 0);
+    
+    node@ANONYMOUS node_ = new node(val=0);
+    node@ANONYMOUS top_0 = new node(next=node_, val=18);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s32 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 0, push_out_stack_s30, stack__0, pop_out_val_s32, pop_out_stack);
+}
+
+harness void positive_example_8() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s31 = push(stack_, 2);
+
+    node@ANONYMOUS node_ = new node(val=2);
+    node@ANONYMOUS top_0 = new node(next=node_, val=2);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s33 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 2, push_out_stack_s31, stack__0, pop_out_val_s33, pop_out_stack);
+}
+
+harness void positive_example_9() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s31 = push(stack_, 2);
+
+    node@ANONYMOUS node_ = new node(val=2);
+    node@ANONYMOUS top_0 = new node(next=node_, val=1);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s33 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 2, push_out_stack_s31, stack__0, pop_out_val_s33, pop_out_stack);
+}
+
+harness void positive_example_10() {
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top = new node(next=next, val=0);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s30 = push(stack_, 0);
+
+    node@ANONYMOUS node_ = new node(val=0);
+    node@ANONYMOUS top_0 = new node(next=node_, val=4);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s32 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 0, push_out_stack_s30, stack__0, pop_out_val_s32, pop_out_stack);
+}
+
+harness void positive_example_11() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s30 = push(stack_, 0);
+
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top_0 = new node(next=next, val=0);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s32 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 0, push_out_stack_s30, stack__0, pop_out_val_s32, pop_out_stack);
+}
+
+/* apply maxsat
+harness void negative_example_1() {
+    node node_ = new node(val=25);
+    node top = new node(next=node_, val=0);
+    stack stack_ = new stack(top=top);
+    node top_0 = null;
+    stack stack__0 = new stack(top=top_0);
+    node node__0 = new node(val=24);
+    node top_1 = new node(next=node__0, val=31);
+    stack stack__1 = new stack(top=top_1);
+    node top_2 = null;
+    stack stack__2 = new stack(top=top_2);
+
+    if (!find_maxsat || ??) {
+        cnt++;
+        assert !stack_spec(stack_, 26, stack__0, stack__1, 1, stack__2);
+    }
+}
+*/
+
+harness void negative_example_2() {
+    node@ANONYMOUS node_ = new node(val=15);
+    node@ANONYMOUS top = new node(next=node_, val=0);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS top_1 = null;
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    node@ANONYMOUS top_2 = null;
+    stack@ANONYMOUS stack__2 = new stack(top=top_2);
+
+    if (!find_maxsat || ??) {
+        cnt++;
+        assert !stack_spec(stack_, 3, stack__0, stack__1, 1, stack__2);
+    }
+}
+
+harness void negative_example_3() {
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top = new node(next=next, val=1);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS next_0 = null;
+    node@ANONYMOUS top_0 = new node(next=next_0, val=0);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS next_1 = null;
+    node@ANONYMOUS top_1 = new node(next=next_1, val=0);
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    node@ANONYMOUS next_2 = null;
+    node@ANONYMOUS top_2 = new node(next=next_2, val=8);
+    stack@ANONYMOUS stack__2 = new stack(top=top_2);
+
+    if (!find_maxsat || ??) {
+        cnt++;
+        assert !stack_spec(stack_, 4, stack__0, stack__1, 0, stack__2);
+    }
+}
+
+harness void negative_example_4() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS top_1 = null;
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    node@ANONYMOUS node_ = new node(val=2);
+    node@ANONYMOUS top_2 = new node(next=node_, val=26);
+    stack@ANONYMOUS stack__2 = new stack(top=top_2);
+
+    if (!find_maxsat || ??) {
+        cnt++;
+        assert !stack_spec(stack_, 0, stack__0, stack__1, 0, stack__2);
+    }
+}
+
+boolean check_soundness = true;
 boolean check_precision = false;
+boolean find_maxsat = false;
+
+harness void maxsat() {
+    if (find_maxsat) {
+        minimize(-cnt);
+    }
+}
 
 harness void soundness() {
     int push_input_val = ??;
@@ -146,10 +405,6 @@ harness void precision() {
     stack pop_input_stack = ??; 
     int pop_out_val = ?? ;
     stack pop_out_stack = ??;
-
-    stack push_out_stack_correct = push(push_input_stack, push_input_val);
-    stack pop_out_stack_correct;
-    int pop_out_val_correct = pop(pop_input_stack, pop_out_stack_correct);
 
     if (check_precision) {
         // new negative example c is in [[ phi ]]
