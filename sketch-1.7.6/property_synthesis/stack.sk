@@ -11,6 +11,8 @@ struct stack {
 }
 
 stack push(stack s, int val) {
+    assert s != null;
+
     node n = new node();
     stack ret = new stack();
 
@@ -22,6 +24,7 @@ stack push(stack s, int val) {
 }
 
 int pop(stack s, ref stack out) {
+    assert s != null;
     assert s.top != null;
     
     node top = s.top;
@@ -42,7 +45,11 @@ boolean node_equal(node n1, node n2) {
 }
 
 boolean stack_equal(stack s1, stack s2) {
-    return node_equal(s1.top, s2.top);
+    if (s1 == null || s2 == null) {
+        return s1 == s2;
+    } else {
+        return node_equal(s1.top, s2.top);
+    }
 }
 
 generator int intGen(int x, int y) {
@@ -135,8 +142,33 @@ boolean stack_spec_obtained(
     // return !(stack_equal(push_input_stack, push_out_stack) || (!(0 == push_input_val) && stack_equal(pop_input_stack, push_out_stack)));
     // return !(stack_equal(push_out_stack, pop_input_stack) || (0 < pop_out_val) && (push_input_val == 0)) 
     //    || (((pop_out_val == push_input_val) || (push_input_val == 0)) && !stack_equal(push_input_stack, push_out_stack));
-    return !(stack_equal(push_input_stack, push_out_stack) 
-        || (stack_equal(pop_input_stack, push_out_stack) && ((pop_out_val < push_input_val) || (push_input_val < pop_out_val))));
+    // return !(stack_equal(push_input_stack, push_out_stack) 
+    //    || (stack_equal(pop_input_stack, push_out_stack) && ((pop_out_val < push_input_val) || (push_input_val < pop_out_val))));
+    
+    //return !(
+    //    (stack_equal(push_out_stack, pop_input_stack) && !(push_input_val == pop_out_val))
+    //    || stack_equal(null, pop_out_stack) || stack_equal(push_out_stack, push_input_stack)
+    //);
+
+    //boolean leftBool_s11 = !(stack_equal(null, pop_out_stack) || stack_equal(pop_input_stack, push_out_stack));
+    //boolean rightBool_s13 = (!(stack_equal(pop_out_stack, pop_input_stack))) && (stack_equal(push_out_stack, pop_out_stack) || stack_equal(push_out_stack, pop_out_stack));
+    //return leftBool_s11 || rightBool_s13;
+
+    //return !(stack_equal(null, pop_out_stack) || stack_equal(pop_input_stack, push_out_stack)) || stack_equal(push_input_stack, pop_out_stack);
+    //return !(stack_equal(null, pop_out_stack) || stack_equal(pop_input_stack, push_out_stack))
+    //    || (stack_equal(push_out_stack, null) || (stack_equal(push_input_stack, pop_out_stack) && (!(pop_out_val < push_input_val))));
+
+    //return !(stack_equal(push_out_stack, pop_input_stack) || stack_equal(pop_out_stack, null)) 
+    //    || ((pop_out_val == push_input_val) && stack_equal(push_input_stack, pop_out_stack));
+
+    //return !(stack_equal(push_out_stack, pop_input_stack) || stack_equal(pop_out_stack, null)) 
+    //    || ((!((pop_out_val <= 0) && (0 < push_input_val))) && (stack_equal(push_input_stack, pop_out_stack) && stack_equal(push_out_stack, pop_input_stack)));
+
+    // return !(stack_equal(push_out_stack, pop_input_stack) || stack_equal(pop_out_stack, null)) 
+    //    || ((pop_out_val == push_input_val) && stack_equal(push_input_stack, pop_out_stack) && stack_equal(pop_input_stack, push_out_stack));
+
+    return (!stack_equal(push_out_stack, pop_input_stack) || ((push_input_val == pop_out_val) && stack_equal(push_input_stack, pop_out_stack)))
+        && !(stack_equal(pop_out_stack, null) || stack_equal(push_input_stack, push_out_stack));
 }
 
 harness void positive_example_1() {
@@ -314,6 +346,21 @@ harness void positive_example_12() {
     assert stack_spec(stack_, 5, push_out_stack_s38, stack__0, pop_out_val_s40, pop_out_stack);
 }
 
+harness void positive_example_13() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS push_out_stack_s39 = push(stack_, 8);
+
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top_0 = new node(next=next, val=8);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    stack@ANONYMOUS pop_out_stack = null;
+    int pop_out_val_s41 = pop(stack__0, pop_out_stack);
+
+    assert stack_spec(stack_, 8, push_out_stack_s39, stack__0, pop_out_val_s41, pop_out_stack);
+
+}
+
 /* apply maxsat
 harness void negative_example_1() {
     node node_ = new node(val=25);
@@ -438,12 +485,116 @@ void negative_example_8() {
     assert !stack_spec(stack_, 0, stack__0, stack__1, 18, stack__2);
 }
 
+void negative_example_9() {
+    node@ANONYMOUS node_ = new node(val=24);
+    node@ANONYMOUS top = new node(next=node_, val=18);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS node__0 = new node(val=27);
+    node@ANONYMOUS top_1 = new node(next=node__0, val=23);
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    stack@ANONYMOUS stack__2 = null;
+
+    assert !stack_spec(stack_, 24, stack__0, stack__1, 9, stack__2);
+}
+
+void negative_example_10() {
+    stack@ANONYMOUS stack_ = null;
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__1 = new stack(top=top_0);
+    node@ANONYMOUS top_1 = null;
+    stack@ANONYMOUS stack__2 = new stack(top=top_1);
+
+    assert !stack_spec(stack_, 17, stack__0, stack__1, 17, stack__2);
+}
+
+void negative_example_11() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS next = null;
+    node@ANONYMOUS top_0 = new node(next=next, val=28);
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS next_0 = null;
+    node@ANONYMOUS top_1 = new node(next=next_0, val=28);
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    node@ANONYMOUS top_2 = null;
+    stack@ANONYMOUS stack__2 = new stack(top=top_2);
+
+    assert !stack_spec(stack_, 2, stack__0, stack__1, 0, stack__2);
+}
+
+void negative_example_12() {
+    node@ANONYMOUS node_ = new node(val=31);
+    node@ANONYMOUS top = new node(next=node_, val=7);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    stack@ANONYMOUS stack__0 = null;
+    stack@ANONYMOUS stack__1 = null;
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__2 = new stack(top=top_0);
+
+    assert !stack_spec(stack_, 0, stack__0, stack__1, 1, stack__2);
+}
+
+void negative_example_13() {
+    stack@ANONYMOUS stack_ = null;
+    node@ANONYMOUS node_ = new node(val=19);
+    node@ANONYMOUS top = new node(next=node_, val=15);
+    stack@ANONYMOUS stack__0 = new stack(top=top);
+    stack@ANONYMOUS stack__1 = null;
+    stack@ANONYMOUS stack__2 = null;
+    
+    assert !stack_spec(stack_, 1, stack__0, stack__1, 1, stack__2);
+}
+
+void negative_example_14() {
+    node@ANONYMOUS node_ = new node(val=15);
+    node@ANONYMOUS top = new node(next=node_, val=1);
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS top_1 = null;
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    node@ANONYMOUS node__0 = new node(val=15);
+    node@ANONYMOUS top_2 = new node(next=node__0, val=1);
+    stack@ANONYMOUS stack__2 = new stack(top=top_2);
+
+    assert !stack_spec(stack_, 1, stack__0, stack__1, 2, stack__2);
+}
+
+void negative_example_15() {
+    stack@ANONYMOUS stack_ = null;
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__1 = new stack(top=top_0);
+    stack@ANONYMOUS stack__2 = null;
+
+    assert !stack_spec(stack_, 0, stack__0, stack__1, 0, stack__2);
+}
+
+void negative_example_16() {
+    node@ANONYMOUS top = null;
+    stack@ANONYMOUS stack_ = new stack(top=top);
+    node@ANONYMOUS top_0 = null;
+    stack@ANONYMOUS stack__0 = new stack(top=top_0);
+    node@ANONYMOUS node_ = new node(val=10);
+    node@ANONYMOUS top_1 = new node(next=node_, val=28);
+    stack@ANONYMOUS stack__1 = new stack(top=top_1);
+    node@ANONYMOUS top_2 = null;
+    stack@ANONYMOUS stack__2 = new stack(top=top_2);
+
+    assert !stack_spec(stack_, 30, stack__0, stack__1, 28, stack__2);
+}
+
 boolean check_soundness = false;
-boolean check_precision = true;
+boolean check_precision = false;
 boolean find_maxsat = false;
 
 harness void maxsat() {
-    int cnt = 10;
+    int cnt = 100;
 
     if (!find_maxsat || ??) {
         cnt -= 1;
@@ -469,6 +620,51 @@ harness void maxsat() {
         cnt -= 1;
         negative_example_6();
     }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_8();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_9();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_10();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_11();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_12();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_13();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_14();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_15();
+    }
+
+    if (!find_maxsat || ??) {
+        cnt -= 1;
+        negative_example_16();
+    } 
 
     if (find_maxsat) {
         minimize(cnt);
