@@ -1,0 +1,25 @@
+//Semantic Check failed
+struct Tree{ 
+	Tree left;
+	Tree right;
+}
+
+
+
+struct Leaf extends Tree{
+    int value;
+}
+struct Branch extends Tree{
+    
+}
+
+
+harness void test(){
+	Branch branch = new Branch();
+Branch b = sum(branch); //TypeError Missing explicit type casting
+
+}
+
+Tree sum(Tree t){  
+    return t;
+}

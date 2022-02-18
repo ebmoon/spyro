@@ -1,0 +1,73 @@
+struct TreeNode{
+	int val;
+	TreeNode left;
+	TreeNode right;	
+}
+
+TreeNode newTreeNode(int val){ /* automatically rewritten */
+	TreeNode tn = new TreeNode();
+	tn.val = val;
+	tn.left = null;
+	tn.right = null;
+	return tn;	
+}
+
+struct Tree{
+	TreeNode root;	
+}
+
+Tree newTree(){ /* automatically rewritten */
+	Tree t = new Tree();
+	t.root = null;
+	return t;	
+}
+
+
+generator bit choice(ref TreeNode n, int v){ /* automatically rewritten */
+	if({| n(.left | .right) |} == null){
+		{| n(.left | .right) |} = newTreeNode(v);
+		return ??;
+	}else{
+		n = {| n(.left | .right) |} ;
+		return ??;
+	}
+}
+
+
+bit addt(Tree t, int v){ /* automatically rewritten */
+	TreeNode n =t.root;	
+	if(n == null){
+		t.root = 	newTreeNode(v);
+		return ??;
+	}	
+	while(n != null){
+		if( n.val == v){ return ??; }
+		if(n.val < v){
+			if(choice(n, v)){
+				return ??;	
+			}
+		}else{ 
+			if(choice(n, v)){
+				return ??;	
+			}
+		}
+	}
+	return ??;
+}
+
+bit containst(Tree t, int v){ /* automatically rewritten */
+	TreeNode n = t.root;
+	while(n != null){
+		if( n.val == v){ return ??; }
+		if(n.val < v){
+				n = n.left;	
+		}else{ 
+				n = n.right;	
+		}
+	}	
+	return ??;	
+}
+
+
+
+

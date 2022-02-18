@@ -1,0 +1,11 @@
+include "generators.skh";
+
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 3 ";
+
+
+
+
+harness void testComp(int a, int b, int c){       
+    assert linexp(4, {a,b,c, 1}) == 10;
+    assert linexp(4, {a,b,c, 1}) == a+b+4*c;
+}

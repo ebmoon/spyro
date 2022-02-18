@@ -1,0 +1,12 @@
+// Calling a lambda function inside a local function
+
+harness void main() {
+	fun f = (x) -> x + 1;
+	
+	int g(int x) {
+		int temp = f(1) + x;
+		return temp;
+	}
+		
+	assert g(1) == 3;
+}

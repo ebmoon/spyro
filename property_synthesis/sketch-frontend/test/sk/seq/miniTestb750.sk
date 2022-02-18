@@ -1,0 +1,14 @@
+// Using local variable inside an local
+// function with a formal parameter
+
+harness void main(int x){
+	int a = 2;
+	int b = 3;
+	
+	int foo(int y) {
+		return $(int);
+	}
+		
+	assert foo(x) == x;
+}
+

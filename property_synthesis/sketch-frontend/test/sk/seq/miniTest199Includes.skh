@@ -1,0 +1,3 @@
+generator bit VOID(bit a, bit b, bit c){ /* automatically rewritten */
+        return (a & !b) & (!b & c);
+}

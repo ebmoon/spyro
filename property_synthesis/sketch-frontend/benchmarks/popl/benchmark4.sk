@@ -1,0 +1,647 @@
+//@Description This sketch derives the desugar function between complex toy languages using interpreters.
+
+
+/**
+ * For this benchmark, the test harnesses only check 2-bit integers for 
+ * each of the 50 integer input values. 
+ * --bnd-int-range 32 means that all intermediate values can be assumed to be
+ * in the range [-32, 32].
+ */
+pragma options "--bnd-inbits 2 --bnd-int-range 32";
+
+/**
+ * Data definitions
+ */
+adt srcAST{
+	NumS {int val;}
+	VarS { int str;}
+	TrueS {}
+	FalseS {}
+	AssignS {int str; srcAST a;}
+	LetS {int str; srcAST a; srcAST b;}
+	Prim1S {opcode op; srcAST a;}
+	Prim2S {opcode op; srcAST a; srcAST b;}
+	BetweenS {srcAST a;srcAST b;srcAST c;}
+}
+
+adt opcode{
+	Oplus{}
+	Ominus{}
+	Oneg{}
+	Oand{}
+	Oor{}
+	Onot{}
+	Ogt{}
+	Olt{}	
+}
+
+adt dstAST{
+	NumD {int val;}
+	VarD {int str;}
+	BoolD {bit v;}
+	Prim1D {opcode op; dstAST a;}
+	AssignD {int str; dstAST a;}
+	LetD {int str; dstAST a; dstAST b;}
+	Prim2D {opcode op; dstAST a; dstAST b;}
+}
+
+/**
+ * Function to synthesize
+ */
+dstAST desugar(srcAST s, int bnd){
+	if(s == null){ return null; }
+	// bnd parameter is there just to have finer control over inlining during bounded model checking.
+	if(bnd <= 0 ){ return null; }
+	
+		
+	/**
+     * This generator produces a destination AST with maximum depth bnd that uses dstAST nodes a, b and c 
+     */
+	generator dstAST getPart(dstAST c1, dstAST c2, dstAST c3, int bnd) {
+		dstAST var = new VarD(str =??);
+		if(??){
+			return {|c1 | c2 |c3 | var|};
+		}else if (bnd > 1) {
+			return new ??(op=??,
+						  a=getPart(c1,c2,c3, bnd-1),
+						  b=getPart(c1,c2,c3, bnd-1),
+						  str=??);
+		}
+		return null;
+	}
+	
+	switch(s){
+		// All cases (except BetweenS) have very trivial desugaring.
+		case NumS: return new NumD(val = s.val);
+		case TrueS: return new BoolD(v =1);
+		case FalseS: return new BoolD(v =0);
+		case VarS: return new VarD(str =s.str);
+		case AssignS: return new AssignD(str = s.str, a = desugar(s.a,bnd-1));
+		case LetS: return new LetD(str = s.str, a = desugar(s.a,bnd-1), b= desugar(s.b,bnd-1));
+		case Prim1S: return new Prim1D(op = s.op, a = desugar(s.a,bnd-1));
+		case Prim2S : return new Prim2D(op = s.op ,a = desugar(s.a,bnd-1), b=desugar(s.b,bnd-1));
+		// Synthesizer must discover desugaring for BetweenS case.
+		case BetweenS:
+		{
+			dstAST a = desugar(s.a,bnd-1);
+			dstAST b = desugar(s.b,bnd-1);
+			dstAST c = desugar(s.c,bnd-1);
+			// In this case, we had to explicitly give a bigger bound to the second getPart because the
+			// b subexpression has to be much bigger than the a subexpression, but the solver is not 
+			// scalable enough to synthesize the solution if both have bound 4.
+ 			return new ??(op=??,
+ 			              a=getPart(a,b,c,1),
+ 			              b=getPart(a,b,c,4), 
+ 			              str=??);
+		}
+	}
+}
+
+
+
+/**
+ * Concrete test case that tests the desugaring on a complex concrete AST.
+ */
+harness void main2(){
+ srcAST s =   new BetweenS(a = new LetS(str = 1,a= gN(1), b = gN(1)), b = new AssignS(str = 1, a= new Prim2S(op = new Oplus(), a = new VarS(str = 1), b= new NumS(val = 1))),c = gN(3)); 
+ 
+ for(int i = 0; i < size; i++){
+     smtStore[i] = null;
+ }
+ int zz = 0;
+ srcAST c1 = interpretSrcAST(s,zz,3);
+ 
+ if(c1 != null){
+     dstAST c2  = desugar(s,5);
+     for(int i = 0; i < size; i++){
+         cmtStore[i] = null;
+     }
+     dstAST c3 = interpretDstAST(c2,4);
+     assert(c3!=null);
+     assert(equals(c1,c3));
+ }
+}
+
+/**
+ * General test harness to check ASTs rooted on BetweenS.
+ */
+
+harness void main1(int[50] arr) {
+ int idx =0;
+ srcAST s = new BetweenS(a =produce( arr, idx, 2), b = produce( arr, idx, 2),c =produce( arr, idx, 1));
+ 
+ for(int i = 0; i < size; i++){
+     smtStore[i] = null;
+ }
+ int z =0;
+ srcAST c1 = interpretSrcAST(s,z,2);
+ if(c1 != null){
+     dstAST c2  = desugar(s,3);
+     for(int i = 0; i < size; i++){
+         cmtStore[i] = null;
+     }
+     dstAST c3 = interpretDstAST(c2,4);
+     assert(c3!=null);
+     assert(equals(c1,c3));
+ }   
+}
+
+
+
+
+int size = 7;
+srcAST[size] smtStore;
+
+/*
+ * Interpreter for srcAST
+ * This interpreter also has state (the array 'smtStore') which stores variable bindings caused by LetS and AssignS constructs.
+ * The 'smtStore' array is indexed by the variable name.
+ */
+srcAST interpretSrcAST(srcAST s, ref int idx, int bnd){
+	if(s==null || bnd < 0) return null;
+	
+	switch(s){
+		case VarS:
+		{
+			if (s.str >= idx) return null;
+			srcAST val = smtStore[s.str];
+			if (val == null) return null;
+			switch(val){
+				case NumS: return val;
+				case TrueS: return val;
+				case FalseS: return val;
+				case VarS: return val;
+				default: return null;
+			}
+		}
+		case AssignS:
+		{
+			if(bnd <1 ) return null;
+			else{
+				srcAST s_a = interpretSrcAST(s.a, idx,  bnd-1);
+				if(s.str<0 || s.str>= size) return null;
+				if (idx <= s.str) idx = s.str+1;
+				if(s_a == null) return null;
+				smtStore[s.str] = s_a;
+				return s_a;
+			}
+		}
+		case Prim1S:
+		{
+			if(bnd <1 ) return null;
+			else{
+			opcode op = s.op;
+			if (op == null) return null;
+			switch(op){
+			case Oneg: {
+				srcAST s_a = interpretSrcAST(s.a,idx, bnd -1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case NumS: {return new NumS(val = (0-s_a.val));}
+					default: {return null;}
+				}
+			}
+			case Onot: {
+				srcAST s_a = interpretSrcAST(s.a,idx, bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case TrueS:{ return new FalseS();}
+					case FalseS:{ return new TrueS();}
+					default: {return null;}
+				}	
+			}
+			default: return null;
+			}
+			}
+		}
+		
+		case Prim2S:
+		{
+			if(bnd <1 ) return null;
+			else{
+			opcode op = s.op;
+			if(op == null) return null;
+			switch(op){
+			case Oplus: {
+				int a, b;
+				srcAST s_a = interpretSrcAST(s.a,idx,  bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case NumS:{ a = s_a.val;}
+					default:{ return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx,bnd -1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case NumS: {b = s_b.val;}
+					default: {return null;}
+				}
+				return new NumS(val = a+b);
+			}
+			case Ominus: {
+				int a, b;
+				srcAST s_a = interpretSrcAST(s.a,idx,  bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case NumS: {a = s_a.val;}
+					default: {return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx,bnd-1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case NumS: {b = s_b.val;}
+					default: {return null;}
+				}
+				return new NumS(val = a-b);
+			}
+			case Oand: {
+				bit a, b;
+				srcAST s_a = interpretSrcAST(s.a,idx, bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case TrueS: {a = 1;}
+					case FalseS: {a = 0;}
+					default: {return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx, bnd-1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case TrueS:{ b = 1;}
+					case FalseS:{ b = 0;}
+					default: {return null;}
+				}
+				if (a&&b) return new TrueS();
+				else return new FalseS();
+				
+			}
+			case Oor: {
+				bit a, b;
+				srcAST s_a = interpretSrcAST(s.a,idx,  bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case TrueS: {a = 1;}
+					case FalseS: {a = 0;}
+					default: {return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx,  bnd-1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case TrueS: {b = 1;}
+					case FalseS:{ b = 0;}
+					default: {return null;}
+				}
+				if(a||b) return new TrueS();
+				else return new FalseS();
+				
+			}
+			case Ogt: {
+				int a, b;
+				srcAST s_a = interpretSrcAST(s.a,idx, bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case NumS: {a = s_a.val;}
+					default: {return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx, bnd-1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case NumS: {b = s_b.val;}
+					default: {return null;}
+				}
+				if(a>b) return new TrueS();
+				else return new FalseS();
+				
+			}
+			case Olt: {
+				int a, b;
+				srcAST s_a = interpretSrcAST(s.a,idx,  bnd-1);
+				if(s_a==null) return null;
+				switch(s_a){
+					case NumS:{ a = s_a.val;}
+					default: {return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx,bnd-1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case NumS: {b = s_b.val;}
+					default: {return null;}
+				}
+				if(a<b) return new TrueS();
+				else return new FalseS();
+				
+			}
+			default: return null;	
+			}
+			}				
+		}
+		case BetweenS:
+		{
+			if(bnd <1 ) return null;
+			else{
+				int a, b, c;
+				srcAST s_a = interpretSrcAST(s.a,idx,  bnd-1);
+				
+				if(s_a==null) return null;
+				switch(s_a){
+					case NumS: {a = s_a.val;}
+					default: {return null;}
+				}
+				srcAST s_b = interpretSrcAST(s.b,idx,  bnd-1);
+				if(s_b==null) return null;
+				switch(s_b){
+					case NumS:{ b = s_b.val;}
+					default: {return null;}
+				}
+				srcAST s_c = interpretSrcAST(s.c,idx, bnd-1);
+				if(s_c==null) return null;
+				switch(s_c){
+					case NumS: {c = s_c.val;}
+					default: {return null;}
+				}
+				if(a<b&&b<c) return new TrueS();
+				else return new FalseS();
+			}
+			
+		}	
+		case LetS:
+		{
+		if(bnd <1) return null;
+		else{
+			srcAST s_a = interpretSrcAST(s.a, idx, bnd-1);
+			if(s.str<0 || s.str>=size) return null;
+			if (idx <= s.str) idx = s.str+1;
+			if(s_a == null) return null;
+			smtStore[s.str] = s_a;
+			return interpretSrcAST(s.b, idx, bnd-1);
+		}
+		}
+		default: return s;
+	}
+}
+
+dstAST[size] cmtStore;
+
+/*
+ * Interpreter for dstAST
+ * This interpreter also has state (the array 'cmtStore') which stores variable bindings caused by LetD and AssignD constructs.
+ * The 'cmtStore' array is indexed by the variable name.
+ */
+dstAST interpretDstAST(dstAST s, int bnd){
+	if(bnd<0) return null;
+
+	switch(s){
+		case VarD:
+		{
+			dstAST val = cmtStore[s.str];
+			assert(val != null);
+			if(val == null) {  return null;}
+			switch(val){
+				case NumD: return val;
+				case BoolD: return val;
+				case VarD: return val;
+				default: {  assert false; return null;}
+			}
+		}
+		case AssignD:
+		{
+			if(bnd <1){  return null;}
+			else{
+				if(s.str<0 || s.str>= size) {assert false; return null;}
+				dstAST s_a = interpretDstAST(s.a, bnd -1);
+				assert(s_a != null);
+				cmtStore[s.str] = s_a;
+				return s_a;
+			}
+		}
+		case Prim1D:
+		{
+			if(bnd <1 ) return null;
+			else{
+				opcode op = s.op;
+				if (op == null ) return null;
+				switch(op){
+				case Oneg: {
+					dstAST s_a = interpretDstAST(s.a, bnd-1);
+					if(s_a==null) {assert false; return null;}
+					switch(s_a){
+						case NumD: {return new NumD(val = (0-s_a.val));}
+						default: { assert false; return null;}
+					}
+				}
+				case Onot: {
+					dstAST s_a = interpretDstAST(s.a, bnd-1);
+					if(s_a==null) {assert false; return null;}
+					switch(s_a){
+						case BoolD:{ return new BoolD( v = (!s_a.v));}
+						default: {assert false; return null;}
+					}	
+				}
+				default:{
+					return null;
+				}
+				}
+			}
+		}
+		
+		case Prim2D:
+		{
+			if(bnd <1 ) return null;
+			else{
+			opcode op = s.op;
+			if (op == null) return null;
+			switch(op) {
+			case Oplus: {
+				int a, b;
+				dstAST s_a = interpretDstAST(s.a, bnd-1);
+				dstAST s_b = interpretDstAST(s.b, bnd-1);
+				if(s_a==null) {assert false; return null;}
+				switch(s_a){
+					case NumD: {a = s_a.val;}
+					default: {assert false; return null;}
+				}
+				if(s_b==null) {assert false; return null;}
+				switch(s_b){
+					case NumD: {b = s_b.val;}
+					default: {assert false; return null;}
+				}
+				return new NumD(val = a+b);
+				}
+			case Ominus: {
+				int a, b;
+				dstAST s_a = interpretDstAST(s.a, bnd-1);
+				dstAST s_b = interpretDstAST(s.b, bnd-1);
+				if(s_a==null) {assert false; return null;}
+				switch(s_a){
+					case NumD: {a = s_a.val;}
+					default: {assert false; return null;}
+				}
+				if(s_b==null) {assert false ;return null;}
+				switch(s_b){
+					case NumD: {b = s_b.val;}
+					default: {assert false; return null;}
+				}
+				return new NumD(val = a-b);
+			}
+			case Oand: {
+				bit a, b;
+				dstAST s_a = interpretDstAST(s.a, bnd-1);
+				dstAST s_b = interpretDstAST(s.b, bnd-1);
+				if(s_a==null) {assert false; return null;}
+				switch(s_a){
+					case BoolD:{ a = s_a.v;}
+					default:{ assert false; return null;}
+				}
+				if(s_b==null){assert false; return null;}
+				switch(s_b){
+					case BoolD:{ b = s_b.v;}
+					default: {assert false; return null;}
+				}
+				return new BoolD(v = a&&b);
+			}
+			case Oor: {
+				bit a, b;
+				dstAST s_a = interpretDstAST(s.a, bnd-1);
+				dstAST s_b = interpretDstAST(s.b, bnd-1);
+				if(s_a==null) {assert false; return null;}
+				switch(s_a){
+					case BoolD: {a = s_a.v;}
+					default: {assert false; return null;}
+				}
+				if(s_b==null) {assert false; return null;}
+				switch(s_b){
+					case BoolD: {b = s_b.v;}
+					default: {assert false; return null;}
+				}
+				return new BoolD(v = a||b);
+			}
+			case Ogt: {
+				int a, b;
+				dstAST s_a = interpretDstAST(s.a, bnd-1);
+				dstAST s_b = interpretDstAST(s.b, bnd-1);
+				if(s_a==null){assert false; return null;}
+				switch(s_a){
+					case NumD: {a = s_a.val;}
+					default: {assert false; return null;}
+				}
+				if(s_b==null) {assert false; return null;}
+				switch(s_b){
+					case NumD:{ b = s_b.val;}
+					default: {assert false; return null;}
+				}
+				return new BoolD(v = a>b);
+			}
+			case Olt:{
+				int a, b;
+				dstAST s_a = interpretDstAST(s.a, bnd-1);
+				dstAST s_b = interpretDstAST(s.b, bnd-1);
+				if(s_a==null) {assert false; return null;}
+				switch(s_a){
+					case NumD: {a = s_a.val;}
+					default: {assert false; return null;}
+				}
+				if(s_b==null) {assert false; return null;}
+				switch(s_b){
+					case NumD:{ b = s_b.val;}
+					default: {assert false; return null;}
+				}
+				return new BoolD(v = a<b);
+			}
+			default: {
+				assert false;
+				return null;	
+			}
+			}	
+			}			
+		}
+		case LetD:
+		{
+			if(s.str<0 || s.str>= size) return null;
+			dstAST s_a = interpretDstAST(s.a, bnd-1);
+			assert s_a != null;
+			cmtStore[s.str] = s_a;
+			if(bnd <1) {assert false; return null;}
+			else return interpretDstAST(s.b, bnd -1);
+		}
+		default: return s;	
+	}
+}
+
+bit equals(srcAST c1 ,dstAST c2){
+	if(c1== null) return true;
+	if(c2 == null) return false;
+	switch(c1){
+		case NumS:
+		{
+			switch(c2){
+				case NumD: return c1.val == c2.val;
+				default: {assert false; return false;}
+			}
+		}
+		case TrueS:
+		{
+			switch(c2){
+				case BoolD:return c2.v==1;
+				default: {assert false; return false;}
+			}
+		}
+		case FalseS:
+		{
+			switch(c2){
+				case BoolD: return c2.v==0;
+				default: {assert false; return false;}
+			}
+		}
+		case VarS:
+		{
+			switch(c2){
+				case VarD: {assert false; return c1.str == c2.str;}
+				default: {assert false; return false;}
+			}
+		}
+		default: {assert false; return false;}
+	}
+}
+
+/**
+ * Function that produces a srcAST from the encoding of maximum depth bnd.
+ */
+srcAST produce( int[50] encoding, ref int idx, int bnd){
+	if(bnd <=1){ 
+		if(encoding[idx]==0){ ++idx; return new NumS(val=encoding[idx++]); }
+        if(encoding[idx]==1){++idx; return new VarS(str = encoding[idx++]);}
+        if(encoding[idx]==2){ ++idx; return new TrueS(); }else{ ++idx; return new FalseS(); }          
+    }
+    if(encoding[idx] == 0){ idx++;
+    if(encoding[idx] == 0){ ++idx; return new NumS(val=encoding[idx++]); }
+    else{++idx; return new VarS(str = encoding[idx++]);} }
+    else if(encoding[idx]==1){ ++idx;
+    if(encoding[idx] == 0){ ++idx; return gOp(2, encoding[idx++],{ produce(encoding, idx, bnd-1),produce(encoding, idx, bnd-1)}); }
+    else{ ++idx; return new BetweenS(a=produce(encoding, idx, bnd-1),b=produce(encoding, idx, bnd-1),c=produce(encoding, idx, bnd-1)); } }
+    else if(encoding[idx]==2){ ++idx; return new AssignS(str = encoding[idx++],a= produce(encoding, idx, bnd-1)); }
+    else { ++idx; return new LetS(str = encoding[idx++],a= produce(encoding, idx, bnd-1),b = produce(encoding, idx, bnd-1)); }
+}
+
+srcAST gOp([int n], int op, srcAST[n] p){
+	opcode o = intToOpcode(op);
+	if(n==1){
+		return new Prim1S( op= o, a = p[0]);
+	}else{
+		return new Prim2S(op=o, a=p[0], b=p[1]);
+	}
+} 
+
+opcode intToOpcode (int op){
+	if (op == 0) return new Oplus();
+	if (op == 1) return new Ominus();
+	if (op == 2) return new Oneg();
+	if (op == 3) return new Oand();
+	if (op == 4) return new Oor();
+	if (op == 5) return new Onot();
+	if (op == 6) return new Olt();
+	return new Ogt();
+}
+
+srcAST gN(int n){
+	return new NumS( val=n);
+}
+

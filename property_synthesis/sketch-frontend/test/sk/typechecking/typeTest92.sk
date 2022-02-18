@@ -1,0 +1,18 @@
+
+
+pragma options "--debug-show-dag ";
+
+
+bit sll(int t);
+
+
+generator void malloc() {
+    if (true) return;
+    assume(sll(0));
+}
+
+
+harness void insSecond(bit active) {
+    malloc();
+    assert active && !active; // TypeError unsatisfiable assertion.
+}

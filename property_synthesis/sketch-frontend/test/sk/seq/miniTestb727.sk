@@ -1,0 +1,13 @@
+// Lambda expression creates a specialized function using
+// the variable that is passed
+
+int apply(fun f, int x) {	
+	return f(x);
+}
+
+harness void main(){	
+	int four = 4;
+	
+    assert apply((y) -> y + 1, four) == 5;
+    assert apply((y)->y, four)== 4;
+}

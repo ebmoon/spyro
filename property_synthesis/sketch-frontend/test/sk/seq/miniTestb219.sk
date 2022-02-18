@@ -1,0 +1,5 @@
+harness void lala(int x)
+{
+  int t = x * ??;
+  assert (t == x + x);
+}

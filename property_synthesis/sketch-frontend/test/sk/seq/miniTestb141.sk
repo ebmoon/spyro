@@ -1,0 +1,25 @@
+pragma options "--bnd-intbits 32";
+
+generator int moo(int i){ /* automatically rewritten */
+	assert i > i-1;
+	return i;		
+}
+
+generator int voo(int i){ /* automatically rewritten */
+	assert i < i - 1;
+	return i;	
+}
+
+
+int spec(int i) {
+	return i;	
+}
+
+int foo(int i) implements spec{
+
+	if(i < i + 1){
+		return moo(i);
+	}
+	
+	return voo(i);	
+}

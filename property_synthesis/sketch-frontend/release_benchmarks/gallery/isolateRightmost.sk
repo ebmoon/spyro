@@ -1,0 +1,24 @@
+//@Description Sketch to isolate the rightmost 0 index using only bit-vector operations.
+
+int W = 32;
+
+bit[W] isolate0 (bit[W] x) {     
+	bit[W] ret = 0;
+	for (int i = 0; i < W; i++)  
+		if (!x[i]) { ret[i] = 1; return ret;  } 
+}
+
+generator bit[W] gen(bit[W] x, int bnd){
+    assert bnd > 0;
+    if(??) return x;
+    if(??) return ??;
+    if(??) return ~gen(x, bnd-1);
+    if(??){
+        return {| gen(x, bnd-1) (+ | & | ^) gen(x, bnd-1) |};
+    }
+}
+
+bit[W] isolate0sk (bit[W] x)  implements isolate0 {		
+	return gen(x, 3);
+}
+

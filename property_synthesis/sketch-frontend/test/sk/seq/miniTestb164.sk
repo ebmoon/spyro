@@ -1,0 +1,17 @@
+pragma options "--bnd-unroll-amnt 4 --debug-show-dag";
+
+int test(int x) {
+	
+	while(x < 6){
+		x = x-1;
+		if(x < 3) return x;		
+	}	
+	
+	return x;	
+}
+
+int spec(int x)implements test{
+	if({| x (> | <) ?? |}) return {| x (+|-) ??  | ??|};
+	if({| x (> | <) ?? |}) return {| x (+|-) ??  | ??|};	
+	return {| x (+|-) ??  | ??|};	
+}
