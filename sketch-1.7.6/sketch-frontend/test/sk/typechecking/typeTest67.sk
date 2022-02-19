@@ -1,8 +1,0 @@
-
-
-harness bit bug2(int sz) {
-
-    int[sz - 3] bad; // TypeError negative indexes not allowed.
-    int x = bad[0];
-    return x > 0;
-}

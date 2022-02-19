@@ -1,9 +1,0 @@
-// Cannot return lambda
-
-fun error() {
-	return () -> 5; //TypeError
-} 
-
-harness void main() { 	
- 	assert error() == 5;
-}

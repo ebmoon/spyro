@@ -1,4 +1,0 @@
-harness void main() {
-  fun1@name(); // TypeError
-  assert true;
-}

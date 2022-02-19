@@ -1,8 +1,0 @@
-package FUFU;
-
-generator int gen(fun f){
-    if(??){
-        return gen(f) + gen(f);
-    }
-    return f();
-}

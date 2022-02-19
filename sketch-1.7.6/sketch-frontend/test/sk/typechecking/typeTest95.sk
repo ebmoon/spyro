@@ -1,9 +1,0 @@
-
-
-
-@inrange("y:a:b")
-harness void main(int x){ // TypeError
-    int t = x + ??;
-    assert t < 0;
-}
-

@@ -1,3 +1,0 @@
-harness void main(int x){
-	assert (?? * x == x+x);
-}

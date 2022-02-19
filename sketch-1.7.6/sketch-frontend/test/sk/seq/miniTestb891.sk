@@ -1,9 +1,0 @@
-
-include "stack.skh";
-
-harness void main(int x){
-    Stack<int> stack = new Nil<int>();
-    stack = push(stack, x);
-    assert peek(stack) == x;
-    pop(stack);    
-}

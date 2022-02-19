@@ -1,9 +1,0 @@
-int ufu(int a);/* Uninterpreted function */ /* automatically rewritten */
-
-int faa(int s){	
-	return ufu(s) * ufu(s+1); 
-}
-
-int sk(int s) implements faa{	
-	return ufu(s) * ufu(s+1); 
-}

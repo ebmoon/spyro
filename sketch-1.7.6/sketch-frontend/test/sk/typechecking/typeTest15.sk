@@ -1,8 +1,0 @@
-pragma options "--fe-fpencoding AS_FIXPOINT";
-
-
-harness void main(int i, int j){
-    double x = (double) i;
-    double y = 0; //TypeError
-    assert x >= y;
-}

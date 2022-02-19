@@ -1,4 +1,0 @@
-libcegis_a-SolveFromInput.o: InputParser/SolveFromInput.cpp \
-  InputParser/SolveFromInput.h
-
-InputParser/SolveFromInput.h:

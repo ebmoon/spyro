@@ -1,8 +1,0 @@
-
-harness void main(int in){
-    int t = in+1;
-    int x = t + 1;
-    t = t -1;
-    assert x == t + ??;
-    
-}

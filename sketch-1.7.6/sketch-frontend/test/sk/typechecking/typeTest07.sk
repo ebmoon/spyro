@@ -1,8 +1,0 @@
-
-int foo(){
-    return 0;
-}
-
-harness void main(){
-    assert 2.0 + foo() > 0.0; // TypeError
-}

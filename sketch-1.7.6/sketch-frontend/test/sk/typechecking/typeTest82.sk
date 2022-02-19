@@ -1,8 +1,0 @@
-struct Car { //TypeError
-  int id;
-  fun gear; // NullPointerException
-}
-
-harness void main() {
-  assert true;
-}
