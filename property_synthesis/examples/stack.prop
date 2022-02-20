@@ -1,0 +1,184 @@
+//@Description Sketch to reverse a list.
+pragma options "--bnd-unroll-amnt 10";
+
+struct node {
+	node next;
+	int val;	
+}
+
+struct stack {
+	node top;
+}
+
+void push(stack s, int val, ref stack ret) {
+    assert s != null;
+
+    node n = new node();
+    n.val = val;
+    n.next = s.top;
+
+    ret = new stack();   
+    ret.top = n;
+}
+
+void pop(stack s, ref stack out_stack, ref int out_val) {
+    assert s != null;
+    assert s.top != null;
+    
+    out_stack = new stack();
+    out_stack.top = s.top.next;
+    out_val = s.top.val;
+}
+
+boolean node_equal(node n1, node n2) {
+    if (n1 == null || n2 == null) {
+        return n1 == n2;
+    } else {
+        return n1.val == n2.val && node_equal(n1.next, n2.next);
+    }
+}
+
+boolean stack_equal(stack s1, stack s2) {
+    if (s1 == null || s2 == null) {
+        return s1 == s2;
+    } else {
+        return node_equal(s1.top, s2.top);
+    }
+}
+
+generator int intGen(int x, int y) {
+   int t = ??;
+   if(t == 0){ return x; }
+   if(t == 1){ return y; }
+}
+
+generator stack stackGen(stack s1, stack s2, stack s3, stack s4) {
+    int t = ??;
+    if (t == 0) { return s1; }
+    if (t == 1) { return s2; }
+    if (t == 2) { return s3; }
+    if (t == 3) { return s4; }
+}
+
+generator boolean atomicPropertyGen(
+    stack push_input_stack, int push_input_val, stack push_out_stack, 
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+) { /* automatically rewritten */
+    int t = ??;
+
+    int leftInt = intGen(push_input_val, pop_out_val);
+    int rightInt = intGen(push_input_val, pop_out_val);
+
+    if(t == 0) { return leftInt < rightInt; }
+    if(t == 1) { return leftInt <= rightInt; }
+    if(t == 2) { return leftInt == rightInt; }
+
+    stack leftStack = stackGen(
+        push_input_stack, push_out_stack, 
+        pop_input_stack, pop_out_stack
+    );
+    stack rightStack = stackGen(
+        push_input_stack, push_out_stack, 
+        pop_input_stack, pop_out_stack
+    );
+
+    if(t == 3) { return stack_equal(leftStack, rightStack); }
+}
+
+
+generator boolean propertyGen(
+    stack push_input_stack, int push_input_val, stack push_out_stack, 
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+) { /* automatically rewritten */
+    int t = ??;
+
+    boolean leftBool = propertyGen(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
+
+    boolean rightBool = propertyGen(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
+    
+    boolean atomicBool = atomicPropertyGen(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
+
+    if(t == 0) { return leftBool || rightBool; }
+    if(t == 1) { return !atomicBool; }
+}
+
+boolean property(
+    stack push_input_stack, int push_input_val, stack push_out_stack, 
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+) {
+    return propertyGen(
+        push_input_stack, push_input_val, push_out_stack, 
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
+}
+
+boolean obtained_property(
+    stack push_input_stack, int push_input_val, stack push_out_stack, 
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+) {
+    return OBTAINED_PROPERTY;
+}
+
+boolean check_soundness = false;
+boolean check_precision = false;
+boolean find_maxsat = false;
+
+harness void maxsat() {
+
+}
+
+harness void soundness() {
+    int push_input_val = ??;
+    stack push_input_stack = ??;
+    stack push_out_stack;
+
+    stack pop_input_stack = ??;
+    stack pop_out_stack;
+    int pop_out_val;
+
+    push(push_input_stack, push_input_val, push_out_stack);   
+    pop(pop_input_stack, pop_out_stack, pop_out_val);
+
+    if (check_soundness) {
+        // new positive example c is not included in [[ phi ]]
+        // c in [[ P ]] since output variables are the result of implementation
+        assert !obtained_property(
+            push_input_stack, push_input_val, push_out_stack,
+            pop_input_stack, pop_out_val, pop_out_stack
+        );
+    }
+}
+
+
+harness void precision() {
+    stack push_input_stack = ??;
+    int push_input_val = ??;
+    stack push_out_stack = ??;
+
+    stack pop_input_stack = ??; 
+    int pop_out_val = ?? ;
+    stack pop_out_stack = ??;
+
+    if (check_precision) {
+        // new negative example c is in [[ phi ]]
+        assert obtained_property(
+            push_input_stack, push_input_val, push_out_stack,
+            pop_input_stack, pop_out_val, pop_out_stack
+        );
+
+        // new negative example c is not in [[ phi' ]]
+        assert !property(
+            push_input_stack, push_input_val, push_out_stack,
+            pop_input_stack, pop_out_val, pop_out_stack
+        );
+    }
+}
