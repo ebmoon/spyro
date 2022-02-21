@@ -130,14 +130,6 @@ boolean obtained_property(
     return true;
 }
 
-boolean check_soundness = false;
-boolean check_precision = true;
-boolean find_maxsat = false;
-
-harness void maxsat() {
-
-}
-
 harness void soundness() {
     int push_input_val = ??;
     stack push_input_stack = ??;
@@ -150,14 +142,12 @@ harness void soundness() {
     push(push_input_stack, push_input_val, push_out_stack);   
     pop(pop_input_stack, pop_out_stack, pop_out_val);
 
-    if (check_soundness) {
-        // new positive example c is not included in [[ phi ]]
-        // c in [[ P ]] since output variables are the result of implementation
-        assert !obtained_property(
-            push_input_stack, push_input_val, push_out_stack,
-            pop_input_stack, pop_out_val, pop_out_stack
-        );
-    }
+    // new positive example c is not included in [[ phi ]]
+    // c in [[ P ]] since output variables are the result of implementation
+    assert !obtained_property(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
 }
 
 
@@ -170,17 +160,15 @@ harness void precision() {
     int pop_out_val = ?? ;
     stack pop_out_stack = ??;
 
-    if (check_precision) {
-        // new negative example c is in [[ phi ]]
-        assert obtained_property(
-            push_input_stack, push_input_val, push_out_stack,
-            pop_input_stack, pop_out_val, pop_out_stack
-        );
+    // new negative example c is in [[ phi ]]
+    assert obtained_property(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
 
-        // new negative example c is not in [[ phi' ]]
-        assert !property(
-            push_input_stack, push_input_val, push_out_stack,
-            pop_input_stack, pop_out_val, pop_out_stack
-        );
-    }
+    // new negative example c is not in [[ phi' ]]
+    assert !property(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
 }

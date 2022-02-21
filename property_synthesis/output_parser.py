@@ -45,6 +45,6 @@ class OutputParser:
 
         return negative_example_code
 
-    def parse_specification(self):
+    def parse_property(self):
         # TO-DO: Implement
         return ""

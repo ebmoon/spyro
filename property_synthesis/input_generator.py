@@ -29,42 +29,36 @@ class InputGenerator:
         self._soundness_code = soundness_code
         self._precision_code = precision_code
 
-        # The property obtained from the last synthesis
-        self._obtained_property = "false"
-
-    def set_obtained_property(self, obtained_property):
-        self._obtained_property = obtained_property
-
-    def _generate_common_part(self, positive_examples, negative_examples):
+    def _generate_common_part(self, phi, pos_examples, neg_examples):
         # TO-DO: Add positive example part
         # TO-DO: Add negative example part
 
-        code = self._implenetation.replace(
-            "OBTAINED_PROPERTY", self._obtained_property)
+        code = self._implenetation.replace("OBTAINED_PROPERTY", phi)
 
         return code       
 
-    def generate_soundness_input(self, positive_examples, negative_examples):
-        # TO-DO: Implement
+    def generate_synthesis_input(self, phi, pos_examples, neg_examples):
+        code = self._generate_common_part(phi, pos_examples, neg_examples)
 
-        code = self._generate_common_part(positive_examples, negative_examples)
+        return code
+
+    def generate_soundness_input(self, phi, pos_examples, neg_examples):
+        code = self._generate_common_part(phi, pos_examples, neg_examples)
         code += '\n'
         code += self._soundness_code
 
         return code
 
-    def generate_precision_input(self, positive_examples, negative_examples):
-        # TO-DO: Implement
-
-        code = self._generate_common_part(positive_examples, negative_examples)
+    def generate_precision_input(self, phi, pos_examples, neg_examples):
+        code = self._generate_common_part(phi, pos_examples, neg_examples)
         code += '\n'
         code += self._precision_code
 
         return code
 
-    def generate_maxsat_input(self, positive_examples, negative_examples):
+    def generate_maxsat_input(self, phi, pos_examples, neg_examples):
         # TO-DO: Implement
 
-        code = self._generate_common_part(positive_examples, negative_examples)
+        code = self._generate_common_part(phi, pos_examples, neg_examples)
 
         return code
