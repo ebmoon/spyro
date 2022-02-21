@@ -63,7 +63,7 @@ class PropertySynthesizer:
     def run(self):
         # TO-DO: Iteration
         path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
-        code = self._input_generator.generate_input([], [])
+        code = self._input_generator.generate_soundness_input([], [])
 
         write_tempfile(path, code)
         output = self._run_synthesizer_once(path)
