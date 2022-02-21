@@ -128,7 +128,7 @@ boolean obtained_property(
     return OBTAINED_PROPERTY;
 }
 
-boolean check_soundness = false;
+boolean check_soundness = true;
 boolean check_precision = false;
 boolean find_maxsat = false;
 

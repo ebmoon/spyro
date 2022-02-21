@@ -2,6 +2,7 @@ import subprocess
 import os
 
 from input_generator import InputGenerator
+from output_parser import OutputParser
 
 SKETCH_BINARY_PATH = "sketch-frontend/sketch"
 TEMP_FILE_PATH = "tmp/"
@@ -47,6 +48,10 @@ class PropertySynthesizer:
         # Sketch Input File Generator
         self._input_generator = InputGenerator(self._template)
 
+        # Initial list of positive/negative examples
+        self._pos_examples = []
+        self._neg_examples = []
+
     def _write_output(self, output):
         self._outfile.write(output)
 
@@ -62,4 +67,8 @@ class PropertySynthesizer:
 
         write_tempfile(path, code)
         output = self._run_synthesizer_once(path)
+        
+        output_parser = OutputParser(output)
+        output_parser.parse_positive_example()
+
         self._write_output(output)
