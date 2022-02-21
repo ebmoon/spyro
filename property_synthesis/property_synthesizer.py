@@ -69,6 +69,5 @@ class PropertySynthesizer:
         output = self._run_synthesizer_once(path)
         
         output_parser = OutputParser(output)
-        output_parser.parse_positive_example()
 
         self._write_output(output)

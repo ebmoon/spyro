@@ -16,8 +16,7 @@ class OutputParser:
         self._text = text
 
     def check_sat(self):
-        # TO-DO: Implement
-        return True
+        return ("*** Rejected" not in self._text)
 
     def _get_function_code_lines(self, function_name):
         lines = self._text.splitlines()
@@ -38,13 +37,18 @@ class OutputParser:
         positive_example_code = '\n'.join(soundness_code_lines[:-3])
         positive_example_code += '\n\tassert ' + property_call.strip()
 
-        print(positive_example_code)
-
         return positive_example_code
 
     def parse_negative_example(self):
-        # TO-DO: Implement
-        return ""
+        precision_code_lines = self._get_function_code_lines("precision")
+        precision_code_lines = ['\t' + line.strip() for line in precision_code_lines]
+
+        property_call = remove_last_argument(precision_code_lines[-2])
+
+        negative_example_code = '\n'.join(precision_code_lines[:-6])
+        negative_example_code += '\n\tassert !' + property_call.strip()
+
+        return negative_example_code
 
     def parse_specification(self):
         # TO-DO: Implement

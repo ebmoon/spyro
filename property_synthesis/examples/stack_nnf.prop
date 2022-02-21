@@ -1,5 +1,6 @@
 //@Description Sketch to reverse a list.
 pragma options "--bnd-unroll-amnt 10";
+pragma options "--bnd-inline-amnt 20";
 
 struct node {
 	node next;
@@ -60,7 +61,7 @@ generator stack stackGen(stack s1, stack s2, stack s3, stack s4) {
     if (t == 3) { return s4; }
 }
 
-generator boolean propertyGen(
+generator boolean atomicPropertyGen(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
     stack pop_input_stack, int pop_out_val, stack pop_out_stack
 ) { /* automatically rewritten */
@@ -83,6 +84,14 @@ generator boolean propertyGen(
     );
 
     if(t == 3) { return stack_equal(leftStack, rightStack); }
+}
+
+
+generator boolean propertyGen(
+    stack push_input_stack, int push_input_val, stack push_out_stack, 
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+) { /* automatically rewritten */
+    int t = ??;
 
     boolean leftBool = propertyGen(
         push_input_stack, push_input_val, push_out_stack,
@@ -93,9 +102,15 @@ generator boolean propertyGen(
         push_input_stack, push_input_val, push_out_stack,
         pop_input_stack, pop_out_val, pop_out_stack
     );
+    
+    boolean atomicBool = atomicPropertyGen(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack
+    );
 
-    if(t == 4) { return leftBool || rightBool; }
-    if(t == 5) { return !leftBool; }
+    if(t == 0) { return leftBool || rightBool; }
+    if(t == 1) { return !atomicBool; }
+    if(t == 2) { return atomicBool; }
 }
 
 boolean property(
