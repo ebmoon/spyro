@@ -60,8 +60,24 @@ class PropertySynthesizer:
         self._is_sound = False
         self._is_precise = True
 
+        # Print all the steps
+        self._verbose = True
+
+        # Number of sketch call
+        self._iterator = 0
+
     def _write_output(self, output):
         self._outfile.write(output)
+
+    def _get_new_tempfile_path(self):
+        path = TEMP_FILE_PATH
+        path += self._tempfile_name
+        # path += '_{}'.format(self._iterator)
+        path += ".sk"
+
+        self._iterator += 1
+
+        return path        
 
     def _try_synthesis(self, path):
         try:
@@ -70,7 +86,10 @@ class PropertySynthesizer:
             return None
 
     def _run_synthesize(self):
-        path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
+        if self._verbose:
+            print(f'Iteration {self._iterator}: Try synthesis')
+
+        path = self._get_new_tempfile_path()
         code = self._input_generator \
             .generate_synthesis_input(
                 self._phi, self._pos_examples, self._neg_examples)        
@@ -85,7 +104,10 @@ class PropertySynthesizer:
             return None
 
     def _run_soundness_check(self):
-        path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
+        if self._verbose:
+            print(f'Iteration {self._iterator}: Check soundenss')
+
+        path = self._get_new_tempfile_path()
         code = self._input_generator \
             .generate_soundness_input(
                 self._phi, self._pos_examples, self._neg_examples)        
@@ -101,7 +123,10 @@ class PropertySynthesizer:
             return (True, None)
 
     def _run_precision_check(self):
-        path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
+        if self._verbose:
+            print(f'Iteration {self._iterator}: Check precision')
+
+        path = self._get_new_tempfile_path()
         code = self._input_generator \
             .generate_precision_input(
                 self._phi, self._pos_examples, self._neg_examples)        
@@ -118,6 +143,9 @@ class PropertySynthesizer:
             return (True, None, None)
 
     def _run_max_sat(self):
+        if self._verbose:
+            print(f'Iteration {self._iterator}: Run MaxSat')
+
         path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
         code = self._input_generator \
             .generate_maxsat_input(
@@ -142,13 +170,19 @@ class PropertySynthesizer:
                 else:
                     self._phi = phi
                 
-            # Deterministic. Do we need nondeterministic choice?
-            if not self._is_sound:
+            check_soundness = bool(random.getrandbits(1))
+            if check_soundness:
+                if self._is_sound:
+                    continue
+
                 self._is_sound, e = self._run_soundness_check()
                 if not self._is_sound:
                     self._is_precise = False
                     self._pos_examples.append(e)
             else:
+                if self._is_precise:
+                    continue
+
                 self._is_precise, e, phi = self._run_precision_check()
                 if not self._is_precise:
                     self._is_sound = False
@@ -156,4 +190,4 @@ class PropertySynthesizer:
                     self._neg_examples.append(e)
 
         print("Obtained a best L-property")
-        self._outfile.write(self._phi)
+        self._write_output(self._phi)

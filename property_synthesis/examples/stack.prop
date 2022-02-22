@@ -99,7 +99,8 @@ generator boolean propertyGen(
     );
 
     if(t == 4) { return leftBool || rightBool; }
-    if(t == 5) { return !leftBool; }
+    if(t == 5) { return leftBool && rightBool; }
+    if(t == 6) { return !leftBool; }
 }
 
 void property(

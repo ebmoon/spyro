@@ -33,7 +33,7 @@ class InputGenerator:
         # TO-DO: Add positive example part
         # TO-DO: Add negative example part
 
-        code = self._implenetation.replace("OBTAINED_PROPERTY", phi)
+        code = self._implenetation.replace('OBTAINED_PROPERTY', phi)
 
         for i, pos_example in enumerate(pos_examples):
             code += '\n'
