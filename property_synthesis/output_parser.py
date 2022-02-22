@@ -1,17 +1,14 @@
 from util import *
 
-def remove_last_argument(text):
+def replace_last_argument(text, var):
     start = text.rfind(",")
     end = text.rfind(")")
 
-    return text[:start] + text[end:]
+    return text[:start] + ', out' + text[end:]
 
 class OutputParser:
     def __init__(self, text):
         self._text = text
-
-    def check_sat(self):
-        return ("*** Rejected" not in self._text)
 
     def _get_function_code_lines(self, function_name):
         lines = self._text.splitlines()
@@ -27,10 +24,12 @@ class OutputParser:
         soundness_code_lines = ['\t' + line.strip() for line in soundness_code_lines]
 
         property_call = soundness_code_lines[-2].replace("obtained_property", "property")
-        property_call = remove_last_argument(property_call)
+        property_call = replace_last_argument(property_call, 'out')
 
         positive_example_code = '\n'.join(soundness_code_lines[:-3])
-        positive_example_code += '\n\tassert ' + property_call.strip()
+        positive_example_code += '\n\tboolean out;'
+        positive_example_code += '\n' + property_call
+        positive_example_code += '\n\tassert out;' 
 
         return positive_example_code
 
@@ -38,13 +37,19 @@ class OutputParser:
         precision_code_lines = self._get_function_code_lines("precision")
         precision_code_lines = ['\t' + line.strip() for line in precision_code_lines]
 
-        property_call = remove_last_argument(precision_code_lines[-2])
+        property_call = replace_last_argument(precision_code_lines[-2], 'out')
 
         negative_example_code = '\n'.join(precision_code_lines[:-6])
-        negative_example_code += '\n\tassert !' + property_call.strip()
+        negative_example_code += '\n\tboolean out;'
+        negative_example_code += '\n' + property_call
+        negative_example_code += '\n\tassert !out;'
 
         return negative_example_code
 
     def parse_property(self):
-        # TO-DO: Implement
-        return ""
+        property_code_lines = self._get_function_code_lines("property")
+        property_code_lines = ['\t' + line.strip() for line in property_code_lines]
+
+        property_code = '\n'.join(property_code_lines)
+
+        return property_code.strip()

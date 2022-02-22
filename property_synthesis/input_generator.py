@@ -35,6 +35,16 @@ class InputGenerator:
 
         code = self._implenetation.replace("OBTAINED_PROPERTY", phi)
 
+        for i, pos_example in enumerate(pos_examples):
+            code += '\n'
+            code += 'harness void positive_example_{} ()'.format(i)
+            code += ' {\n' + pos_example + '\n}\n'
+
+        for i, neg_example in enumerate(neg_examples):
+            code += '\n'
+            code += 'harness void negative_example_{} ()'.format(i)
+            code += ' {\n' + neg_example + '\n}\n'      
+
         return code       
 
     def generate_synthesis_input(self, phi, pos_examples, neg_examples):

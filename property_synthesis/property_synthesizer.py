@@ -54,41 +54,47 @@ class PropertySynthesizer:
         self._neg_examples = []
         
         # Synthesized property
-        self._phi = "false"
+        self._phi = "out = false;"
 
         # Boolean variables for iteration
         self._is_sound = False
-        self._is_precise = False
+        self._is_precise = True
 
     def _write_output(self, output):
         self._outfile.write(output)
 
+    def _try_synthesis(self, path):
+        try:
+            return subprocess.check_output([SKETCH_BINARY_PATH, path])
+        except subprocess.CalledProcessError as e:
+            return None
+
     def _run_synthesize(self):
         path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
-        code = self._input_generator
+        code = self._input_generator \
             .generate_synthesis_input(
                 self._phi, self._pos_examples, self._neg_examples)        
-        
-        write_tempfile(path, code)
-        output = subprocess.check_output([SKETCH_BINARY_PATH, path])
 
-        output_parser = OutputParser(output)
-        if output_parser.check_sat:
+        write_tempfile(path, code)
+        output = self._try_synthesis(path)
+
+        if output != None:
+            output_parser = OutputParser(output)
             return output_parser.parse_property()
         else:
             return None
 
     def _run_soundness_check(self):
         path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
-        code = self._input_generator
+        code = self._input_generator \
             .generate_soundness_input(
                 self._phi, self._pos_examples, self._neg_examples)        
         
         write_tempfile(path, code)
-        output = subprocess.check_output([SKETCH_BINARY_PATH, path])
+        output = self._try_synthesis(path)
 
-        output_parser = OutputParser(output)
-        if output_parser.check_sat:
+        if output != None:
+            output_parser = OutputParser(output)
             pos_example = output_parser.parse_positive_example() 
             return (False, pos_example)
         else:
@@ -96,23 +102,23 @@ class PropertySynthesizer:
 
     def _run_precision_check(self):
         path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
-        code = self._input_generator
+        code = self._input_generator \
             .generate_precision_input(
                 self._phi, self._pos_examples, self._neg_examples)        
         
         write_tempfile(path, code)
-        output = subprocess.check_output([SKETCH_BINARY_PATH, path])
+        output = self._try_synthesis(path)
 
-        output_parser = OutputParser(output)
-        if output_parser.check_sat:
+        if output != None:
+            output_parser = OutputParser(output)
             neg_example = output_parser.parse_negative_example() 
             phi = output_parser.parse_property()
-            return (False, pos_example, phi)
+            return (False, neg_example, phi)
         else:
             return (True, None, None)
 
     def _run_max_sat(self):
-        # TO-DO: Impelment
+        # TO-DO: Implement
 
         return ""
 
@@ -128,8 +134,8 @@ class PropertySynthesizer:
                 else:
                     self._phi = phi
                 
-            check_soundness = bool(random.getrandbits(1))
-            if check_soundness:
+            # Deterministic. Do we need nondeterministic choice?
+            if not self._is_sound:
                 self._is_sound, e = self._run_soundness_check()
                 if not self._is_sound:
                     self._is_precise = False

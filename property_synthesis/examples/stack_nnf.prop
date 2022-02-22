@@ -1,6 +1,6 @@
 //@Description Sketch to reverse a list.
-pragma options "--bnd-unroll-amnt 10";
-pragma options "--bnd-inline-amnt 20";
+pragma options "--bnd-unroll-amnt 20";
+pragma options "--bnd-inline-amnt 50";
 
 struct node {
 	node next;

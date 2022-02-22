@@ -38,11 +38,11 @@ boolean node_equal(node n1, node n2) {
     }
 }
 
-boolean stack_equal(stack s1, stack s2) {
+void stack_equal(stack s1, stack s2, ref boolean out) {
     if (s1 == null || s2 == null) {
-        return s1 == s2;
+        out = s1 == s2;
     } else {
-        return node_equal(s1.top, s2.top);
+        out = node_equal(s1.top, s2.top);
     }
 }
 
@@ -82,7 +82,11 @@ generator boolean propertyGen(
         pop_input_stack, pop_out_stack
     );
 
-    if(t == 3) { return stack_equal(leftStack, rightStack); }
+    if(t == 3) { 
+        boolean out;
+        stack_equal(leftStack, rightStack, out); 
+        return out;
+    }
 
     boolean leftBool = propertyGen(
         push_input_stack, push_input_val, push_out_stack,
@@ -98,21 +102,23 @@ generator boolean propertyGen(
     if(t == 5) { return !leftBool; }
 }
 
-boolean property(
+void property(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
-    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack, 
+    ref boolean out
 ) {
-    return propertyGen(
+    out = propertyGen(
         push_input_stack, push_input_val, push_out_stack, 
         pop_input_stack, pop_out_val, pop_out_stack
     );
 }
 
-boolean obtained_property(
+void obtained_property(
     stack push_input_stack, int push_input_val, stack push_out_stack, 
-    stack pop_input_stack, int pop_out_val, stack pop_out_stack
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack,
+    ref boolean out
 ) {
-    return OBTAINED_PROPERTY;
+    OBTAINED_PROPERTY
 }
 
 harness void soundness() {
@@ -129,10 +135,13 @@ harness void soundness() {
     
     // new positive example c is not included in [[ phi ]]
     // c in [[ P ]] since output variables are the result of implementation
-    assert !obtained_property(
+    
+    boolean out;
+    obtained_property(
         push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack
+        pop_input_stack, pop_out_val, pop_out_stack, out
     );
+    assert !out;
 }
 
 
@@ -146,14 +155,18 @@ harness void precision() {
     stack pop_out_stack = ??;
 
     // new negative example c is in [[ phi ]]
-    assert obtained_property(
+    boolean out_1;
+    obtained_property(
         push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack
+        pop_input_stack, pop_out_val, pop_out_stack, out_1
     );
+    assert out_1;
 
     // new negative example c is not in [[ phi' ]]
-    assert !property(
+    boolean out_2;
+    property(
         push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack
+        pop_input_stack, pop_out_val, pop_out_stack, out_2
     );
+    assert !out_2;
 }
