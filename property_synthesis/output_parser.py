@@ -46,6 +46,17 @@ class OutputParser:
 
         return negative_example_code
 
+    def parse_maxsat(self, neg_examples):
+        maxsat_code_lines = self._get_function_code_lines("maxsat") 
+        maxsat_code = "\n".join(maxsat_code_lines)
+
+        used_neg_examples = []
+        for i, e in enumerate(neg_examples):
+            if 'negative_example_{}'.format(i) in maxsat_code:
+                used_neg_examples.append(e)
+        
+        return used_neg_examples
+
     def parse_property(self):
         property_code_lines = self._get_function_code_lines("property")
         property_code_lines = ['\t' + line.strip() for line in property_code_lines]

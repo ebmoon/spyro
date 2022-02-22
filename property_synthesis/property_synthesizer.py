@@ -65,7 +65,7 @@ class PropertySynthesizer:
 
     def _try_synthesis(self, path):
         try:
-            return subprocess.check_output([SKETCH_BINARY_PATH, path])
+            return subprocess.check_output([SKETCH_BINARY_PATH, path], stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
             return None
 
@@ -118,19 +118,27 @@ class PropertySynthesizer:
             return (True, None, None)
 
     def _run_max_sat(self):
-        # TO-DO: Implement
+        path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
+        code = self._input_generator \
+            .generate_maxsat_input(
+                self._phi, self._pos_examples, self._neg_examples)        
+        
+        write_tempfile(path, code)
+        output = self._try_synthesis(path)
 
-        return ""
+        if output != None:
+            output_parser = OutputParser(output)
+            neg_examples = output_parser.parse_maxsat(self._neg_examples) 
+            return neg_examples
+        else:
+            raise Error("MaxSat Failed")
 
     def run(self):
         while not self._is_sound or not self._is_precise:
             if not self._is_sound and not self._is_precise:
                 phi = self._run_synthesize()
                 if phi == None:
-                    self._run_max_sat()
-                    # TO-DO: Update negative example
-                    print ("Error: Not implemented")
-                    break
+                    self._neg_examples = self._run_max_sat()
                 else:
                     self._phi = phi
                 
@@ -147,4 +155,5 @@ class PropertySynthesizer:
                     self._phi = phi
                     self._neg_examples.append(e)
 
-        return self._phi
+        print("Obtained a best L-property")
+        self._outfile.write(self._phi)

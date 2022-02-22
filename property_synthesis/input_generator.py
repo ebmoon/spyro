@@ -29,7 +29,7 @@ class InputGenerator:
         self._soundness_code = soundness_code
         self._precision_code = precision_code
 
-    def _generate_common_part(self, phi, pos_examples, neg_examples):
+    def _generate_common_part(self, phi, pos_examples, neg_examples, check_maxsat = False):
         # TO-DO: Add positive example part
         # TO-DO: Add negative example part
 
@@ -42,7 +42,10 @@ class InputGenerator:
 
         for i, neg_example in enumerate(neg_examples):
             code += '\n'
-            code += 'harness void negative_example_{} ()'.format(i)
+            if check_maxsat:
+                code += 'void negative_example_{} ()'.format(i)
+            else:   
+                code += 'harness void negative_example_{} ()'.format(i)
             code += ' {\n' + neg_example + '\n}\n'      
 
         return code       
@@ -67,8 +70,16 @@ class InputGenerator:
         return code
 
     def generate_maxsat_input(self, phi, pos_examples, neg_examples):
-        # TO-DO: Implement
+        num_neg_examples = len(neg_examples)
 
-        code = self._generate_common_part(phi, pos_examples, neg_examples)
+        code = self._generate_common_part(phi, pos_examples, neg_examples, True)
+        code += '\nharness void maxsat() {'
+        code += '\tint cnt = {};'.format(num_neg_examples)
+
+        for i in range(num_neg_examples):
+            code += '\n\tif (??) {{ cnt -= 1; negative_example_{}(); }}'.format(i)
+
+        code += '\n\tminimize(cnt);'
+        code += '\n}'
 
         return code
