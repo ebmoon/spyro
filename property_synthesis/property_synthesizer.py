@@ -35,7 +35,7 @@ def write_tempfile(path, code):
         f.write(code)
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile):       
+    def __init__(self, infile, outfile, verbose, soundness_first):       
         # Input/Output file stream
         self._infile = infile
         self._outfile = outfile
@@ -60,8 +60,9 @@ class PropertySynthesizer:
         self._is_sound = False
         self._is_precise = True
 
-        # Print all the steps
+        # Options
         self._verbose = True
+        self._check_soundness_first = True
 
         # Number of sketch call
         self._iterator = 0
@@ -169,8 +170,8 @@ class PropertySynthesizer:
                     self._neg_examples = self._run_max_sat()
                 else:
                     self._phi = phi
-                
-            check_soundness = bool(random.getrandbits(1))
+
+            check_soundness = not self._is_sound if self._check_soundness_first else bool(random.getrandbits(1))
             if check_soundness:
                 if self._is_sound:
                     continue

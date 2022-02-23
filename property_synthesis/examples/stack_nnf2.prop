@@ -1,5 +1,6 @@
 //@Description Sketch to reverse a list.
-pragma options "--bnd-unroll-amnt 10";
+pragma options "--bnd-unroll-amnt 20";
+pragma options "--bnd-inline-amnt 1000";
 
 struct node {
 	node next;
@@ -83,30 +84,29 @@ generator boolean propertyGen(
         pop_input_stack, pop_out_stack
     );
 
-    if(t == 4) { 
-        boolean out;
-        stack_equal(leftStack, rightStack, out); 
-        return out;
-    }
+    if(t == 4) { boolean out; stack_equal(leftStack, rightStack, out); return out; }
+    if(t == 5) { boolean out; stack_equal(leftStack, rightStack, out); return !out;}
 
-    if(t == 5) { 
-        boolean out;
-        stack_equal(leftStack, rightStack, out); 
-        return !out;
-    }
-
-    boolean leftBool = propertyGen(
+    // non-atomic
+    boolean nonatomicBool = propertyGen(
         push_input_stack, push_input_val, push_out_stack,
         pop_input_stack, pop_out_val, pop_out_stack
     );
 
-    boolean rightBool = propertyGen(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack
-    );
-
-    if(t == 6) { return leftBool || rightBool; }
-    if(t == 7) { return leftBool && rightBool; }
+    if(t == 6) { return (leftInt < rightInt) || nonatomicBool; }
+    if(t == 7) { return (leftInt <= rightInt) || nonatomicBool; }
+    if(t == 8) { return (leftInt == rightInt) || nonatomicBool; }
+    if(t == 9) { return (leftInt != rightInt) || nonatomicBool; }
+    if(t == 10) { 
+        boolean out; 
+        stack_equal(leftStack, rightStack, out); 
+        return out || nonatomicBool; 
+    }
+    if(t == 11) { 
+        boolean out; 
+        stack_equal(leftStack, rightStack, out); 
+        return !out || nonatomicBool;
+    }
 }
 
 void property(

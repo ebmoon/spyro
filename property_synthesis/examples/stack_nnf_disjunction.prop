@@ -106,7 +106,6 @@ generator boolean propertyGen(
     );
 
     if(t == 6) { return leftBool || rightBool; }
-    if(t == 7) { return leftBool && rightBool; }
 }
 
 void property(
