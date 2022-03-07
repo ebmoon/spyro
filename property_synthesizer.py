@@ -52,9 +52,12 @@ class PropertySynthesizer:
         # Initial list of positive/negative examples
         self._pos_examples = []
         self._neg_examples = []
+        self._discarded_examples = []
         
         # Synthesized property
         self._phi = "out = false;"
+        self._phi_conj = "out = true;"
+        self._phi_list = []
 
         # Boolean variables for iteration
         self._is_sound = False
@@ -66,6 +69,7 @@ class PropertySynthesizer:
 
         # Number of sketch call
         self._iterator = 0
+
 
     def _write_output(self, output):
         self._outfile.write(output)
@@ -162,33 +166,50 @@ class PropertySynthesizer:
         else:
             raise Error("MaxSat Failed")
 
-    def run(self):
-        while not self._is_sound or not self._is_precise:
-            if not self._is_sound and not self._is_precise:
+    def _synthesizeProperty(self):
+        is_sound = False
+        is_precise = True
+
+        while not is_sound or not is_precise:
+            if not is_sound and not is_precise:
                 phi = self._run_synthesize()
                 if phi == None:
                     self._neg_examples = self._run_max_sat()
                 else:
                     self._phi = phi
 
-            check_soundness = not self._is_sound if self._check_soundness_first else bool(random.getrandbits(1))
-            if check_soundness:
-                if self._is_sound:
+            if is_sound:
+                if is_sound:
                     continue
 
-                self._is_sound, e = self._run_soundness_check()
-                if not self._is_sound:
-                    self._is_precise = False
+                is_sound, e = self._run_soundness_check()
+                if not is_sound:
+                    is_precise = False
                     self._pos_examples.append(e)
             else:
-                if self._is_precise:
+                if is_precise:
                     continue
 
-                self._is_precise, e, phi = self._run_precision_check()
-                if not self._is_precise:
-                    self._is_sound = False
+                is_precise, e, phi = self._run_precision_check()
+                if not is_precise:
+                    is_sound = False
                     self._phi = phi
                     self._neg_examples.append(e)
 
+    def _check_adds_behavior(self):
+        # To-Do: Implement
+        return True
+
+    def _synthesizeAllProperties(self):
+        # To-Do: Implement
+        addsBehavior = False
+        while not addsBehavior:
+            self._synthesizeProperty()
+            if self._check_adds_behavior():
+                self._phi_list.append(self._phi)
+                # To-Do: Implement conjunction
+                # To-Do: Set initial set of negative examples
+
+    def run(self):
         print("Obtained a best L-property")
         self._write_output(self._phi)
