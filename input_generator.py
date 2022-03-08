@@ -1,42 +1,96 @@
 import os
 from util import *
 
-OBTAINED_PROPERTY_HOLE = "OBTAINED_PROPERTY"
+def split_section_from_code(code, section_name):
+    target = section_name
+    section_symbol_loc = code.find(target)
+    start = code.find('{', section_symbol_loc)
+    end = code.find('}', start)
 
-def split_function_from_code(code, function_name):
-    lines = code.splitlines()
+    section_content = code[start:end]
+    remainder = code[:section_symbol_loc] + code[end + 1:]
 
-    target = 'harness void ' + function_name
-    start = find_linenum_starts_with(lines, target)
-    end = find_linenum_starts_with(lines, '}', start)
+    return (remainder, section_content)
 
-    remainder = '\n'.join(lines[:start] + lines[end + 1:])
-    function = '\n'.join(lines[start:end+1])
+def split_var_section(section_content):
+    decls = [decl.strip().split() for decl in section_content.split(';')]
+    return [(decl[0], decl[1]) for decl in decls]
 
-    return (remainder, function)
+def split_relation_section(section_content):
+    return [rel.strip() for rel in section_content.split(';')]
 
 class InputGenerator:
+    # To-Do: Generate codes from variables and relations
 
     def __init__(self, code):
         # Input code
         self._code = code
 
         # Split input code into three parts
-        code, soundness_code = split_function_from_code(code, 'soundness')
-        code, precision_code = split_function_from_code(code, 'precision')
-        code, add_behavior_code = split_function_from_code(code, 'add_behavior')
+        code, variable_section = split_function_from_code(code, 'var')
+        code, relation_section = split_function_from_code(code, 'relation')
 
         self._implenetation = code
-        self._soundness_code = soundness_code
-        self._precision_code = precision_code
-        self._add_behavior_code = add_behavior_code
+        self._var_decls = split_var_section(variable_section)
+        self._relations = split_relation_section(relation_section)
 
-    def _generate_common_part(self, phi, phi_conj, pos_examples, neg_examples, check_maxsat = False):
-        # TO-DO: Add positive example part
-        # TO-DO: Add negative example part
+    def _arguments_defn(self):
+        return ','.join([typ + ' ' + symbol for typ, symbol in self._var_decls])
 
-        code = self._implenetation.replace('OBTAINED_PROPERTY', phi)
-        code = code.replace('PROPERTY_CONJ', phi_conj)
+    def _arguments(self):
+        return ','.join(symbol for _, symbol in self._var_decls)
+
+    def _variables_hole(self):
+        return '\n'.join(['\t' + typ + ' ' + symbol '= ???;' for typ, symbol in self._var_decls])
+
+    def _relations(self):
+        return '\n'.join(['\t' + rel + ';' for rel in self._relations])
+
+    def _soundness_code(self):
+        code = 'harness void soundness('
+        code += self._arguments_defn()
+        code += ') {\n'
+        code += self._variables_hole() + '\n\n'
+        code += self._relations() + '\n\n'
+        code += '\tboolean out;\n'
+        code += '\tobtained_property(' + self._arguments() + ',out);\n'
+        code += '\tassert !out;\n'
+        code += '}'
+
+        return code
+
+    def _precision_code(self):
+        # To-Do: Implement
+
+        return ''
+
+    def _add_behavior_code(self):
+        # To-Do: Implement
+
+        return ''
+
+    def _property_code(self):
+        # To-Do: Implement
+
+        return ''
+
+    def _obtained_property_code(self, phi):
+        # To-Do: Implement
+
+        return ''
+
+    def _prev_property_code(self, n):
+        # To-Do: Implement
+
+        return ''
+
+    def _property_conj_code(self, phi_list):
+        # To-Do: Implement
+
+        return ''
+
+    def _examples(self, pos_examples, neg_examples, check_maxsat = False):
+        code = ''
 
         for i, pos_example in enumerate(pos_examples):
             code += '\n'
