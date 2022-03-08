@@ -39,7 +39,7 @@ class OutputParser:
 
         property_call = replace_last_argument(precision_code_lines[-2], 'out')
 
-        negative_example_code = '\n'.join(precision_code_lines[:-6])
+        negative_example_code = '\n'.join(precision_code_lines[:-9])
         negative_example_code += '\n\tboolean out;'
         negative_example_code += '\n' + property_call
         negative_example_code += '\n\tassert !out;'
@@ -51,11 +51,14 @@ class OutputParser:
         maxsat_code = '\n'.join(maxsat_code_lines)
 
         used_neg_examples = []
+        discarded_examples = []
         for i, e in enumerate(neg_examples):
             if 'negative_example_{}'.format(i) in maxsat_code:
                 used_neg_examples.append(e)
+            else:
+                discarded_examples.append(e)
         
-        return used_neg_examples
+        return used_neg_examples, discarded_examples
 
     def parse_property(self):
         property_code_lines = self._get_function_code_lines('property')

@@ -51,6 +51,10 @@ void obtained_property(int x, int y, int o, ref boolean out){
     OBTAINED_PROPERTY
 }
 
+void property_conj(int x, int y, int o, ref boolean out){
+    PROPERTY_CONJ
+}
+
 harness void soundness() {
     int x = ??;
     int y = ??;
@@ -73,6 +77,24 @@ harness void precision() {
     assert out_1;
 
     boolean out_2;
-    property(x, y, o, out_2);
+    property_conj(x, y, o, out_2);
+    assert out_2;
+
+    boolean out_3;
+    property(x, y, o, out_3);
+    assert !out_3;
+}
+
+harness void add_behavior() {
+    int x = ??;
+    int y = ??;
+    int o = ??;
+
+    boolean out_1;
+    property_conj(x, y, o, out_1);
+    assert out_1;
+
+    boolean out_2;
+    obtained_property(x, y, o, out_2);
     assert !out_2;
 }

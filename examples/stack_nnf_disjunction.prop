@@ -127,6 +127,14 @@ void obtained_property(
     OBTAINED_PROPERTY
 }
 
+void property_conj(
+    stack push_input_stack, int push_input_val, stack push_out_stack, 
+    stack pop_input_stack, int pop_out_val, stack pop_out_stack,
+    ref boolean out
+) {
+    PROPERTY_CONJ
+}
+
 harness void soundness() {
     int push_input_val = ??;
     stack push_input_stack = ??;
@@ -170,7 +178,40 @@ harness void precision() {
 
     // new negative example c is not in [[ phi' ]]
     boolean out_2;
+    property_conj(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack, out_2
+    );
+    assert out_2;
+
+    // new negative example c is not in [[ phi' ]]
+    boolean out_3;
     property(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack, out_3
+    );
+    assert !out_3;
+}
+
+harness void add_behavior() {
+    stack push_input_stack = ??;
+    int push_input_val = ??;
+    stack push_out_stack = ??;
+
+    stack pop_input_stack = ??; 
+    int pop_out_val = ?? ;
+    stack pop_out_stack = ??;
+
+    boolean out_1;
+    property_conj(
+        push_input_stack, push_input_val, push_out_stack,
+        pop_input_stack, pop_out_val, pop_out_stack, out_1
+    );
+    assert out_1;
+
+    // new negative example c is not in [[ phi' ]]
+    boolean out_2;
+    obtained_property(
         push_input_stack, push_input_val, push_out_stack,
         pop_input_stack, pop_out_val, pop_out_stack, out_2
     );
