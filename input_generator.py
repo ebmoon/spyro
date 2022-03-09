@@ -47,47 +47,98 @@ class InputGenerator:
         return '\n'.join(['\t' + rel + ';' for rel in self._relations])
 
     def _soundness_code(self):
-        code = 'harness void soundness('
-        code += self._arguments_defn()
-        code += ') {\n'
+        code = 'harness void soundness() {\n'
         code += self._variables_hole() + '\n\n'
         code += self._relations() + '\n\n'
+        
         code += '\tboolean out;\n'
         code += '\tobtained_property(' + self._arguments() + ',out);\n'
         code += '\tassert !out;\n'
-        code += '}'
+        
+        code += '}\n\n'
 
         return code
 
     def _precision_code(self):
-        # To-Do: Implement
+        code = 'harness void precision() {\n'
+        code += self._variables_hole() + '\n\n'
+        
+        code += '\tboolean out_1;\n'
+        code += '\tobtained_property(' + self._arguments() + ',out_1);\n'
+        code += '\tassert out_1;\n\n'
 
-        return ''
+        code += '\tboolean out_2;\n'
+        code += '\tproperty_conj(' + self._arguments() + ',out_2);\n'
+        code += '\tassert out_2;\n\n'
+
+        code += '\tboolean out_3;\n'
+        code += '\tproperty(' + self._arguments() + ',out_3);\n'
+        code += '\tassert !out_3;\n'
+        code += '}\n\n'
+
+        return code
 
     def _add_behavior_code(self):
-        # To-Do: Implement
+        code = 'harness void adds_behavior() {\n'
+        code += self._variables_hole() + '\n\n'
+        
+        code += '\tboolean out_1;\n'
+        code += '\tproperty_conj(' + self._arguments() + ',out_1);\n'
+        code += '\tassert out_1;\n\n'
 
-        return ''
+        code += '\tboolean out_2;\n'
+        code += '\tobtained_property(' + self._arguments() + ',out_2);\n'
+        code += '\tassert !out_2;\n'
+        
+        code += '}\n\n'
+
+        return code
 
     def _property_code(self):
-        # To-Do: Implement
+        code = 'harness void property('
+        code += self._arguments_defn()
+        code += ',ref boolean out) {\n'
+        code += '\tout = propertyGen(' + self._arguments() + ');\n'
+        code += '}\n\n'
 
-        return ''
+        return code
 
     def _obtained_property_code(self, phi):
-        # To-Do: Implement
+        code = 'harness void obtained_property('
+        code += self._arguments_defn()
+        code += ',ref boolean out) {\n'
+        code += '\t' + phi + '\n'
+        code += '}\n\n'
 
-        return ''
+        return code
 
-    def _prev_property_code(self, n):
-        # To-Do: Implement
+    def _prev_property_code(self, i, phi):
+        code = f'harness void prev_property_{i}('
+        code += self._arguments_defn()
+        code += ',ref boolean out) {\n'
+        code += '\t' + phi + '\n'
+        code += '}\n\n'
 
-        return ''
+        return code
 
     def _property_conj_code(self, phi_list):
-        # To-Do: Implement
+        code = ''
 
-        return ''
+        for i, phi in enumerate(phi_list):
+            code += self._prev_property_code(i, phi) + '\n\n'      
+
+        code += 'harness void property_conj(
+        code += self._arguments_defn()
+        code += ',ref boolean out) {\n'
+
+        for i in range(len(phi_list)):
+            code += f'\tboolean out_{i};\n'
+            code += f'\tprev_property_{i}(' + self._arguments() + f',out_{i})\n\n' 
+
+        code += '\tout = ' + '&&'.join([f'out_{i}' for i in range(len(phi_list))]) + ';\n'
+        code += '}\n\n'
+
+        return code
 
     def _examples(self, pos_examples, neg_examples, check_maxsat = False):
         code = ''
@@ -107,43 +158,54 @@ class InputGenerator:
 
         return code       
 
-    def generate_synthesis_input(self, phi, phi_conj, pos_examples, neg_examples):
-        code = self._generate_common_part(phi, phi_conj, pos_examples, neg_examples)
+    def _maxsat(self, num_neg_examples):
+        code += 'harness void maxsat() {\n'
+        code += f'\tint cnt = {num_neg_examples};\n'
+
+        for i in range(num_neg_examples):
+            code += f'\tif (??) {{ cnt -= 1; negative_example_{i}(); }}\n'
+
+        code += '\tminimize(cnt);\n'
+        code += '}\n\n'
 
         return code
 
-    def generate_soundness_input(self, phi, phi_conj, pos_examples, neg_examples):
-        code = self._generate_common_part(phi, phi_conj, pos_examples, neg_examples)
-        code += '\n'
-        code += self._soundness_code
+    def generate_synthesis_input(self, phi, pos_examples, neg_examples):
+        code = self._implenetation
+        code += self._examples(pos_examples, neg_examples)
+        code += self._property_code()
 
         return code
 
-    def generate_precision_input(self, phi, phi_conj, pos_examples, neg_examples):
-        code = self._generate_common_part(phi, phi_conj, pos_examples, neg_examples)
-        code += '\n'
+    def generate_soundness_input(self, phi, pos_examples, neg_examples):
+        code = self._implenetation
+        code += self._obtained_property_code(phi)
+
+        return code
+
+    def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples):
+        code = self._implenetation
+        code += self._examples(pos_examples, neg_examples)
+        code += self._property_code()
+        code += self._obtained_property_code(phi)
+        code += self._property_conj_code(phi_list)
         code += self._precision_code
 
         return code
 
     def generate_maxsat_input(self, phi, phi_conj, pos_examples, neg_examples):
-        num_neg_examples = len(neg_examples)
-
-        code = self._generate_common_part(phi, phi_conj, pos_examples, neg_examples, True)
-        code += '\nharness void maxsat() {'
-        code += '\tint cnt = {};'.format(num_neg_examples)
-
-        for i in range(num_neg_examples):
-            code += '\n\tif (??) {{ cnt -= 1; negative_example_{}(); }}'.format(i)
-
-        code += '\n\tminimize(cnt);'
-        code += '\n}'
+        code = self._implenetation
+        code += self._examples(pos_examples, neg_examples, True)
+        code += self._property_code()
+        code += self._maxsat(len(neg_examples))
 
         return code
 
-    def generate_add_behavior_input(self, phi_conj, phi):
-        code = self._generate_common_part(phi, phi_conj, [], [])
-        code += '\n'
-        code += self._add_behavior_code
+    def generate_add_behavior_input(self, phi, phi_list):
+        code = self._implenetation
+        code += self._examples(pos_examples, neg_examples)
+        code += self._property_conj_code(phi_list)
+        code += self._obtained_property_code(phi)
+        code += self._add_behavior_code()
 
         return code
