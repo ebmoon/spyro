@@ -77,7 +77,7 @@ class PropertySynthesizer:
     def _get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self._tempfile_name
-        # path += '_{}'.format(self._iterator)
+        path += f'_{self._outer_iterator}_{self._inner_iterator}'
         path += ".sk"
 
         self._inner_iterator += 1
@@ -99,8 +99,7 @@ class PropertySynthesizer:
 
         path = self._get_new_tempfile_path()
         code = self._input_generator \
-            .generate_synthesis_input(
-                self._phi, self._phi_conj, self._pos_examples, self._neg_examples)        
+            .generate_synthesis_input(self._phi, self._pos_examples, self._neg_examples)        
 
         write_tempfile(path, code)
         output = self._try_synthesis(path)
@@ -117,8 +116,7 @@ class PropertySynthesizer:
 
         path = self._get_new_tempfile_path()
         code = self._input_generator \
-            .generate_soundness_input(
-                self._phi, self._phi_conj, self._pos_examples, self._neg_examples)        
+            .generate_soundness_input(self._phi, self._pos_examples, self._neg_examples)        
         
         write_tempfile(path, code)
         output = self._try_synthesis(path)
@@ -137,7 +135,7 @@ class PropertySynthesizer:
         path = self._get_new_tempfile_path()
         code = self._input_generator \
             .generate_precision_input(
-                self._phi, self._phi_conj, self._pos_examples, self._neg_examples)        
+                self._phi, self._phi_list, self._pos_examples, self._neg_examples)        
         
         write_tempfile(path, code)
         output = self._try_synthesis(path)
@@ -156,8 +154,7 @@ class PropertySynthesizer:
 
         path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
         code = self._input_generator \
-            .generate_maxsat_input(
-                self._phi, self._phi_conj, self._pos_examples, self._neg_examples)        
+            .generate_maxsat_input(self._pos_examples, self._neg_examples)        
         
         write_tempfile(path, code)
         output = self._try_synthesis(path)
@@ -209,7 +206,7 @@ class PropertySynthesizer:
 
         path = self._get_new_tempfile_path()
         code = self._input_generator \
-            .generate_add_behavior_input(self._phi_conj, self._phi)        
+            .generate_add_behavior_input(self._phi, self._phi_list)        
         
         write_tempfile(path, code)
         output = self._try_synthesis(path)
@@ -224,7 +221,8 @@ class PropertySynthesizer:
 
             self._phi_list.append(self._phi)
             self._add_prop_to_conjunction()
-            self._neg_examples = self._discarded_examples
+            self._neg_examples = []
+            # self._neg_examples = self._discarded_examples
             # To-Do: Checks whether e \models phi_conj
 
             print("Obtained a best L-property")

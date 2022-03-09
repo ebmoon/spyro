@@ -1,5 +1,15 @@
 //@Description Toy benchmarks to show complex recursive generators.
 
+var {
+    int x;
+    int y;
+    int o;
+}
+
+relation {
+    max2(x, y, o);
+}
+
 void max2(int x, int y, ref int out){
     if (x > y) {
         out = x;
@@ -8,7 +18,7 @@ void max2(int x, int y, ref int out){
     }
 }
 
-generator boolean boolGen(int x, int y, int o){ /* automatically rewritten */
+generator boolean propertyGen(int x, int y, int o){ /* automatically rewritten */
     int t = ??;
 
     int leftInt = intGen(x, y, o);
@@ -19,8 +29,8 @@ generator boolean boolGen(int x, int y, int o){ /* automatically rewritten */
     if(t == 2) { return leftInt == rightInt; }
     if(t == 3) { return leftInt != rightInt; }
 
-    boolean leftBool = boolGen(x, y, o);
-    boolean rightBool = boolGen(x, y, o);
+    boolean leftBool = propertyGen(x, y, o);
+    boolean rightBool = propertyGen(x, y, o);
 
     if(t == 4) { return leftBool || rightBool; }
 }
@@ -38,62 +48,4 @@ generator int intGen(int x, int y, int o) {
    if(t == 2){
      return o;
    }
-}
-
-
-void property( int x, int y, int o, ref boolean out ){
-   out = boolGen(x, y, o);
-}
-
-
-void obtained_property(int x, int y, int o, ref boolean out){
-    OBTAINED_PROPERTY
-}
-
-void property_conj(int x, int y, int o, ref boolean out){
-    PROPERTY_CONJ
-}
-
-harness void soundness() {
-    int x = ??;
-    int y = ??;
-    int o;
-    
-    max2(x, y, o);
-
-    boolean out;
-    obtained_property(x, y, o, out);
-    assert !out;
-}
-
-harness void precision() {
-    int x = ??;
-    int y = ??;
-    int o = ??;
-
-    boolean out_1;
-    obtained_property(x, y, o, out_1);
-    assert out_1;
-
-    boolean out_2;
-    property_conj(x, y, o, out_2);
-    assert out_2;
-
-    boolean out_3;
-    property(x, y, o, out_3);
-    assert !out_3;
-}
-
-harness void add_behavior() {
-    int x = ??;
-    int y = ??;
-    int o = ??;
-
-    boolean out_1;
-    property_conj(x, y, o, out_1);
-    assert out_1;
-
-    boolean out_2;
-    obtained_property(x, y, o, out_2);
-    assert !out_2;
 }

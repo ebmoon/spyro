@@ -1,5 +1,20 @@
 //@Description Sketch to reverse a list.
-pragma options "--bnd-unroll-amnt 10";
+pragma options "--bnd-unroll-amnt 20";
+
+var {
+    stack push_input_stack;
+    int push_input_val;
+    stack push_out_stack;
+
+    stack pop_input_stack;
+    int pop_out_val;
+    stack pop_out_stack;
+}
+
+relation {
+    push(push_input_stack, push_input_val, push_out_stack);
+    pop(pop_input_stack, pop_out_stack, pop_out_val);
+}
 
 struct node {
 	node next;
@@ -106,114 +121,4 @@ generator boolean propertyGen(
     );
 
     if(t == 6) { return leftBool || rightBool; }
-}
-
-void property(
-    stack push_input_stack, int push_input_val, stack push_out_stack, 
-    stack pop_input_stack, int pop_out_val, stack pop_out_stack, 
-    ref boolean out
-) {
-    out = propertyGen(
-        push_input_stack, push_input_val, push_out_stack, 
-        pop_input_stack, pop_out_val, pop_out_stack
-    );
-}
-
-void obtained_property(
-    stack push_input_stack, int push_input_val, stack push_out_stack, 
-    stack pop_input_stack, int pop_out_val, stack pop_out_stack,
-    ref boolean out
-) {
-    OBTAINED_PROPERTY
-}
-
-void property_conj(
-    stack push_input_stack, int push_input_val, stack push_out_stack, 
-    stack pop_input_stack, int pop_out_val, stack pop_out_stack,
-    ref boolean out
-) {
-    PROPERTY_CONJ
-}
-
-harness void soundness() {
-    int push_input_val = ??;
-    stack push_input_stack = ??;
-    stack push_out_stack;
-
-    stack pop_input_stack = ??;
-    stack pop_out_stack;
-    int pop_out_val;
-
-    push(push_input_stack, push_input_val, push_out_stack);   
-    pop(pop_input_stack, pop_out_stack, pop_out_val);
-    
-    // new positive example c is not included in [[ phi ]]
-    // c in [[ P ]] since output variables are the result of implementation
-    
-    boolean out;
-    obtained_property(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack, out
-    );
-    assert !out;
-}
-
-
-harness void precision() {
-    stack push_input_stack = ??;
-    int push_input_val = ??;
-    stack push_out_stack = ??;
-
-    stack pop_input_stack = ??; 
-    int pop_out_val = ?? ;
-    stack pop_out_stack = ??;
-
-    // new negative example c is in [[ phi ]]
-    boolean out_1;
-    obtained_property(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack, out_1
-    );
-    assert out_1;
-
-    // new negative example c is not in [[ phi' ]]
-    boolean out_2;
-    property_conj(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack, out_2
-    );
-    assert out_2;
-
-    // new negative example c is not in [[ phi' ]]
-    boolean out_3;
-    property(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack, out_3
-    );
-    assert !out_3;
-}
-
-harness void add_behavior() {
-    stack push_input_stack = ??;
-    int push_input_val = ??;
-    stack push_out_stack = ??;
-
-    stack pop_input_stack = ??; 
-    int pop_out_val = ?? ;
-    stack pop_out_stack = ??;
-
-    boolean out_1;
-    property_conj(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack, out_1
-    );
-    assert out_1;
-
-    // new negative example c is not in [[ phi' ]]
-    boolean out_2;
-    obtained_property(
-        push_input_stack, push_input_val, push_out_stack,
-        pop_input_stack, pop_out_val, pop_out_stack, out_2
-    );
-    assert !out_2;
 }
