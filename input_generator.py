@@ -78,8 +78,8 @@ class InputGenerator:
 
         return code
 
-    def _add_behavior_code(self):
-        code = 'harness void adds_behavior() {\n'
+    def _change_behavior_code(self):
+        code = 'harness void change_behavior() {\n'
         code += self._variables_hole() + '\n\n'
         
         code += '\tboolean out_1;\n'
@@ -205,10 +205,10 @@ class InputGenerator:
 
         return code
 
-    def generate_add_behavior_input(self, phi, phi_list):
+    def generate_change_behavior_input(self, phi, phi_list):
         code = self._implenetation
         code += self._property_conj_code(phi_list)
         code += self._obtained_property_code(phi)
-        code += self._add_behavior_code()
+        code += self._change_behavior_code()
 
         return code

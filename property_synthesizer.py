@@ -77,7 +77,7 @@ class PropertySynthesizer:
     def _get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self._tempfile_name
-        path += f'_{self._outer_iterator}_{self._inner_iterator}'
+        # path += f'_{self._outer_iterator}_{self._inner_iterator}'
         path += ".sk"
 
         self._inner_iterator += 1
@@ -86,7 +86,7 @@ class PropertySynthesizer:
 
     def _try_synthesis(self, path):
         try:
-            return subprocess.check_output([SKETCH_BINARY_PATH, path], stderr=subprocess.PIPE, timeout=60)
+            return subprocess.check_output([SKETCH_BINARY_PATH, path], stderr=subprocess.PIPE, timeout=120)
         except subprocess.CalledProcessError as e:
             return None
         except subprocess.TimeoutExpired as e:
@@ -200,13 +200,13 @@ class PropertySynthesizer:
         self._phi_conj += self._phi
         self._phi_conj += f'\n\tout = prev_out_{self._outer_iterator} && out;'
 
-    def _check_adds_behavior(self):
+    def _check_change_behavior(self):
         if self._verbose:
             print(f'Iteration {self._outer_iterator} : Check termination')
 
         path = self._get_new_tempfile_path()
         code = self._input_generator \
-            .generate_add_behavior_input(self._phi, self._phi_list)        
+            .generate_change_behavior_input(self._phi, self._phi_list)        
         
         write_tempfile(path, code)
         output = self._try_synthesis(path)
@@ -216,7 +216,7 @@ class PropertySynthesizer:
     def _synthesizeAllProperties(self):
         while True:
             self._synthesizeProperty()
-            if not self._check_adds_behavior():
+            if not self._check_change_behavior():
                 break
 
             self._phi_list.append(self._phi)

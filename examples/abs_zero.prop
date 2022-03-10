@@ -1,0 +1,47 @@
+//@Description Toy benchmarks to show complex recursive generators.
+
+var {
+    int x;
+    int y;
+    int o;
+    int zero;
+}
+
+relation {
+    abs(x - y, o);
+    zero = 0;
+}
+
+void abs(int x, ref int out){
+    if (x < 0) {
+        out = -x;
+    } else {
+        out = x;
+    }
+}
+
+generator boolean propertyGen(int x, int y, int o, int zero){ /* automatically rewritten */
+    int t = ??;
+
+    int leftInt = intGen(x, y, o, zero);
+    int rightInt = intGen(x, y, o, zero);
+
+    if(t == 0) { return leftInt < rightInt; }
+    if(t == 1) { return leftInt <= rightInt; }
+    if(t == 2) { return leftInt == rightInt; }
+    if(t == 3) { return leftInt != rightInt; }
+
+    boolean leftBool = propertyGen(x, y, o, zero);
+    boolean rightBool = propertyGen(x, y, o, zero);
+
+    if(t == 4) { return leftBool || rightBool; }
+}
+
+generator int intGen(int x, int y, int o, int zero) {
+   int t = ??;
+   if(t == 0) { return x - y; }
+   if(t == 1) { return y - x; }
+   if(t == 2) { return o; }
+   if(t == 3) { return -o; }
+   if(t == 4) { return zero; }
+}
