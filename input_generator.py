@@ -30,7 +30,7 @@ class InputGenerator:
         code, variable_section = split_section_from_code(code, 'var')
         code, relation_section = split_section_from_code(code, 'relation')
 
-        self._implenetation = code + '\n\n'
+        self._implenetation = code + '\n\n' + self._const_gen()
         self._var_decls = split_var_section(variable_section)
         self._relations = split_relation_section(relation_section)
 
@@ -41,10 +41,23 @@ class InputGenerator:
         return ','.join(symbol for _, symbol in self._var_decls)
 
     def _variables_hole(self):
-        return '\n'.join(['\t' + typ + ' ' + symbol + ' = ??;' for typ, symbol in self._var_decls])
+        def decl(typ, symbol):
+            hole = 'constGen()' if (typ == 'int') else '??'
+            return f'\t{typ} {symbol} = {hole};'
+
+        return '\n'.join([decl(typ, symbol) for typ, symbol in self._var_decls])
 
     def _relations_code(self):
         return '\n'.join(['\t' + rel + ';' for rel in self._relations])
+
+    def _const_gen(self):
+        code = 'generator int constGen() {\n'
+        code += '\tint t = ??;\n'
+        code += '\tif (t == 0) { return ??; }\n'
+        code += '\tif (t == 1) { return -1 * ??; }\n'
+        code += '}\n\n'
+
+        return code
 
     def _soundness_code(self):
         code = 'harness void soundness() {\n'
@@ -173,6 +186,20 @@ class InputGenerator:
 
         return code
 
+    def _model_check(self, neg_example):
+        code = 'harness void model_check() {\n'
+
+        neg_example = '\n'.join(neg_example.splitlines()[:-1])
+        code += neg_example.replace('property', 'property_conj')
+        code += '\tassert out;\n'
+
+        code += '\tboolean trivial_target = ??;\n'
+        code += '\tassert trivial_target;\n'
+
+        code += '}\n\n'
+
+        return code
+
     def generate_synthesis_input(self, phi, pos_examples, neg_examples):
         code = self._implenetation
         code += self._examples(pos_examples, neg_examples)
@@ -210,5 +237,12 @@ class InputGenerator:
         code += self._property_conj_code(phi_list)
         code += self._obtained_property_code(phi)
         code += self._change_behavior_code()
+
+        return code
+
+    def generate_model_check_input(self, phi_list, neg_example):
+        code = self._implenetation
+        code += self._property_conj_code(phi_list)
+        code += self._model_check(neg_example)
 
         return code

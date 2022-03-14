@@ -77,7 +77,7 @@ class PropertySynthesizer:
     def _get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self._tempfile_name
-        # path += f'_{self._outer_iterator}_{self._inner_iterator}'
+        path += f'_{self._outer_iterator}_{self._inner_iterator}'
         path += ".sk"
 
         self._inner_iterator += 1
@@ -213,6 +213,19 @@ class PropertySynthesizer:
 
         return output != None
 
+    def _model_check(self, neg_example):
+        if self._verbose:
+            print(f'Iteratoin {self._outer_iterator} : Model check')
+
+        path = self._get_new_tempfile_path()
+        code = self._input_generator \
+            .generate_model_check_input(self._phi_list, neg_example)
+
+        write_tempfile(path, code)
+        output = self._try_synthesis(path)
+
+        return output != None
+
     def _synthesizeAllProperties(self):
         while True:
             self._synthesizeProperty()
@@ -221,9 +234,8 @@ class PropertySynthesizer:
 
             self._phi_list.append(self._phi)
             self._add_prop_to_conjunction()
-            self._neg_examples = []
-            # self._neg_examples = self._discarded_examples
-            # To-Do: Checks whether e \models phi_conj
+            self._neg_examples = [e for e in self._discarded_examples if self._model_check(e)]
+            self._discarded_examples = []
 
             print("Obtained a best L-property")
             self._write_output(self._phi + '\n')
