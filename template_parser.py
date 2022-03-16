@@ -2,7 +2,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 
 tokens = (
-    'SPLITTER', 'ID', 'INTEGER',
+    'SPLITTER', 'ID', 'INT',
     'LPAREN', 'RPAREN', 'ARROW', 'COMMA', 'HOLE', 'SEMI',
     'LT', 'LE', 'GT', 'GE', 'AND', 'OR', 'NOT', 'EQ', 'NEQ',
     'PLUS', 'MINUS', 'TIMES', 'DIV'
@@ -10,7 +10,7 @@ tokens = (
 
 t_SPLITTER = r'\|'
 t_ID = r'[A-Za-z_][A-Za-z0-9_]*'
-t_INTEGER = r'\d+'
+t_INT = r'\d+'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_ARROW = r'->'
@@ -24,12 +24,17 @@ t_GE = r'>='
 t_AND = r'&&'
 t_OR = r'\|\|'
 t_NOT = r'!'
-t_NE = r'!='
 t_EQ = r'=='
+t_NEQ = r'!='
 t_PLUS = r'\+'
 t_MINUS = r'-'
 t_TIMES = r'\*'
 t_DIV = r'/'
+t_ignore = ' \t\r\n'
+
+def t_error(t):
+    print("Illegal character %s" % repr(t.value[0]))
+    t.lexer.skip(1)
 
 lexer = lex.lex(debug=0)
 
@@ -39,8 +44,18 @@ precedence = (
     ('right', 'UMINUS')
 )
 
-def p_rule_generator(p):
-    "rule : type symbol ARROW expr"
+def p_rulelist(p):
+    '''rulelist : rule
+                | rulelist rule'''
+
+    if len(p) > 2:
+        p[0] = p[1]
+        p[0].append(p[2])
+    else:
+        p[0] = [p[1]]       
+
+def p_rule(p):
+    "rule : type symbol ARROW exprlist SEMI"
     
     p[0] = (p[1], p[2], p[4])
 
@@ -53,6 +68,16 @@ def p_symbol(p):
     "symbol : ID"
     
     p[0] = p[1]
+
+def p_exprlist(p):
+    '''exprlist : expr
+                | exprlist SPLITTER expr'''
+
+    if len(p) > 2:
+        p[0] = p[1]
+        p[0].append(p[3])
+    else:
+        p[0] = [p[1]]    
 
 def p_expr_uminus(p):
     "expr : MINUS expr %prec UMINUS"
@@ -74,11 +99,21 @@ def p_expr_binop(p):
             | expr GT expr
             | expr GE expr
             | expr EQ expr
-            | expr NE expr
+            | expr NEQ expr
             | expr AND expr
             | expr OR expr'''
 
     p[0] = ('BINOP', p[2], p[1], p[3])
+
+def p_expr_var(p):
+    "expr : ID"
+
+    p[0] = ('VAR', p[1])
+
+def p_expr_num(p):
+    "expr : INT"
+
+    p[0] = ('INT', p[1])
 
 def p_expr_call(p):
     "expr : ID LPAREN args RPAREN"
@@ -95,9 +130,17 @@ def p_args(p):
     else:
         p[0] = [p[1]]
 
+def p_error(p):
+    if p:
+        print("Syntax error at '%s'" % p.value)
+    else:
+        print("Syntax error at EOF")
+
+parser = yacc.yacc()
+
 class TemplateParser():
     def __init__(self, template):
-            # Split input code into three parts
+        # Split input code into three parts
         template, variable_section = self.__split_section_from_code(template, 'var')
         template, relation_section = self.__split_section_from_code(template, 'relation')
         template, generator_section = self.__split_section_from_code(template, 'generator')
@@ -129,8 +172,8 @@ class TemplateParser():
 
     def __split_generator_section(self, section_content):
         # To-Do: Implement
-        rules = [rule.strip().split('->') for rule in section_content.split(';')[:-1]]
-
+        print(section_content)
+        print(parser.parse(section_content))
 
         return []
 

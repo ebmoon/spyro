@@ -15,7 +15,7 @@ generator {
 }
 
 example {
-    int -> ?? | -1 * ??;
+    int -> ?? | -1 * ?? ;
 }
 
 void abs(int x, ref int out){
