@@ -77,7 +77,7 @@ class PropertySynthesizer:
     def _get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self._tempfile_name
-        path += f'_{self._outer_iterator}_{self._inner_iterator}'
+        # path += f'_{self._outer_iterator}_{self._inner_iterator}'
         path += ".sk"
 
         self._inner_iterator += 1

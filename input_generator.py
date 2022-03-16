@@ -1,152 +1,108 @@
 import os
+from template_parser import TemplateParser
 from util import *
-
-def split_section_from_code(code, section_name):
-    target = section_name
-    section_symbol_loc = code.find(target)
-    start = code.find('{', section_symbol_loc)
-    end = code.find('}', start)
-
-    section_content = code[start+1:end]
-    remainder = code[:section_symbol_loc] + code[end + 1:]
-
-    return (remainder.strip(), section_content.strip())
-
-def split_var_section(section_content):
-    decls = [decl.strip().split() for decl in section_content.split(';')]
-    return [(decl[0], decl[1]) for decl in decls[:-1]]
-
-def split_relation_section(section_content):
-    return [rel.strip() for rel in section_content.split(';')[:-1]]
 
 class InputGenerator:
     # To-Do: Generate codes from variables and relations
 
     def __init__(self, code):
         # Input code
-        self._code = code
+        self.__template = TemplateParser(code)
 
-        # Split input code into three parts
-        code, variable_section = split_section_from_code(code, 'var')
-        code, relation_section = split_section_from_code(code, 'relation')
-
-        self._implenetation = code + '\n\n' + self._const_gen()
-        self._var_decls = split_var_section(variable_section)
-        self._relations = split_relation_section(relation_section)
-
-    def _arguments_defn(self):
-        return ','.join([typ + ' ' + symbol for typ, symbol in self._var_decls])
-
-    def _arguments(self):
-        return ','.join(symbol for _, symbol in self._var_decls)
-
-    def _variables_hole(self):
-        def decl(typ, symbol):
-            hole = 'constGen()' if (typ == 'int') else '??'
-            return f'\t{typ} {symbol} = {hole};'
-
-        return '\n'.join([decl(typ, symbol) for typ, symbol in self._var_decls])
-
-    def _relations_code(self):
-        return '\n'.join(['\t' + rel + ';' for rel in self._relations])
-
-    def _const_gen(self):
-        code = 'generator int constGen() {\n'
-        code += '\tint t = ??;\n'
-        code += '\tif (t == 0) { return ??; }\n'
-        code += '\tif (t == 1) { return -1 * ??; }\n'
-        code += '}\n\n'
-
-        return code
-
-    def _soundness_code(self):
+    def __soundness_code(self):
         code = 'harness void soundness() {\n'
-        code += self._variables_hole() + '\n\n'
-        code += self._relations_code() + '\n\n'
+        code += self.__template.get_variables_with_hole() + '\n\n'
+        code += self.__template.get_relations() + '\n\n'
         
         code += '\tboolean out;\n'
-        code += '\tobtained_property(' + self._arguments() + ',out);\n'
+        code += '\tobtained_property(' + self.__template.get_arguments_call() + ',out);\n'
         code += '\tassert !out;\n'
         
         code += '}\n\n'
 
         return code
 
-    def _precision_code(self):
+    def __precision_code(self):
         code = 'harness void precision() {\n'
-        code += self._variables_hole() + '\n\n'
+        code += self.__template.get_variables_with_hole() + '\n\n'
         
+        arguments = self.__template.get_arguments_call()
+
         code += '\tboolean out_1;\n'
-        code += '\tobtained_property(' + self._arguments() + ',out_1);\n'
+        code += '\tobtained_property(' + arguments + ',out_1);\n'
         code += '\tassert out_1;\n\n'
 
         code += '\tboolean out_2;\n'
-        code += '\tproperty_conj(' + self._arguments() + ',out_2);\n'
+        code += '\tproperty_conj(' + arguments + ',out_2);\n'
         code += '\tassert out_2;\n\n'
 
         code += '\tboolean out_3;\n'
-        code += '\tproperty(' + self._arguments() + ',out_3);\n'
+        code += '\tproperty(' + arguments + ',out_3);\n'
         code += '\tassert !out_3;\n'
         code += '}\n\n'
 
         return code
 
-    def _change_behavior_code(self):
+    def __change_behavior_code(self):
         code = 'harness void change_behavior() {\n'
-        code += self._variables_hole() + '\n\n'
+        code += self.__template.get_variables_with_hole() + '\n\n'
         
+        arguments = self.__template.get_arguments_call()
+
         code += '\tboolean out_1;\n'
-        code += '\tproperty_conj(' + self._arguments() + ',out_1);\n'
+        code += '\tproperty_conj(' + arguments + ',out_1);\n'
         code += '\tassert out_1;\n\n'
 
         code += '\tboolean out_2;\n'
-        code += '\tobtained_property(' + self._arguments() + ',out_2);\n'
+        code += '\tobtained_property(' + arguments + ',out_2);\n'
         code += '\tassert !out_2;\n'
         
         code += '}\n\n'
 
         return code
 
-    def _property_code(self):
+    def __property_code(self):
         code = 'void property('
-        code += self._arguments_defn()
+        code += self.__template.get_arguments_defn()
         code += ',ref boolean out) {\n'
-        code += '\tout = propertyGen(' + self._arguments() + ');\n'
+        code += '\tout = propertyGen(' + self.__template.get_arguments_call() + ');\n'
         code += '}\n\n'
 
         return code
 
-    def _obtained_property_code(self, phi):
+    def __obtained_property_code(self, phi):
         code = 'void obtained_property('
-        code += self._arguments_defn()
+        code += self.__template.get_arguments_defn()
         code += ',ref boolean out) {\n'
         code += '\t' + phi + '\n'
         code += '}\n\n'
 
         return code
 
-    def _prev_property_code(self, i, phi):
+    def __prev_property_code(self, i, phi):
         code = f'void prev_property_{i}('
-        code += self._arguments_defn()
+        code += self.__template.get_arguments_defn()
         code += ',ref boolean out) {\n'
         code += '\t' + phi + '\n'
         code += '}\n\n'
 
         return code
 
-    def _property_conj_code(self, phi_list):
+    def __property_conj_code(self, phi_list):
         code = ''
 
         for i, phi in enumerate(phi_list):
-            code += self._prev_property_code(i, phi) + '\n\n'      
+            code += self.__prev_property_code(i, phi) + '\n\n'      
 
         code += 'void property_conj('
-        code += self._arguments_defn()
+        code += self.__template.get_arguments_defn()
         code += ',ref boolean out) {\n'
 
         for i in range(len(phi_list)):
             code += f'\tboolean out_{i};\n'
-            code += f'\tprev_property_{i}(' + self._arguments() + f',out_{i});\n\n' 
+            code += f'\tprev_property_{i}(' 
+            code += self.__template.get_arguments_call() 
+            code += f',out_{i});\n\n' 
 
         if len(phi_list) == 0:
             code += '\tout = true;\n'
@@ -156,7 +112,7 @@ class InputGenerator:
 
         return code
 
-    def _examples(self, pos_examples, neg_examples, check_maxsat = False):
+    def __examples(self, pos_examples, neg_examples, check_maxsat = False):
         code = ''
 
         for i, pos_example in enumerate(pos_examples):
@@ -174,7 +130,7 @@ class InputGenerator:
 
         return code       
 
-    def _maxsat(self, num_neg_examples):
+    def __maxsat(self, num_neg_examples):
         code = 'harness void maxsat() {\n'
         code += f'\tint cnt = {num_neg_examples};\n'
 
@@ -186,7 +142,7 @@ class InputGenerator:
 
         return code
 
-    def _model_check(self, neg_example):
+    def __model_check(self, neg_example):
         code = 'harness void model_check() {\n'
 
         neg_example = '\n'.join(neg_example.splitlines()[:-1])
@@ -201,48 +157,48 @@ class InputGenerator:
         return code
 
     def generate_synthesis_input(self, phi, pos_examples, neg_examples):
-        code = self._implenetation
-        code += self._examples(pos_examples, neg_examples)
-        code += self._property_code()
+        code = self.__template.get_implementation()
+        code += self.__examples(pos_examples, neg_examples)
+        code += self.__property_code()
 
         return code
 
     def generate_soundness_input(self, phi, pos_examples, neg_examples):
-        code = self._implenetation
-        code += self._obtained_property_code(phi)
-        code += self._soundness_code()
+        code = self.__template.get_implementation()
+        code += self.__obtained_property_code(phi)
+        code += self.__soundness_code()
 
         return code
 
     def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples):
-        code = self._implenetation
-        code += self._examples(pos_examples, neg_examples)
-        code += self._property_code()
-        code += self._obtained_property_code(phi)
-        code += self._property_conj_code(phi_list)
-        code += self._precision_code()
+        code = self.__template.get_implementation()
+        code += self.__examples(pos_examples, neg_examples)
+        code += self.__property_code()
+        code += self.__obtained_property_code(phi)
+        code += self.__property_conj_code(phi_list)
+        code += self.__precision_code()
 
         return code
 
     def generate_maxsat_input(self, pos_examples, neg_examples):
-        code = self._implenetation
-        code += self._examples(pos_examples, neg_examples, True)
-        code += self._property_code()
-        code += self._maxsat(len(neg_examples))
+        code = self.__template.get_implementation()
+        code += self.__examples(pos_examples, neg_examples, True)
+        code += self.__property_code()
+        code += self.__maxsat(len(neg_examples))
 
         return code
 
     def generate_change_behavior_input(self, phi, phi_list):
-        code = self._implenetation
-        code += self._property_conj_code(phi_list)
-        code += self._obtained_property_code(phi)
-        code += self._change_behavior_code()
+        code = self.__template.get_implementation()
+        code += self.__property_conj_code(phi_list)
+        code += self.__obtained_property_code(phi)
+        code += self.__change_behavior_code()
 
         return code
 
     def generate_model_check_input(self, phi_list, neg_example):
-        code = self._implenetation
-        code += self._property_conj_code(phi_list)
-        code += self._model_check(neg_example)
+        code = self.__template.get_implementation()
+        code += self.__property_conj_code(phi_list)
+        code += self.__model_check(neg_example)
 
         return code

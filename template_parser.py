@@ -1,0 +1,62 @@
+import ply.lex as lex
+import ply.yacc as yacc
+
+class TemplateParser():
+    def __init__(self, template):
+            # Split input code into three parts
+        template, variable_section = self.__split_section_from_code(template, 'var')
+        template, relation_section = self.__split_section_from_code(template, 'relation')
+        # template, generator_section = self.__split_section_from_code(template, 'generator')
+        # template, example_section = self.__split_section_from_code(template, 'example')
+
+        self.__implenetation = template
+        self.__var_decls = self.__split_var_section(variable_section)
+        self.__relations = self.__split_relation_section(relation_section)
+        # self.__generators = self.__split_generator_section(generator_section)
+        # self.__example_generators = self.__split_example_section(example_section)
+
+    def __split_section_from_code(self, code, section_name):
+        target = section_name
+        section_symbol_loc = code.find(target)
+        start = code.find('{', section_symbol_loc)
+        end = code.find('}', start)
+
+        section_content = code[start+1:end]
+        remainder = code[:section_symbol_loc] + code[end + 1:]
+
+        return (remainder.strip(), section_content.strip())
+
+    def __split_var_section(self, section_content):
+        decls = [decl.strip().split() for decl in section_content.split(';')]
+        return [(decl[0], decl[1]) for decl in decls[:-1]]
+
+    def __split_relation_section(self, section_content):
+        return [rel.strip() for rel in section_content.split(';')[:-1]]
+
+    def __split_generator_section(self, section_content):
+        # To-Do: Implement
+        rules = [rule.split for rule in section_content.split(';')[:-1]]
+        return []
+
+    def __split_example_section(self, section_content):
+        # To-Do: Implement
+        return []
+
+    def get_implementation(self):
+        return self.__implenetation
+
+    def get_arguments_defn(self):
+        return ','.join([typ + ' ' + symbol for typ, symbol in self.__var_decls])
+
+    def get_arguments_call(self):
+        return ','.join(symbol for _, symbol in self.__var_decls)
+
+    def get_variables_with_hole(self):
+        def decl(typ, symbol):
+            hole = '??'
+            return f'\t{typ} {symbol} = {hole};'
+
+        return '\n'.join([decl(typ, symbol) for typ, symbol in self.__var_decls])
+
+    def get_relations(self):
+        return '\n'.join(['\t' + rel + ';' for rel in self.__relations])
