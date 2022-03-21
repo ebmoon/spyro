@@ -169,7 +169,7 @@ class InputGenerator:
             return sum_dict(d1, d2)
         elif expr[0] == 'UNARY':
             return self.__count_generator_calls(cxt, expr[2])
-        elif expr[0] == 'INT':
+        elif expr[0] == 'INT' or expr[0] == 'HOLE':
             return dict()
         elif expr[0] == 'VAR':
             return {expr[1] : 1} if expr[1] in cxt else dict()
@@ -218,6 +218,8 @@ class InputGenerator:
                 return (cxt, '', f'var_{symbol}_{count}')
             else:
                 return (cxt, '', symbol)
+        elif expr[0] == 'HOLE':
+            return (cxt, '', '??')
         elif expr[0] == 'FCALL':
             code = ''
             args = []
@@ -232,7 +234,7 @@ class InputGenerator:
             code += f'\t\t{expr[1]}({args_call},{fresh_var});\n'
             return (cxt, code, fresh_var)
         else:
-            raise Exception('Unhandled case')
+            raise Exception(f'Unhandled case: {expr}')
 
     def __rule_to_code(self, rule):
         typ = rule[0]
@@ -270,6 +272,30 @@ class InputGenerator:
         rules = self.__template.get_generator_rules()
         return '\n'.join([self.__rule_to_code(rule) for rule in rules]) + '\n'
 
+    def __example_rule_to_code(self, rule):
+        typ = rule[0]
+        exprlist = rule[1]
+
+        code = f'generator {typ} {typ}_gen() {{\n'
+        code += '\tint t = ??;\n'
+        
+        for n, e in enumerate(exprlist):
+            cxt_init = dict()
+            _, e_code, e_out = self.__expr_to_code(cxt_init, e)
+
+            code += f'\tif (t == {n}) {{\n'
+            code += e_code
+            code += f'\t\treturn {e_out};\n'
+            code += '\t}\n'
+
+        code += '}\n'
+
+        return code       
+
+    def __example_generators(self):
+        rules = self.__template.get_example_rules()
+        return '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
+
     def generate_synthesis_input(self, phi, pos_examples, neg_examples):
         code = self.__template.get_implementation()
         code += self.__examples(pos_examples, neg_examples)
@@ -280,6 +306,7 @@ class InputGenerator:
     def generate_soundness_input(self, phi, pos_examples, neg_examples):
         code = self.__template.get_implementation()
         code += self.__obtained_property_code(phi)
+        code += self.__example_generators()
         code += self.__soundness_code()
 
         return code
@@ -290,6 +317,7 @@ class InputGenerator:
         code += self.__property_code()
         code += self.__obtained_property_code(phi)
         code += self.__property_conj_code(phi_list)
+        code += self.__example_generators()
         code += self.__precision_code()
 
         return code
@@ -297,6 +325,7 @@ class InputGenerator:
     def generate_maxsat_input(self, pos_examples, neg_examples):
         code = self.__template.get_implementation()
         code += self.__examples(pos_examples, neg_examples, True)
+        code += self.__example_generators()
         code += self.__property_code()
         code += self.__maxsat(len(neg_examples))
 
@@ -306,6 +335,7 @@ class InputGenerator:
         code = self.__template.get_implementation()
         code += self.__property_conj_code(phi_list)
         code += self.__obtained_property_code(phi)
+        code += self.__example_generators()
         code += self.__change_behavior_code()
 
         return code
@@ -313,6 +343,7 @@ class InputGenerator:
     def generate_model_check_input(self, phi_list, neg_example):
         code = self.__template.get_implementation()
         code += self.__property_conj_code(phi_list)
+        code += self.__example_generators()
         code += self.__model_check(neg_example)
 
         return code
