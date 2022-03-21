@@ -144,7 +144,7 @@ class TemplateParser():
         template, variable_section = self.__split_section_from_code(template, 'var')
         template, relation_section = self.__split_section_from_code(template, 'relation')
         template, generator_section = self.__split_section_from_code(template, 'generator')
-        # template, example_section = self.__split_section_from_code(template, 'example')
+        template, example_section = self.__split_section_from_code(template, 'example')
 
         self.__implenetation = template
         self.__var_decls = self.__split_var_section(variable_section)
@@ -171,18 +171,20 @@ class TemplateParser():
         return [rel.strip() for rel in section_content.split(';')[:-1]]
 
     def __split_generator_section(self, section_content):
-        # To-Do: Implement
-        print(section_content)
-        print(parser.parse(section_content))
-
-        return []
+        return parser.parse(section_content)
 
     def __split_example_section(self, section_content):
         # To-Do: Implement
         return []
 
+    def get_context(self):
+        return {rule[1]:rule[0] for rule in self.__generators}
+
+    def get_generator_rules(self):
+        return self.__generators
+
     def get_implementation(self):
-        return self.__implenetation
+        return self.__implenetation + '\n\n'
 
     def get_arguments_defn(self):
         return ','.join([typ + ' ' + symbol for typ, symbol in self.__var_decls])

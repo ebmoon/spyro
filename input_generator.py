@@ -1,4 +1,5 @@
 import os
+import functools
 from template_parser import TemplateParser
 from util import *
 
@@ -8,6 +9,7 @@ class InputGenerator:
     def __init__(self, code):
         # Input code
         self.__template = TemplateParser(code)
+        self.__fresh_num = 0
 
     def __soundness_code(self):
         code = 'harness void soundness() {\n'
@@ -62,10 +64,14 @@ class InputGenerator:
         return code
 
     def __property_code(self):
-        code = 'void property('
+        property_gen_symbol = self.__template.get_generator_rules()[0][1]
+        arg_call = self.__template.get_arguments_call()
+
+        code = self.__generators() + '\n\n'
+        code += 'void property('
         code += self.__template.get_arguments_defn()
         code += ',ref boolean out) {\n'
-        code += '\tout = propertyGen(' + self.__template.get_arguments_call() + ');\n'
+        code += f'\tout = {property_gen_symbol}_gen({arg_call});\n'
         code += '}\n\n'
 
         return code
@@ -155,6 +161,114 @@ class InputGenerator:
         code += '}\n\n'
 
         return code
+
+    def __count_generator_calls(self, cxt, expr):
+        if expr[0] == 'BINOP':
+            d1 = self.__count_generator_calls(cxt, expr[2])
+            d2 = self.__count_generator_calls(cxt, expr[3])
+            return sum_dict(d1, d2)
+        elif expr[0] == 'UNARY':
+            return self.__count_generator_calls(cxt, expr[2])
+        elif expr[0] == 'INT':
+            return dict()
+        elif expr[0] == 'VAR':
+            return {expr[1] : 1} if expr[1] in cxt else dict()
+        elif expr[0] == 'FCALL':
+            dicts = [self.__count_generator_calls(cxt, e) for e in expr[2]]
+            return functools.reduce(sum_dict, dicts)
+        else:
+            raise Exception('Unhandled case')
+
+    def __subcall_gen(self, num_calls_prev, num_calls):
+        cxt = self.__template.get_context()
+        arg_call = self.__template.get_arguments_call()
+
+        code = ''
+        for symbol, n in num_calls.items():
+            if symbol not in num_calls_prev:
+                for i in range(n):
+                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {symbol}_gen({arg_call});\n'
+            elif num_calls_prev[symbol] < n:
+                for i in range(num_calls_prev[symbol], n):
+                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {symbol}_gen({arg_call});\n'
+
+        return code + '\n'
+
+    def __fresh_variable(self):
+        n = self.__fresh_variable
+        self.__fresh_variable += 1
+
+        return f'var_{n}'
+
+    def __expr_to_code(self, cxt, expr):
+        if expr[0] == 'BINOP':
+            cxt1, code1, out1 = self.__expr_to_code(cxt, expr[2])
+            cxt2, code2, out2 = self.__expr_to_code(cxt1, expr[3])
+            return (cxt2, code1 + code2, f'{out1} {expr[1]} {out2}')
+        elif expr[0] == 'UNARY':
+            cxt, code, out = self.__expr_to_code(cxt, expr[2])
+            return (cxt, code, f'{expr[1]} {out}')
+        elif expr[0] == 'INT':
+            return (cxt, '', expr[1])
+        elif expr[0] == 'VAR':
+            symbol = expr[1]
+            if symbol in cxt:
+                count = cxt[symbol]
+                cxt[symbol] += 1
+                return (cxt, '', f'var_{symbol}_{count}')
+            else:
+                return (cxt, '', symbol)
+        elif expr[0] == 'FCALL':
+            code = ''
+            args = []
+            for e in expr[2]:
+                cxt, code_sub, out_sub = self.__expr_to_code(cxt, e)
+                code += code_sub
+                args.append(out_sub)
+
+            args_call = ','.join(args)
+            fresh_var = self.__fresh_variable()
+            code += f'\t\tboolean {fresh_var};\n'
+            code += f'\t\t{expr[1]}({args_call},{fresh_var});\n'
+            return (cxt, code, fresh_var)
+        else:
+            raise Exception('Unhandled case')
+
+    def __rule_to_code(self, rule):
+        typ = rule[0]
+        symbol = rule[1]
+        exprlist = rule[2]
+
+        cxt = self.__template.get_context()
+        dicts = [self.__count_generator_calls(cxt, e) for e in exprlist]
+        num_calls = functools.reduce(max_dict, dicts)
+        num_calls_prev = dict()
+
+        arg_defn = self.__template.get_arguments_defn()
+
+        code = f'generator {typ} {symbol}_gen({arg_defn}) {{\n'
+        code += '\tint t = ??;\n'
+        
+        for n, e in enumerate(exprlist):
+            num_calls = self.__count_generator_calls(cxt, e)
+            code += self.__subcall_gen(num_calls_prev, num_calls)
+            num_calls_prev = max_dict(num_calls_prev, num_calls)
+
+            cxt_init = {k:0 for k in cxt.keys()}
+            _, e_code, e_out = self.__expr_to_code(cxt_init, e)
+
+            code += f'\tif (t == {n}) {{\n'
+            code += e_code
+            code += f'\t\treturn {e_out};\n'
+            code += '\t}\n'
+
+        code += '}\n'
+
+        return code
+
+    def __generators(self):
+        rules = self.__template.get_generator_rules()
+        return '\n'.join([self.__rule_to_code(rule) for rule in rules]) + '\n'
 
     def generate_synthesis_input(self, phi, pos_examples, neg_examples):
         code = self.__template.get_implementation()

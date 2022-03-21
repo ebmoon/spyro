@@ -165,7 +165,7 @@ class PropertySynthesizer:
             phi = output_parser.parse_property()
             return (neg_examples, discarded_examples, phi)
         else:
-            raise Error("MaxSat Failed")
+            raise Exception("MaxSat Failed")
 
     def _synthesizeProperty(self):
         is_sound = False
