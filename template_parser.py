@@ -15,6 +15,7 @@ class TemplateParser():
         self.__relations = self.__split_relation_section(relation_section)
         self.__generators = self.__split_generator_section(generator_section)
         self.__example_generators = self.__split_example_section(example_section)
+        self.__structs = self.__split_struct_definitions(template)
 
     def __split_section_from_code(self, code, section_name):
         target = section_name
@@ -39,6 +40,34 @@ class TemplateParser():
 
     def __split_example_section(self, section_content):
         return example_rule_parser.parser.parse(section_content)
+
+    def __parse_struct(self, code):
+        start = code.find('{')
+        end = code.find('}', start)
+
+        symbol = code[:start].strip().split()[1]
+        content = code[start+1:end]
+        decls = [line.strip().split() for line in content.split(';')[:-1]]
+        decl_pairs = [(decl[0], decl[1]) for decl in decls]
+
+        return (symbol, decl_pairs)
+
+    def __split_struct_definitions(self, code):
+        struct_list = []
+        while True:
+            target = 'struct'
+            struct_loc = code.find(target)
+            start = code.find('{', struct_loc)
+            end = code.find('}', start)
+            
+            if (struct_loc < 0):
+                break
+
+            struct_code = code[struct_loc:end+1]
+            code = code[:struct_loc] + code[end + 1:]
+            struct_list.append(struct_code.strip())
+
+        return [self.__parse_struct(code) for code in struct_list]
 
     def get_context(self):
         return {rule[1]:rule[0] for rule in self.__generators}
@@ -67,3 +96,6 @@ class TemplateParser():
 
     def get_relations(self):
         return '\n'.join(['\t' + rel + ';' for rel in self.__relations])
+
+    def get_structs(self):
+        return self.__structs

@@ -195,8 +195,8 @@ class InputGenerator:
         return code + '\n'
 
     def __fresh_variable(self):
-        n = self.__fresh_variable
-        self.__fresh_variable += 1
+        n = self.__fresh_num
+        self.__fresh_num += 1
 
         return f'var_{n}'
 
@@ -268,8 +268,30 @@ class InputGenerator:
 
         return code
 
+    def __struct_generator(self, st):
+        st_name = st[0]
+        elements = st[1]
+        var_name = 'tmp'
+
+        code = f'generator {st_name} {st_name}_gen() {{\n'
+        code += '\tint t = ??;\n'
+
+        code += f'\tif (t == 0) {{ return null; }}\n'
+        code += '\tif (t == 1) {\n'
+        code += f'\t\t{st_name} {var_name} = new {st_name}();\n'
+
+        for n, (typ, sym) in enumerate(elements):
+            code += f'\t\t{var_name}.{sym} = {typ}_gen();\n'
+
+        code += f'\t\treturn {var_name};\n'
+        code += '\t}\n'
+        code += '}\n'
+
+        return code
+
     def __generators(self):
         rules = self.__template.get_generator_rules()
+
         return '\n'.join([self.__rule_to_code(rule) for rule in rules]) + '\n'
 
     def __example_rule_to_code(self, rule):
@@ -290,11 +312,16 @@ class InputGenerator:
 
         code += '}\n'
 
-        return code       
+        return code    
 
     def __example_generators(self):
         rules = self.__template.get_example_rules()
-        return '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
+        structs = self.__template.get_structs()
+
+        code = '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
+        code += '\n'.join([self.__struct_generator(st) for st in structs]) + '\n'
+
+        return code
 
     def generate_synthesis_input(self, phi, pos_examples, neg_examples):
         code = self.__template.get_implementation()

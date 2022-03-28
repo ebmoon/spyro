@@ -37,54 +37,54 @@ def write_tempfile(path, code):
 class PropertySynthesizer:
     def __init__(self, infile, outfile, verbose, soundness_first):       
         # Input/Output file stream
-        self._infile = infile
-        self._outfile = outfile
+        self.__infile = infile
+        self.__outfile = outfile
         
         # Temporary filename for iteration
-        self._tempfile_name = get_tempfile_name(infile, outfile)
+        self.__tempfile_name = get_tempfile_name(infile, outfile)
         
         # Template for Sketch synthesis
-        self._template = infile.read()
+        self.__template = infile.read()
 
         # Sketch Input File Generator
-        self._input_generator = InputGenerator(self._template)
+        self.__input_generator = InputGenerator(self.__template)
 
         # Initial list of positive/negative examples
-        self._pos_examples = []
-        self._neg_examples = []
-        self._discarded_examples = []
+        self.__pos_examples = []
+        self.__neg_examples = []
+        self.__discarded_examples = []
         
         # Synthesized property
-        self._phi = "out = false;"
-        self._phi_conj = "out = true;"
-        self._phi_list = []
+        self.__phi = "out = false;"
+        self.__phi_conj = "out = true;"
+        self.__phi_list = []
 
         # Boolean variables for iteration
-        self._is_sound = False
-        self._is_precise = True
+        self.__is_sound = False
+        self.__is_precise = True
 
         # Options
-        self._verbose = True
-        self._check_soundness_first = True
+        self.__verbose = True
+        self.__check_soundness_first = True
 
         # Iterators for descriptive message
-        self._inner_iterator = 0
-        self._outer_iterator = 0
+        self.__inner_iterator = 0
+        self.__outer_iterator = 0
 
-    def _write_output(self, output):
-        self._outfile.write(output)
+    def __write_output(self, output):
+        self.__outfile.write(output)
 
-    def _get_new_tempfile_path(self):
+    def __get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
-        path += self._tempfile_name
+        path += self.__tempfile_name
         # path += f'_{self._outer_iterator}_{self._inner_iterator}'
         path += ".sk"
 
-        self._inner_iterator += 1
+        self.__inner_iterator += 1
 
         return path        
 
-    def _try_synthesis(self, path):
+    def __try_synthesis(self, path):
         try:
             return subprocess.check_output([SKETCH_BINARY_PATH, path], stderr=subprocess.PIPE, timeout=120)
         except subprocess.CalledProcessError as e:
@@ -93,16 +93,16 @@ class PropertySynthesizer:
             print("Timeout")
             return None
 
-    def _run_synthesize(self):
-        if self._verbose:
-            print(f'Iteration {self._outer_iterator} - {self._inner_iterator}: Try synthesis')
+    def __run_synthesize(self):
+        if self.__verbose:
+            print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Try synthesis')
 
-        path = self._get_new_tempfile_path()
-        code = self._input_generator \
-            .generate_synthesis_input(self._phi, self._pos_examples, self._neg_examples)        
+        path = self.__get_new_tempfile_path()
+        code = self.__input_generator \
+            .generate_synthesis_input(self.__phi, self.__pos_examples, self.__neg_examples)        
 
         write_tempfile(path, code)
-        output = self._try_synthesis(path)
+        output = self.__try_synthesis(path)
 
         if output != None:
             output_parser = OutputParser(output)
@@ -110,16 +110,16 @@ class PropertySynthesizer:
         else:
             return None
 
-    def _run_soundness_check(self):
-        if self._verbose:
-            print(f'Iteration {self._outer_iterator} - {self._inner_iterator}: Check soundenss')
+    def __run_soundness_check(self):
+        if self.__verbose:
+            print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Check soundenss')
 
-        path = self._get_new_tempfile_path()
-        code = self._input_generator \
-            .generate_soundness_input(self._phi, self._pos_examples, self._neg_examples)        
+        path = self.__get_new_tempfile_path()
+        code = self.__input_generator \
+            .generate_soundness_input(self.__phi, self.__pos_examples, self.__neg_examples)        
         
         write_tempfile(path, code)
-        output = self._try_synthesis(path)
+        output = self.__try_synthesis(path)
 
         if output != None:
             output_parser = OutputParser(output)
@@ -128,17 +128,17 @@ class PropertySynthesizer:
         else:
             return (True, None)
 
-    def _run_precision_check(self):
-        if self._verbose:
-            print(f'Iteration {self._outer_iterator} - {self._inner_iterator}: Check precision')
+    def __run_precision_check(self):
+        if self.__verbose:
+            print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Check precision')
 
-        path = self._get_new_tempfile_path()
-        code = self._input_generator \
+        path = self.__get_new_tempfile_path()
+        code = self.__input_generator \
             .generate_precision_input(
-                self._phi, self._phi_list, self._pos_examples, self._neg_examples)        
+                self.__phi, self.__phi_list, self.__pos_examples, self.__neg_examples)        
         
         write_tempfile(path, code)
-        output = self._try_synthesis(path)
+        output = self.__try_synthesis(path)
 
         if output != None:
             output_parser = OutputParser(output)
@@ -148,105 +148,105 @@ class PropertySynthesizer:
         else:
             return (True, None, None)
 
-    def _run_max_sat(self):
-        if self._verbose:
-            print(f'Iteration {self._outer_iterator} - {self._inner_iterator}: Run MaxSat')
+    def __run_max_sat(self):
+        if self.__verbose:
+            print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Run MaxSat')
 
-        path = TEMP_FILE_PATH + self._tempfile_name + ".sk"
-        code = self._input_generator \
-            .generate_maxsat_input(self._pos_examples, self._neg_examples)        
+        path = TEMP_FILE_PATH + self.__tempfile_name + ".sk"
+        code = self.__input_generator \
+            .generate_maxsat_input(self.__pos_examples, self.__neg_examples)        
         
         write_tempfile(path, code)
-        output = self._try_synthesis(path)
+        output = self.__try_synthesis(path)
 
         if output != None:
             output_parser = OutputParser(output)
-            neg_examples, discarded_examples = output_parser.parse_maxsat(self._neg_examples) 
+            neg_examples, discarded_examples = output_parser.parse_maxsat(self.__neg_examples) 
             phi = output_parser.parse_property()
             return (neg_examples, discarded_examples, phi)
         else:
             raise Exception("MaxSat Failed")
 
-    def _synthesizeProperty(self):
+    def __synthesizeProperty(self):
         is_sound = False
         is_precise = True
 
         while not is_sound or not is_precise:
             if not is_sound and not is_precise:
-                phi = self._run_synthesize()
+                phi = self.__run_synthesize()
                 if phi == None:
-                    neg_examples, discarded_examples, phi = self._run_max_sat()
-                    self._neg_examples = neg_examples
-                    self._discarded_examples += discarded_examples
-                    self._phi = phi
+                    neg_examples, discarded_examples, phi = self.__run_max_sat()
+                    self.__neg_examples = neg_examples
+                    self.__discarded_examples += discarded_examples
+                    self.__phi = phi
                 else:
-                    self._phi = phi
+                    self.__phi = phi
 
             if not is_sound:
-                is_sound, e = self._run_soundness_check()
+                is_sound, e = self.__run_soundness_check()
                 if not is_sound:
                     is_precise = False
-                    self._pos_examples.append(e)
+                    self.__pos_examples.append(e)
             else:
-                is_precise, e, phi = self._run_precision_check()
+                is_precise, e, phi = self.__run_precision_check()
                 if not is_precise:
                     is_sound = False
-                    self._phi = phi
-                    self._neg_examples.append(e)
+                    self.__phi = phi
+                    self.__neg_examples.append(e)
 
-    def _add_prop_to_conjunction(self):
-        self._phi_conj += f'\n\tboolean prev_out_{self._outer_iterator} = out;'
-        self._phi_conj += '\n\t'
-        self._phi_conj += self._phi
-        self._phi_conj += f'\n\tout = prev_out_{self._outer_iterator} && out;'
+    def __add_prop_to_conjunction(self):
+        self.__phi_conj += f'\n\tboolean prev_out_{self.__outer_iterator} = out;'
+        self.__phi_conj += '\n\t'
+        self.__phi_conj += self.__phi
+        self.__phi_conj += f'\n\tout = prev_out_{self.__outer_iterator} && out;'
 
-    def _check_change_behavior(self):
-        if self._verbose:
-            print(f'Iteration {self._outer_iterator} : Check termination')
+    def __check_change_behavior(self):
+        if self.__verbose:
+            print(f'Iteration {self.__outer_iterator} : Check termination')
 
-        path = self._get_new_tempfile_path()
-        code = self._input_generator \
-            .generate_change_behavior_input(self._phi, self._phi_list)        
+        path = self.__get_new_tempfile_path()
+        code = self.__input_generator \
+            .generate_change_behavior_input(self.__phi, self.__phi_list)        
         
         write_tempfile(path, code)
-        output = self._try_synthesis(path)
+        output = self.__try_synthesis(path)
 
         return output != None
 
-    def _model_check(self, neg_example):
-        if self._verbose:
-            print(f'Iteratoin {self._outer_iterator} : Model check')
+    def __model_check(self, neg_example):
+        if self.__verbose:
+            print(f'Iteratoin {self.__outer_iterator} : Model check')
 
-        path = self._get_new_tempfile_path()
-        code = self._input_generator \
-            .generate_model_check_input(self._phi_list, neg_example)
+        path = self.__get_new_tempfile_path()
+        code = self.__input_generator \
+            .generate_model_check_input(self.__phi_list, neg_example)
 
         write_tempfile(path, code)
-        output = self._try_synthesis(path)
+        output = self.__try_synthesis(path)
 
         return output != None
 
-    def _synthesizeAllProperties(self):
+    def __synthesizeAllProperties(self):
         while True:
-            self._synthesizeProperty()
-            if not self._check_change_behavior():
+            self.__synthesizeProperty()
+            if not self.__check_change_behavior():
                 break
 
-            self._phi_list.append(self._phi)
-            self._add_prop_to_conjunction()
-            self._neg_examples = [e for e in self._discarded_examples if self._model_check(e)]
-            self._discarded_examples = []
+            self.__phi_list.append(self.__phi)
+            self.__add_prop_to_conjunction()
+            self.__neg_examples = [e for e in self.__discarded_examples if self.__model_check(e)]
+            self.__discarded_examples = []
 
             print("Obtained a best L-property")
-            self._write_output(self._phi + '\n')
+            self.__write_output(self.__phi + '\n')
 
-            self._outer_iterator += 1
-            self._inner_iterator = 0
-            self._phi = "out = false;"
+            self.__outer_iterator += 1
+            self.__inner_iterator = 0
+            self.__phi = "out = false;"
 
     def run(self):
-        self._synthesizeAllProperties()
-        for i, phi in enumerate(self._phi_list):
-            self._write_output(f'Output {i}\n')
-            self._write_output(phi)
-            self._write_output('\n')    
+        self.__synthesizeAllProperties()
+        for i, phi in enumerate(self.__phi_list):
+            self.__write_output(f'Output {i}\n')
+            self.__write_output(phi)
+            self.__write_output('\n')    
