@@ -1,3 +1,7 @@
+//@Description Toy benchmarks to show complex recursive generators.
+pragma option "--bnd-inline-amnt 10"
+pragma option "--bnd-branch-amnt 10"
+
 var {
     int x;
     int o;
@@ -8,8 +12,10 @@ relation {
 }
 
 generator {
-    boolean B -> I < I | I == I | (I < I) || B | (I == I) || B;
-    int I -> C | C + I | C * I ;
+    boolean B -> AP | !AP | (AP || B) | (!AP || B) ;
+    boolean AP -> I < I | I == I ;
+    int I -> T | T * T ;
+    int T -> C | C + C ;
     int C -> 0 | 1 | x | o ;
 }
 
