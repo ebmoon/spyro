@@ -77,7 +77,7 @@ class PropertySynthesizer:
     def __get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self.__tempfile_name
-        # path += f'_{self._outer_iterator}_{self._inner_iterator}'
+        # path += f'_{self.__outer_iterator}_{self.__inner_iterator}'
         path += ".sk"
 
         self.__inner_iterator += 1
@@ -165,7 +165,10 @@ class PropertySynthesizer:
             phi = output_parser.parse_property()
             return (neg_examples, discarded_examples, phi)
         else:
-            raise Exception("MaxSat Failed")
+            neg_examples = []
+            discarded_examples = self.__neg_examples
+            phi = 'out = true;'
+            return (neg_examples, discarded_examples, phi)
 
     def __synthesizeProperty(self):
         is_sound = False

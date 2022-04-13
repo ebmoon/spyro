@@ -70,6 +70,11 @@ def p_expr_binop(p):
 
     p[0] = ('BINOP', p[2], p[1], p[3])
 
+def p_expr_paren(p):
+    "expr : LPAREN expr RPAREN"
+
+    p[0] = p[2]
+
 def p_expr_var(p):
     "expr : ID"
 
@@ -78,7 +83,7 @@ def p_expr_var(p):
 def p_expr_hole(p):
     "expr : HOLE"
 
-    p[0] = ('HOLE')
+    p[0] = ('HOLE', )
 
 def p_expr_num(p):
     "expr : INT"

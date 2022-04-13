@@ -2,23 +2,26 @@
 
 var {
     int x;
-    int y;
     int o;
 }
 
 relation {
-    max2(x, y, o);
+    abs(x, o);
 }
 
 generator {
     boolean B -> I < I | I <= I | I == I | I != I | B || B ;
-    int I -> x | y | o;
+    int I -> 0 | x | o | -x | -o | I + I ;
 }
 
-void max2(int x, int y, ref int out){
-    if (x > y) {
-        out = x;
+example {
+    int -> ?? | -1 * ?? ;
+}
+
+void abs(int x, ref int out){
+    if (x < 0) {
+        out = -x;
     } else {
-        out = y;
+        out = x;
     }
 }

@@ -39,6 +39,11 @@ def p_exprlist(p):
     else:
         p[0] = [p[1]]    
 
+def p_expr_paren(p):
+    "expr : LPAREN expr RPAREN"
+
+    p[0] = p[2]
+
 def p_expr_uminus(p):
     "expr : MINUS expr %prec UMINUS"
     

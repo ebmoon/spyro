@@ -177,7 +177,7 @@ class InputGenerator:
             dicts = [self.__count_generator_calls(cxt, e) for e in expr[2]]
             return functools.reduce(sum_dict, dicts)
         else:
-            raise Exception('Unhandled case')
+            raise Exception(f'Unhandled case: {expr[0]}')
 
     def __subcall_gen(self, num_calls_prev, num_calls):
         cxt = self.__template.get_context()
