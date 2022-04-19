@@ -76,9 +76,13 @@ def p_expr_var(p):
     p[0] = ('VAR', p[1])
 
 def p_expr_hole(p):
-    "expr : HOLE"
+    '''expr : HOLE
+            | HOLE LPAREN INT RPAREN'''
 
-    p[0] = ('HOLE',)
+    if len(p) > 2:
+        p[0] = ('HOLE', p[3])
+    else:
+        p[0] = ('HOLE', 0)
 
 def p_expr_num(p):
     "expr : INT"

@@ -10,11 +10,9 @@ relation {
 }
 
 generator {
-    boolean B -> AP | !AP | (AP || B) | (!AP || B) ;
-    boolean AP -> I < I | I == I ;
-    int I -> T | T * T ;
-    int T -> C | C + C ;
-    int C -> 0 | 1 | x | o ;
+    boolean B -> AP || AP || AP ;
+    boolean AP -> false | E < E | E == E | E != E ;
+    int E -> ??(3) * x + ??(3) * o + ??(3) * x * x + ??(3) * x * o + ??(3) * o * o + ??(3) ;
 }
 
 example {

@@ -219,7 +219,8 @@ class InputGenerator:
             else:
                 return (cxt, '', symbol)
         elif expr[0] == 'HOLE':
-            return (cxt, '', '??')
+            code = '??' if expr[1] == 0 else f'??({expr[1]})'
+            return (cxt, '', code)
         elif expr[0] == 'FCALL':
             code = ''
             args = []

@@ -71,6 +71,9 @@ class PropertySynthesizer:
         self.__inner_iterator = 0
         self.__outer_iterator = 0
 
+        self.__inline_bnd = 5
+        self.__inline_bnd_max = 10
+
     def __write_output(self, output):
         self.__outfile.write(output)
 
@@ -86,9 +89,15 @@ class PropertySynthesizer:
 
     def __try_synthesis(self, path):
         try:
-            return subprocess.check_output([SKETCH_BINARY_PATH, path], stderr=subprocess.PIPE, timeout=120)
+            return subprocess.check_output( \
+                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(self.__inline_bnd)], \
+                stderr=subprocess.PIPE, timeout=120)
         except subprocess.CalledProcessError as e:
-            return None
+            if (self.__inline_bnd < self.__inline_bnd_max):
+                self.__inline_bnd += 1
+                return self.__try_synthesis(path)
+            else:
+                return None
         except subprocess.TimeoutExpired as e:
             print("Timeout")
             return None
