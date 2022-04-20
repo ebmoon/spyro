@@ -10,6 +10,13 @@ class InputGenerator:
         # Input code
         self.__template = TemplateParser(code)
         self.__fresh_num = 0
+        self.__num_atom = 1
+
+    def set_num_atom(self, num_atom):
+        self.__num_atom = num_atom
+
+    def num_atom(self):
+        return self.__num_atom
 
     def __soundness_code(self):
         code = 'harness void soundness() {\n'
@@ -66,12 +73,20 @@ class InputGenerator:
     def __property_code(self):
         property_gen_symbol = self.__template.get_generator_rules()[0][1]
         arg_call = self.__template.get_arguments_call()
+        arg_defn = self.__template.get_arguments_defn()
+
+        atom_gen = f'{property_gen_symbol}_gen({arg_call})'
+        property_gen = ' || '.join([f'atom_{i}' for i in range(self.__num_atom)])
 
         code = self.__generators() + '\n\n'
-        code += 'void property('
-        code += self.__template.get_arguments_defn()
-        code += ',ref boolean out) {\n'
-        code += f'\tout = {property_gen_symbol}_gen({arg_call});\n'
+        code += f'generator boolean property_gen({arg_defn}) {{\n'
+        for i in range(self.__num_atom):
+            code += f'\tboolean atom_{i} = {atom_gen};\n'
+        code += f'\treturn {property_gen};\n'
+        code += '}\n\n'
+
+        code += f'void property({arg_defn},ref boolean out) {{\n'
+        code += f'\tout = property_gen({arg_call});\n'
         code += '}\n\n'
 
         return code

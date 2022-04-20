@@ -8,16 +8,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
-    parser.add_argument('--verbose', '-v', dest='verbose', action='store_true')
-    parser.add_argument('--soundness-first', '-s', dest='soundness_first', action='store_true')
+    parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', default=True)
+    parser.add_argument('--inline-bnd', dest='inline_bnd', type=int, nargs='?', default=5)
+    parser.add_argument('--inline-bnd-sound', dest='inline_bnd_sound', type=int, nargs='?', default=10)
+    parser.add_argument('--num-atom-max', dest='num_atom_max', type=int, nargs='?', default=5)
 
     args = parser.parse_args(sys.argv[1:])
     infile = args.infile
     outfile = args.outfile
     v = args.verbose
-    s = args.soundness_first
+    inline_bnd = args.inline_bnd
+    inline_bnd_sound = args.inline_bnd_sound
+    num_atom_max = args.num_atom_max
 
-    PropertySynthesizer(infile, outfile, True, True).run()
+    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max).run()
 
     infile.close()
     outfile.close()

@@ -35,7 +35,7 @@ def write_tempfile(path, code):
         f.write(code)
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, soundness_first):       
+    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max) :       
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
@@ -48,6 +48,7 @@ class PropertySynthesizer:
 
         # Sketch Input File Generator
         self.__input_generator = InputGenerator(self.__template)
+        self.__input_generator.set_num_atom(num_atom_max)
 
         # Initial list of positive/negative examples
         self.__pos_examples = []
@@ -55,7 +56,7 @@ class PropertySynthesizer:
         self.__discarded_examples = []
         
         # Synthesized property
-        self.__phi = "out = false;"
+        self.__phi = "out = true;"
         self.__phi_conj = "out = true;"
         self.__phi_list = []
 
@@ -71,8 +72,8 @@ class PropertySynthesizer:
         self.__inner_iterator = 0
         self.__outer_iterator = 0
 
-        self.__inline_bnd = 5
-        self.__inline_bnd_max = 10
+        self.__inline_bnd = inline_bnd
+        self.__inline_bnd_sound = inline_bnd_sound
 
     def __write_output(self, output):
         self.__outfile.write(output)
@@ -87,17 +88,14 @@ class PropertySynthesizer:
 
         return path        
 
-    def __try_synthesis(self, path):
+    def __try_synthesis(self, path, check_sound=False):
+        inline_bnd = self.__inline_bnd if not check_sound else self.__inline_bnd_sound
         try:
             return subprocess.check_output( \
-                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(self.__inline_bnd)], \
+                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(inline_bnd)], \
                 stderr=subprocess.PIPE, timeout=120)
         except subprocess.CalledProcessError as e:
-            if (self.__inline_bnd < self.__inline_bnd_max):
-                self.__inline_bnd += 1
-                return self.__try_synthesis(path)
-            else:
-                return None
+            return None
         except subprocess.TimeoutExpired as e:
             print("Timeout")
             return None
@@ -121,14 +119,14 @@ class PropertySynthesizer:
 
     def __run_soundness_check(self):
         if self.__verbose:
-            print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Check soundenss')
+            print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Check soundness')
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
             .generate_soundness_input(self.__phi, self.__pos_examples, self.__neg_examples)        
         
         write_tempfile(path, code)
-        output = self.__try_synthesis(path)
+        output = self.__try_synthesis(path, check_sound=True)
 
         if output != None:
             output_parser = OutputParser(output)
@@ -180,8 +178,9 @@ class PropertySynthesizer:
             return (neg_examples, discarded_examples, phi)
 
     def __synthesizeProperty(self):
-        is_sound = False
-        is_precise = True
+        # Set is_sound False to do MaxSat first, when number of neg examples is positive
+        is_sound = len(self.__neg_examples) == 0
+        is_precise = False
 
         while not is_sound or not is_precise:
             if not is_sound and not is_precise:
@@ -193,7 +192,7 @@ class PropertySynthesizer:
                     self.__phi = phi
                 else:
                     self.__phi = phi
-
+            
             if not is_sound:
                 is_sound, e = self.__run_soundness_check()
                 if not is_sound:
@@ -205,6 +204,20 @@ class PropertySynthesizer:
                     is_sound = False
                     self.__phi = phi
                     self.__neg_examples.append(e)
+            
+            '''
+            if not is_precise:
+                is_precise, e, phi = self.__run_precision_check()
+                if not is_precise:
+                    is_sound = False
+                    self.__phi = phi
+                    self.__neg_examples.append(e)
+            else:
+                is_sound, e = self.__run_soundness_check()
+                if not is_sound:
+                    is_precise = False
+                    self.__pos_examples.append(e)
+            '''
 
     def __add_prop_to_conjunction(self):
         self.__phi_conj += f'\n\tboolean prev_out_{self.__outer_iterator} = out;'
@@ -254,7 +267,7 @@ class PropertySynthesizer:
 
             self.__outer_iterator += 1
             self.__inner_iterator = 0
-            self.__phi = "out = false;"
+            self.__phi = "out = true;"
 
     def run(self):
         self.__synthesizeAllProperties()
