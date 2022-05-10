@@ -123,5 +123,16 @@ class TemplateParser():
     def get_relations(self):
         return '\n'.join(['\t' + rel + ';' for rel in self.__relations])
 
+    def get_copied_relations(self):
+        def copied_relation(rel):
+            start = rel.find('(')
+            end = rel.find(')', start)
+            arguments = rel[start+1:end].split(",")
+
+            copied_args = ",".join([arg.strip() + "_copy" for arg in arguments])
+            return rel[:start+1] + copied_args + rel[end:]
+
+        return '\n'.join(['\t' + copied_relation(rel) + ';' for rel in self.__relations])
+
     def get_structs(self):
         return self.__structs

@@ -71,9 +71,10 @@ class InputGenerator:
         int_arguments = self.__template.get_integer_arguments_call()
         copied_arguments = self.__template.get_copied_arguments_call()
         int_copied_arguments = self.__template.get_int_copied_arguments_call()
-        
+
         if minimize_dist:
             code += self.__template.get_copied_variables_with_hole() + '\n\n'
+            code += self.__template.get_copied_relations() + '\n\n'
             code += f'\tminimize(distance({int_arguments},{int_copied_arguments}));\n\n'
 
             code += '\tboolean out_copy;\n'
