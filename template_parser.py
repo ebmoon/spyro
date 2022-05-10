@@ -12,6 +12,7 @@ class TemplateParser():
 
         self.__implenetation = template
         self.__var_decls = self.__split_var_section(variable_section)
+        self.__int_decls = [(typ, symbol) for typ, symbol in self.__var_decls if typ == 'int']
         self.__relations = self.__split_relation_section(relation_section)
         self.__generators = self.__split_generator_section(generator_section)
         self.__example_generators = self.__split_example_section(example_section)
@@ -69,6 +70,9 @@ class TemplateParser():
 
         return [self.__parse_struct(code) for code in struct_list]
 
+    def get_int_symbols(self):
+        return self.__int_decls
+
     def get_context(self):
         return {rule[1]:rule[0] for rule in self.__generators}
 
@@ -84,13 +88,35 @@ class TemplateParser():
     def get_arguments_defn(self):
         return ','.join([typ + ' ' + symbol for typ, symbol in self.__var_decls])
 
+    def get_integer_arguments_defn(self):
+        return ','.join([typ + ' ' + symbol for typ, symbol in self.__int_decls])
+
+    def get_copied_arguments_defn(self):
+        return ','.join([typ + ' ' + symbol + '_copy' for typ, symbol in self.__int_decls])
+
     def get_arguments_call(self):
-        return ','.join(symbol for _, symbol in self.__var_decls)
+        return ','.join([symbol for _, symbol in self.__var_decls])
+
+    def get_integer_arguments_call(self):
+        return ','.join([symbol for _, symbol in self.__int_decls])
+
+    def get_copied_arguments_call(self):
+        return ','.join([symbol + "_copy" for _, symbol in self.__var_decls])
+
+    def get_int_copied_arguments_call(self):
+        return ','.join([symbol + "_copy" for _, symbol in self.__int_decls])
 
     def get_variables_with_hole(self):
         def decl(typ, symbol):
             hole = f'{typ}_gen()'
             return f'\t{typ} {symbol} = {hole};'
+
+        return '\n'.join([decl(typ, symbol) for typ, symbol in self.__var_decls])
+
+    def get_copied_variables_with_hole(self):
+        def decl(typ, symbol):
+            hole = f'{typ}_gen()'
+            return f'\t{typ} {symbol}_copy = {hole};'
 
         return '\n'.join([decl(typ, symbol) for typ, symbol in self.__var_decls])
 

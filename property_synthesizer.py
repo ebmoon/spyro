@@ -56,7 +56,7 @@ class PropertySynthesizer:
         self.__discarded_examples = []
         
         # Synthesized property
-        self.__phi = "out = true;"
+        self.__phi_initial = "out = false;"
         self.__phi_conj = "out = true;"
         self.__phi_list = []
 
@@ -81,7 +81,7 @@ class PropertySynthesizer:
     def __get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self.__tempfile_name
-        # path += f'_{self.__outer_iterator}_{self.__inner_iterator}'
+        path += f'_{self.__outer_iterator}_{self.__inner_iterator}'
         path += ".sk"
 
         self.__inner_iterator += 1
@@ -178,9 +178,9 @@ class PropertySynthesizer:
             return (neg_examples, discarded_examples, phi)
 
     def __synthesizeProperty(self):
-        # Set is_sound False to do MaxSat first, when number of neg examples is positive
-        is_sound = len(self.__neg_examples) == 0
-        is_precise = False
+        self.__phi = self.__phi_initial
+        is_sound = False
+        is_precise = len(self.__pos_examples) == 0
 
         while not is_sound or not is_precise:
             if not is_sound and not is_precise:
@@ -204,20 +204,6 @@ class PropertySynthesizer:
                     is_sound = False
                     self.__phi = phi
                     self.__neg_examples.append(e)
-            
-            '''
-            if not is_precise:
-                is_precise, e, phi = self.__run_precision_check()
-                if not is_precise:
-                    is_sound = False
-                    self.__phi = phi
-                    self.__neg_examples.append(e)
-            else:
-                is_sound, e = self.__run_soundness_check()
-                if not is_sound:
-                    is_precise = False
-                    self.__pos_examples.append(e)
-            '''
 
     def __add_prop_to_conjunction(self):
         self.__phi_conj += f'\n\tboolean prev_out_{self.__outer_iterator} = out;'
@@ -267,7 +253,6 @@ class PropertySynthesizer:
 
             self.__outer_iterator += 1
             self.__inner_iterator = 0
-            self.__phi = "out = true;"
 
     def run(self):
         self.__synthesizeAllProperties()

@@ -11,8 +11,12 @@ relation {
 }
 
 generator {
-    boolean B -> I < I | I <= I | I == I | I != I | B || B ;
-    int I -> x | y | o;
+    boolean B -> I < I | I == I ;
+    int I -> x | y | o ;
+}
+
+example {
+    int -> ??(5) | -1 * ??(5) ;
 }
 
 void max2(int x, int y, ref int out){

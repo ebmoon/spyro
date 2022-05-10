@@ -21,6 +21,9 @@ class OutputParser:
 
     def parse_positive_example(self):       
         soundness_code_lines = self._get_function_code_lines('soundness')
+        soundness_code_lines = [line for line in soundness_code_lines if 'distance' not in line]
+        soundness_code_lines = [line for line in soundness_code_lines if 'copy' not in line]
+        soundness_code_lines = [line for line in soundness_code_lines if 'minimize' not in line]
         soundness_code_lines = ['\t' + line.strip() for line in soundness_code_lines]
 
         property_call = soundness_code_lines[-2].replace('obtained_property', 'property')
@@ -35,6 +38,9 @@ class OutputParser:
 
     def parse_negative_example(self):
         precision_code_lines = self._get_function_code_lines('precision')
+        precision_code_lines = [line for line in precision_code_lines if 'distance' not in line]
+        precision_code_lines = [line for line in precision_code_lines if 'copy' not in line]
+        precision_code_lines = [line for line in precision_code_lines if 'minimize' not in line]
         precision_code_lines = ['\t' + line.strip() for line in precision_code_lines]
 
         property_call = replace_last_argument(precision_code_lines[-2], 'out')

@@ -1,5 +1,4 @@
 //@Description Sketch to reverse a list.
-pragma options "--bnd-unroll-amnt 20";
 
 var {
     stack push_input_stack;
@@ -17,7 +16,7 @@ relation {
 }
 
 generator {
-    boolean B -> I < I | I <= I | I == I | I != I | stack_equal(S, S) | !stack_equal(S, S) | B || B;
+    boolean AP -> I < I | I <= I | I == I | I != I | stack_equal(S, S) | !stack_equal(S, S);
     int I -> push_input_val | pop_out_val;
     stack S -> push_input_stack | push_out_stack | pop_input_stack | pop_out_stack | null;
 }

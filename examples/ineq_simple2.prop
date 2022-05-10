@@ -10,13 +10,11 @@ relation {
 }
 
 generator {
-    boolean B -> false | I <= 0;
-    int I -> C + C + C ;
-    int C -> ??(4) | -??(4) | x | o | -x | -o ;
+    boolean B -> o > ??(5) ;
 }
 
 example {
-    int -> ??(5) | -1 * ??(5) ;
+    int -> ?? | -1 * ?? ;
 }
 
 void abs(int x, ref int out){
@@ -25,4 +23,5 @@ void abs(int x, ref int out){
     } else {
         out = x;
     }
+    out = out + 15;
 }

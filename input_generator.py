@@ -18,24 +18,67 @@ class InputGenerator:
     def num_atom(self):
         return self.__num_atom
 
-    def __soundness_code(self):
+    def __distance(self):
+
+        l1_code = 'int l1(int x, int y) { '
+        l1_code += 'if (x > y) { return x - y; } else { return y - x; } '
+        l1_code += '}\n\n'
+
+        var_defns = self.__template.get_integer_arguments_defn()
+        copied_defns = self.__template.get_copied_arguments_defn()
+
+        dist_code = f'int distance({var_defns},{copied_defns}) {{\n'
+        dist_code += '\tint dist = 0;\n'
+        for _, symbol in self.__template.get_int_symbols():
+            dist_code += f'\tdist += l1({symbol}, {symbol}_copy);\n'
+        dist_code += '\treturn dist;\n'
+        dist_code += '}\n\n'
+
+        # To-Do: Implement L1 distance
+        return l1_code + dist_code
+
+    def __soundness_code(self, maximize_dist = True):
         code = 'harness void soundness() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
         code += self.__template.get_relations() + '\n\n'
-        
+
+        arguments = self.__template.get_arguments_call()
+        copied_arguments = self.__template.get_copied_arguments_call()
+        int_arguments = self.__template.get_integer_arguments_call()
+        int_copied_arguments = self.__template.get_int_copied_arguments_call()
+
+        if maximize_dist:
+            code += self.__template.get_copied_variables_with_hole() + '\n\n'
+            code += f'\tminimize(64 - distance({int_arguments},{int_copied_arguments}));\n\n'
+
+            code += '\tboolean out_copy;\n'
+            code += '\tobtained_property(' + copied_arguments + ',out_copy);\n'
+            code += '\tassert out_copy;\n\n'
+
         code += '\tboolean out;\n'
-        code += '\tobtained_property(' + self.__template.get_arguments_call() + ',out);\n'
+        code += '\tobtained_property(' + arguments + ',out);\n'
         code += '\tassert !out;\n'
         
         code += '}\n\n'
 
         return code
 
-    def __precision_code(self):
+    def __precision_code(self, minimize_dist = True):
         code = 'harness void precision() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
-        
+
         arguments = self.__template.get_arguments_call()
+        int_arguments = self.__template.get_integer_arguments_call()
+        copied_arguments = self.__template.get_copied_arguments_call()
+        int_copied_arguments = self.__template.get_int_copied_arguments_call()
+        
+        if minimize_dist:
+            code += self.__template.get_copied_variables_with_hole() + '\n\n'
+            code += f'\tminimize(distance({int_arguments},{int_copied_arguments}));\n\n'
+
+            code += '\tboolean out_copy;\n'
+            code += '\tobtained_property(' + copied_arguments + ',out_copy);\n'
+            code += '\tassert out_copy;\n\n'
 
         code += '\tboolean out_1;\n'
         code += '\tobtained_property(' + arguments + ',out_1);\n'
@@ -347,21 +390,27 @@ class InputGenerator:
         return code
 
     def generate_soundness_input(self, phi, pos_examples, neg_examples):
+        maximize_dist = len(pos_examples) != 0
+        
         code = self.__template.get_implementation()
         code += self.__obtained_property_code(phi)
         code += self.__example_generators()
-        code += self.__soundness_code()
+        code += self.__distance()
+        code += self.__soundness_code(maximize_dist)
 
         return code
 
     def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples):
+        minimize_dist = len(pos_examples) != 0
+
         code = self.__template.get_implementation()
         code += self.__examples(pos_examples, neg_examples)
         code += self.__property_code()
         code += self.__obtained_property_code(phi)
         code += self.__property_conj_code(phi_list)
         code += self.__example_generators()
-        code += self.__precision_code()
+        code += self.__distance()
+        code += self.__precision_code(minimize_dist)
 
         return code
 
