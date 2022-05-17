@@ -36,7 +36,22 @@ class OutputParser:
 
         return positive_example_code
 
-    def parse_negative_example(self):
+    def parse_positive_example_precision(self):
+        precision_code_lines = self._get_function_code_lines('precision')
+        distance_line = find_linenum_with(precision_code_lines, 'distance')
+        decl_lines = [line for line in precision_code_lines[:distance_line] if 'copy' in line]
+        
+        property_call = replace_last_argument(precision_code_lines[-11], 'out')
+        property_call = property_call.replace('obtained_property', 'property')
+
+        positive_example_code = '\n'.join(decl_lines)
+        positive_example_code += '\n\tboolean out;'
+        positive_example_code += '\n' + property_call
+        positive_example_code += '\n\tassert out;'
+
+        return positive_example_code 
+
+    def parse_negative_example_precision(self):
         precision_code_lines = self._get_function_code_lines('precision')
         precision_code_lines = [line for line in precision_code_lines if 'distance' not in line]
         precision_code_lines = [line for line in precision_code_lines if 'copy' not in line]
@@ -50,7 +65,7 @@ class OutputParser:
         negative_example_code += '\n' + property_call
         negative_example_code += '\n\tassert !out;'
 
-        return negative_example_code
+        return negative_example_code       
 
     def parse_maxsat(self, neg_examples):
         maxsat_code_lines = self._get_function_code_lines('maxsat') 

@@ -149,11 +149,12 @@ class PropertySynthesizer:
 
         if output != None:
             output_parser = OutputParser(output)
-            neg_example = output_parser.parse_negative_example() 
+            pos_example = output_parser.parse_positive_example_precision()
+            neg_example = output_parser.parse_negative_example_precision() 
             phi = output_parser.parse_property()
-            return (False, neg_example, phi)
+            return (False, pos_example, neg_example, phi)
         else:
-            return (True, None, None)
+            return (True, None, None, None)
 
     def __run_max_sat(self):
         if self.__verbose:
@@ -199,11 +200,12 @@ class PropertySynthesizer:
                     is_precise = False
                     self.__pos_examples.append(e)
             else:
-                is_precise, e, phi = self.__run_precision_check()
+                is_precise, e_pos, e_neg, phi = self.__run_precision_check()
                 if not is_precise:
                     is_sound = False
                     self.__phi = phi
-                    self.__neg_examples.append(e)
+                    self.__pos_examples.append(e_pos)
+                    self.__neg_examples.append(e_neg)
 
     def __add_prop_to_conjunction(self):
         self.__phi_conj += f'\n\tboolean prev_out_{self.__outer_iterator} = out;'
