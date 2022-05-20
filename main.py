@@ -12,7 +12,8 @@ def main():
     parser.add_argument('--inline-bnd', dest='inline_bnd', type=int, nargs='?', default=5)
     parser.add_argument('--inline-bnd-sound', dest='inline_bnd_sound', type=int, nargs='?', default=10)
     parser.add_argument('--num-atom-max', dest='num_atom_max', type=int, nargs='?', default=5)
-
+    parser.add_argument('--disable-minimization', dest='disable_minimization', action='store_true', default=False)
+    
     args = parser.parse_args(sys.argv[1:])
     infile = args.infile
     outfile = args.outfile
@@ -20,8 +21,9 @@ def main():
     inline_bnd = args.inline_bnd
     inline_bnd_sound = args.inline_bnd_sound
     num_atom_max = args.num_atom_max
+    disable_minimization = args.disable_minimization
 
-    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max).run()
+    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, disable_minimization).run()
 
     infile.close()
     outfile.close()

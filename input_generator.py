@@ -6,11 +6,12 @@ from util import *
 class InputGenerator:
     # To-Do: Generate codes from variables and relations
 
-    def __init__(self, code):
+    def __init__(self, code, disable_minimization):
         # Input code
         self.__template = TemplateParser(code)
         self.__fresh_num = 0
         self.__num_atom = 1
+        self.__use_minimization = not disable_minimization
 
     def set_num_atom(self, num_atom):
         self.__num_atom = num_atom
@@ -37,7 +38,7 @@ class InputGenerator:
         # To-Do: Implement L1 distance
         return l1_code + dist_code
 
-    def __soundness_code(self, maximize_dist = True):
+    def __soundness_code(self, maximize_dist):
         code = 'harness void soundness() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
         code += self.__template.get_relations() + '\n\n'
@@ -63,7 +64,7 @@ class InputGenerator:
 
         return code
 
-    def __precision_code(self, minimize_dist = True):
+    def __precision_code(self, minimize_dist):
         code = 'harness void precision() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
 
@@ -391,7 +392,7 @@ class InputGenerator:
         return code
 
     def generate_soundness_input(self, phi, pos_examples, neg_examples):
-        maximize_dist = len(pos_examples) != 0
+        maximize_dist = len(pos_examples) != 0 and self.__use_minimization
         
         code = self.__template.get_implementation()
         code += self.__obtained_property_code(phi)
@@ -402,7 +403,7 @@ class InputGenerator:
         return code
 
     def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples):
-        minimize_dist = len(pos_examples) != 0
+        minimize_dist = len(pos_examples) != 0 and self.__use_minimization
 
         code = self.__template.get_implementation()
         code += self.__examples(pos_examples, neg_examples)

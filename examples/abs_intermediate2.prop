@@ -10,12 +10,13 @@ relation {
 }
 
 generator {
-    boolean B -> I < I | I <= I | I == I | I != I | B || B ;
-    int I -> ?? | -?? | x | o | I + I | I - I ;
+    boolean B -> false | I <= 0;
+    int I -> C + C + C ;
+    int C -> ??(4) | -??(4) | x | o | -x | -o ;
 }
 
 example {
-    int -> ?? | -1 * ?? ;
+    int -> ??(5) | -1 * ??(5) ;
 }
 
 void abs(int x, ref int out){

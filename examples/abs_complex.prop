@@ -10,7 +10,7 @@ relation {
 }
 
 generator {
-    boolean B -> I < I | I <= I | I == I | I != I | B || B ;
+    boolean B -> I < I | I <= I | I == I | I != I ;
     int I -> C | C * x | C * o | I + I ;
     int C -> ?? | -?? ;
 }

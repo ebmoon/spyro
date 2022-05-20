@@ -1,6 +1,7 @@
 import subprocess
 import os
 import random
+import time
 
 from input_generator import InputGenerator
 from output_parser import OutputParser
@@ -35,7 +36,7 @@ def write_tempfile(path, code):
         f.write(code)
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max) :       
+    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, disable_minimization) :       
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
@@ -47,7 +48,7 @@ class PropertySynthesizer:
         self.__template = infile.read()
 
         # Sketch Input File Generator
-        self.__input_generator = InputGenerator(self.__template)
+        self.__input_generator = InputGenerator(self.__template, disable_minimization)
         self.__input_generator.set_num_atom(num_atom_max)
 
         # Initial list of positive/negative examples
@@ -67,10 +68,25 @@ class PropertySynthesizer:
         # Options
         self.__verbose = True
         self.__check_soundness_first = True
+        self.__disable_minimization = disable_minimization
 
         # Iterators for descriptive message
         self.__inner_iterator = 0
         self.__outer_iterator = 0
+
+        self.__num_soundness = 0
+        self.__num_precision = 0
+        self.__num_maxsat = 0
+        self.__num_synthesis = 0
+
+        self.__time_soundness = 0
+        self.__time_precision = 0
+        self.__time_maxsat = 0
+        self.__time_synthesis = 0
+
+        self.__num_pos_examples = []
+        self.__num_used_neg_examples = []
+        self.__num_discarded_neg_examples = []
 
         self.__inline_bnd = inline_bnd
         self.__inline_bnd_sound = inline_bnd_sound
@@ -108,8 +124,15 @@ class PropertySynthesizer:
         code = self.__input_generator \
             .generate_synthesis_input(self.__phi, self.__pos_examples, self.__neg_examples)        
 
+        start_time = time.time()
+
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
+
+        end_time = time.time()
+
+        self.__num_synthesis += 1
+        self.__time_synthesis += end_time - start_time
 
         if output != None:
             output_parser = OutputParser(output)
@@ -125,8 +148,15 @@ class PropertySynthesizer:
         code = self.__input_generator \
             .generate_soundness_input(self.__phi, self.__pos_examples, self.__neg_examples)        
         
+        start_time = time.time()
+
         write_tempfile(path, code)
         output = self.__try_synthesis(path, check_sound=True)
+
+        end_time = time.time()
+
+        self.__num_soundness += 1
+        self.__time_soundness += end_time - start_time
 
         if output != None:
             output_parser = OutputParser(output)
@@ -144,12 +174,20 @@ class PropertySynthesizer:
             .generate_precision_input(
                 self.__phi, self.__phi_list, self.__pos_examples, self.__neg_examples)        
         
+        start_time = time.time()
+
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
+        end_time = time.time()
+
+        self.__num_precision += 1
+        self.__time_precision += end_time - start_time
+
         if output != None:
             output_parser = OutputParser(output)
-            pos_example = output_parser.parse_positive_example_precision()
+            pos_example = output_parser.parse_positive_example_precision() \
+                if not self.__disable_minimization else None
             neg_example = output_parser.parse_negative_example_precision() 
             phi = output_parser.parse_property()
             return (False, pos_example, neg_example, phi)
@@ -160,12 +198,19 @@ class PropertySynthesizer:
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Run MaxSat')
 
-        path = TEMP_FILE_PATH + self.__tempfile_name + ".sk"
+        path = self.__get_new_tempfile_path()
         code = self.__input_generator \
             .generate_maxsat_input(self.__pos_examples, self.__neg_examples)        
         
+        start_time = time.time()
+
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
+
+        end_time = time.time()
+
+        self.__num_maxsat += 1
+        self.__time_maxsat += end_time - start_time 
 
         if output != None:
             output_parser = OutputParser(output)
@@ -182,9 +227,10 @@ class PropertySynthesizer:
         self.__phi = self.__phi_initial
         is_sound = False
         is_precise = len(self.__pos_examples) == 0
+        try_synthesis = True
 
         while not is_sound or not is_precise:
-            if not is_sound and not is_precise:
+            if not is_sound and not is_precise and try_synthesis:
                 phi = self.__run_synthesize()
                 if phi == None:
                     neg_examples, discarded_examples, phi = self.__run_max_sat()
@@ -199,13 +245,16 @@ class PropertySynthesizer:
                 if not is_sound:
                     is_precise = False
                     self.__pos_examples.append(e)
+                try_synthesis = True
             else:
                 is_precise, e_pos, e_neg, phi = self.__run_precision_check()
                 if not is_precise:
                     is_sound = False
                     self.__phi = phi
-                    self.__pos_examples.append(e_pos)
                     self.__neg_examples.append(e_neg)
+                    if e_pos != None:
+                        self.__pos_examples.append(e_pos)
+                    try_synthesis = False
 
     def __add_prop_to_conjunction(self):
         self.__phi_conj += f'\n\tboolean prev_out_{self.__outer_iterator} = out;'
@@ -246,6 +295,10 @@ class PropertySynthesizer:
                 break
 
             self.__phi_list.append(self.__phi)
+            self.__num_pos_examples.append(len(self.__pos_examples))
+            self.__num_used_neg_examples.append(len(self.__neg_examples))
+            self.__num_discarded_neg_examples.append(len(self.__discarded_examples))
+
             self.__add_prop_to_conjunction()
             self.__neg_examples = [e for e in self.__discarded_examples if self.__model_check(e)]
             self.__discarded_examples = []
@@ -256,9 +309,33 @@ class PropertySynthesizer:
             self.__outer_iterator += 1
             self.__inner_iterator = 0
 
+    def __printStatistics(self):
+        self.__write_output('-- Statistics --\n')
+
+        self.__write_output(f'# synthesis: {self.__num_synthesis}\n')
+        self.__write_output(f'Time spent on synthesis: {self.__time_synthesis:.2f}s\n\n')
+
+        self.__write_output(f'# maxsat: {self.__num_maxsat}\n')
+        self.__write_output(f'Time spent on maxsat: {self.__time_maxsat:.2f}s\n\n')
+
+        self.__write_output(f'# soundness check: {self.__num_soundness}\n')
+        self.__write_output(f'Time spent on soundness check: {self.__time_soundness:.2f}s\n\n')
+
+        self.__write_output(f'# precision check: {self.__num_precision}\n')
+        self.__write_output(f'Time spent on precision check: {self.__time_precision:.2f}s\n')
+
+        self.__write_output('----------------\n')
+
     def run(self):
         self.__synthesizeAllProperties()
+        self.__printStatistics()
         for i, phi in enumerate(self.__phi_list):
-            self.__write_output(f'Output {i}\n')
+            self.__write_output(f'--- Output {i} ---\n')
             self.__write_output(phi)
-            self.__write_output('\n')    
+            self.__write_output('\n')
+
+            self.__write_output(f'# pos. examples: {self.__num_pos_examples[i]}\n')
+            self.__write_output(f'# used neg. examples: {self.__num_used_neg_examples[i]}\n')
+            self.__write_output(f'# discarded neg. examples: {self.__num_discarded_neg_examples[i]}\n')
+            
+            self.__write_output(f'----------------\n')

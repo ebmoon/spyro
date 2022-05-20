@@ -39,7 +39,7 @@ class OutputParser:
     def parse_positive_example_precision(self):
         precision_code_lines = self._get_function_code_lines('precision')
         distance_line = find_linenum_with(precision_code_lines, 'distance')
-        decl_lines = [line for line in precision_code_lines[:distance_line] if 'copy' in line]
+        decl_lines = precision_code_lines[:distance_line]
         
         property_call = replace_last_argument(precision_code_lines[-11], 'out')
         property_call = property_call.replace('obtained_property', 'property')
