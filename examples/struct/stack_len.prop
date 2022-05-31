@@ -1,0 +1,101 @@
+//@Description Sketch to reverse a list.
+
+var {
+    stack empty_out;
+
+    stack push_input_stack;
+    int push_input_val;
+    stack push_out_stack;
+
+    stack pop_input_stack;
+    int pop_out_val;
+    stack pop_out_stack;
+}
+
+relation {
+    empty(empty_out);
+    push(push_input_stack, push_input_val, push_out_stack);
+    pop(pop_input_stack, pop_out_stack, pop_out_val);
+}
+
+generator {
+    boolean AP -> IAP | LAP | stack_equal(S, S) | !stack_equal(S, S);
+    boolean IAP -> I == I | I != I;
+    boolean LAP -> L + L == L + L | L + L < L + L | L + L != L + L;
+    int I -> push_input_val | pop_out_val;
+    int L -> stack_len(S) | 0 | 1;
+    stack S -> push_input_stack | push_out_stack | pop_input_stack | pop_out_stack | empty_out;
+}
+
+example {
+    int -> ??(5) | -1 * ??(5) ;
+    stack -> empty() | push(stack, int);
+}
+
+struct node {
+	node next;
+	int val;	
+}
+
+struct stack {
+	node top;
+}
+
+void empty(ref stack ret) {
+    ret = new stack();
+    ret.top = null;
+}
+
+void push(stack s, int val, ref stack ret) {
+    assert s != null;
+
+    node n = new node();
+    n.val = val;
+    n.next = s.top;
+
+    ret = new stack();   
+    ret.top = n;
+}
+
+void pop(stack s, ref stack out_stack, ref int out_val) {
+    assert s != null;
+    assert s.top != null;
+    
+    out_stack = new stack();
+    out_stack.top = s.top.next;
+    out_val = s.top.val;
+}
+
+boolean node_equal(node n1, node n2) {
+    if (n1 == null || n2 == null) {
+        return n1 == n2;
+    } else {
+        return n1.val == n2.val && node_equal(n1.next, n2.next);
+    }
+}
+
+void stack_equal(stack s1, stack s2, ref boolean out) {
+    if (s1 == null || s2 == null) {
+        out = s1 == s2;
+    } else {
+        out = node_equal(s1.top, s2.top);
+    }
+}
+
+
+void node_len(node n, ref int ret) {
+    if (n == null) {
+        ret = 0;
+    } else {
+        node_len(n.next, ret);
+        ret = ret + 1;
+    }
+}
+
+void stack_len(stack s, ref int ret) {
+    if (s == null) {
+        ret = 0;
+    } else {
+        node_len(s.top, ret);
+    }
+}

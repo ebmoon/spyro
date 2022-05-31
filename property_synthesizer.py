@@ -109,7 +109,7 @@ class PropertySynthesizer:
         try:
             return subprocess.check_output( \
                 [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(inline_bnd)], \
-                stderr=subprocess.PIPE, timeout=120)
+                stderr=subprocess.PIPE, timeout=300)
         except subprocess.CalledProcessError as e:
             return None
         except subprocess.TimeoutExpired as e:

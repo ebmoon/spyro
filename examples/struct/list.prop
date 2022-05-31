@@ -12,9 +12,6 @@ var {
 
     list tail_in;
     list tail_out;
-
-    list is_empty_in;
-    boolean is_empty_out;
 }
 
 relation {
@@ -22,19 +19,21 @@ relation {
     cons(cons_hd, cons_tl, cons_out);
     head(head_in, head_out);
     tail(tail_in, tail_out);
-    is_empty(is_empty_in, is_empty_out);
 }
 
 generator {
-    boolean AP -> I < I | I == I | I != I | is_empty_out | !is_empty_out | equal_list(L, L) | !equal_list(L, L);
-    int I -> T + T ;
-    int T -> cons_hd | head_out | len(L) | 0 | 1 ;
+    boolean AP -> TAP | SAP | is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L);
+    boolean TAP -> T == T | T != T ;
+    boolean SAP -> S + S < S + S | S + S == S + S | S + S != S + S ;
+    int S -> len(L) | 0 | 1 ;
+    int T -> cons_hd | head_out ;
     list L -> nil_out | cons_tl | cons_out | head_in | tail_in | tail_out ;
 }
 
 example {
     int -> ?? | -1 * ?? ;
     boolean -> ?? ;
+    list -> nil() | cons(int, list);
 }
 
 struct list {

@@ -11,7 +11,7 @@ def main():
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', default=True)
     parser.add_argument('--inline-bnd', dest='inline_bnd', type=int, nargs='?', default=5)
     parser.add_argument('--inline-bnd-sound', dest='inline_bnd_sound', type=int, nargs='?', default=10)
-    parser.add_argument('--num-atom-max', dest='num_atom_max', type=int, nargs='?', default=5)
+    parser.add_argument('--num-atom-max', dest='num_atom_max', type=int, nargs='?', default=3)
     parser.add_argument('--disable-minimization', dest='disable_minimization', action='store_true', default=False)
     
     args = parser.parse_args(sys.argv[1:])

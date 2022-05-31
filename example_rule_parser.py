@@ -70,10 +70,10 @@ def p_expr_binop(p):
 
     p[0] = ('BINOP', p[2], p[1], p[3])
 
-def p_expr_var(p):
+def p_expr_type(p):
     "expr : ID"
 
-    p[0] = ('VAR', p[1])
+    p[0] = ('TYPE', p[1])
 
 def p_expr_hole(p):
     '''expr : HOLE
@@ -90,9 +90,12 @@ def p_expr_num(p):
     p[0] = ('INT', p[1])
 
 def p_expr_call(p):
-    "expr : ID LPAREN args RPAREN"
-
-    p[0] = ('FCALL', p[1], p[3])
+    '''expr : ID LPAREN RPAREN
+            | ID LPAREN args RPAREN'''
+    if len(p) > 4:
+        p[0] = ('FCALL', p[1], p[3])
+    else:
+        p[0] = ('FCALL', p[1], [])
 
 def p_args(p):
     '''args : expr

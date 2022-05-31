@@ -231,16 +231,15 @@ class InputGenerator:
             return self.__count_generator_calls(cxt, expr[2])
         elif expr[0] == 'INT' or expr[0] == 'HOLE':
             return dict()
-        elif expr[0] == 'VAR':
+        elif expr[0] == 'VAR' or expr[0] == 'TYPE':
             return {expr[1] : 1} if expr[1] in cxt else dict()
         elif expr[0] == 'FCALL':
             dicts = [self.__count_generator_calls(cxt, e) for e in expr[2]]
-            return functools.reduce(sum_dict, dicts)
+            return functools.reduce(sum_dict, dicts) if len(dicts) > 0 else dict()
         else:
             raise Exception(f'Unhandled case: {expr[0]}')
 
-    def __subcall_gen(self, num_calls_prev, num_calls):
-        cxt = self.__template.get_context()
+    def __subcall_gen(self, cxt, num_calls_prev, num_calls):
         arg_call = self.__template.get_arguments_call()
 
         code = ''
@@ -254,13 +253,27 @@ class InputGenerator:
 
         return code + '\n'
 
+    def __subcall_gen_example(self, cxt, num_calls_prev, num_calls):
+        arg_call = self.__template.get_arguments_call()
+
+        code = ''
+        for symbol, n in num_calls.items():
+            if symbol not in num_calls_prev:
+                for i in range(n):
+                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {symbol}_gen();\n'
+            elif num_calls_prev[symbol] < n:
+                for i in range(num_calls_prev[symbol], n):
+                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {symbol}_gen();\n'
+
+        return code + '\n'
+
     def __fresh_variable(self):
         n = self.__fresh_num
         self.__fresh_num += 1
 
         return f'var_{n}'
 
-    def __expr_to_code(self, cxt, expr):
+    def __expr_to_code(self, cxt, expr, out_type = 'boolean'):
         if expr[0] == 'BINOP':
             cxt1, code1, out1 = self.__expr_to_code(cxt, expr[2])
             cxt2, code2, out2 = self.__expr_to_code(cxt1, expr[3])
@@ -270,7 +283,7 @@ class InputGenerator:
             return (cxt, code, f'{expr[1]} {out}')
         elif expr[0] == 'INT':
             return (cxt, '', expr[1])
-        elif expr[0] == 'VAR':
+        elif expr[0] == 'VAR' or expr[0] == 'TYPE':
             symbol = expr[1]
             if symbol in cxt:
                 count = cxt[symbol]
@@ -289,10 +302,11 @@ class InputGenerator:
                 code += code_sub
                 args.append(out_sub)
 
-            args_call = ','.join(args)
+            
             fresh_var = self.__fresh_variable()
-            code += f'\t\tboolean {fresh_var};\n'
-            code += f'\t\t{expr[1]}({args_call},{fresh_var});\n'
+            args_call = ','.join(args + [fresh_var])
+            code += f'\t\t{out_type} {fresh_var};\n'
+            code += f'\t\t{expr[1]}({args_call});\n'
             return (cxt, code, fresh_var)
         else:
             raise Exception(f'Unhandled case: {expr}')
@@ -303,8 +317,6 @@ class InputGenerator:
         exprlist = rule[2]
 
         cxt = self.__template.get_context()
-        dicts = [self.__count_generator_calls(cxt, e) for e in exprlist]
-        num_calls = functools.reduce(max_dict, dicts)
         num_calls_prev = dict()
 
         arg_defn = self.__template.get_arguments_defn()
@@ -314,7 +326,7 @@ class InputGenerator:
         
         for n, e in enumerate(exprlist):
             num_calls = self.__count_generator_calls(cxt, e)
-            code += self.__subcall_gen(num_calls_prev, num_calls)
+            code += self.__subcall_gen(cxt, num_calls_prev, num_calls)
             num_calls_prev = max_dict(num_calls_prev, num_calls)
 
             cxt_init = {k:0 for k in cxt.keys()}
@@ -359,12 +371,19 @@ class InputGenerator:
         typ = rule[0]
         exprlist = rule[1]
 
+        cxt = {typ:typ for (typ, _) in self.__template.get_example_rules()}
+        num_calls_prev = dict()
+
         code = f'generator {typ} {typ}_gen() {{\n'
         code += '\tint t = ??;\n'
         
         for n, e in enumerate(exprlist):
-            cxt_init = dict()
-            _, e_code, e_out = self.__expr_to_code(cxt_init, e)
+            num_calls = self.__count_generator_calls(cxt, e)
+            code += self.__subcall_gen_example(cxt, num_calls_prev, num_calls)
+            num_calls_prev = max_dict(num_calls_prev, num_calls)
+
+            cxt_init = {k:0 for k in cxt.keys()}
+            _, e_code, e_out = self.__expr_to_code(cxt_init, e, typ)
 
             code += f'\tif (t == {n}) {{\n'
             code += e_code
@@ -380,7 +399,7 @@ class InputGenerator:
         structs = self.__template.get_structs()
 
         code = '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
-        code += '\n'.join([self.__struct_generator(st) for st in structs]) + '\n'
+        # code += '\n'.join([self.__struct_generator(st) for st in structs]) + '\n'
 
         return code
 
