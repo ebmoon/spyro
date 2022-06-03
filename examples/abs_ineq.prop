@@ -10,7 +10,7 @@ relation {
 }
 
 generator {
-    boolean AP -> I > ??(4) | I > -??(4) ;
+    boolean AP -> I < 0 ;
     int I -> C * x + C * o + C ;
     int C -> ??(3) - 4;
 }

@@ -21,9 +21,9 @@ relation {
 generator {
     boolean AP -> IAP | LAP | stack_equal(S, S) | !stack_equal(S, S);
     boolean IAP -> I == I | I != I;
-    boolean LAP -> L + L == L + L | L + L < L + L | L + L != L + L;
+    boolean LAP -> L == L + ??(1) | L < L + ??(1) | L > L + ??(1) | L != L + ??(1);
     int I -> push_input_val | pop_out_val;
-    int L -> stack_len(S) | 0 | 1;
+    int L -> stack_len(S) | 0;
     stack S -> push_input_stack | push_out_stack | pop_input_stack | pop_out_stack | empty_out;
 }
 

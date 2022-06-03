@@ -18,10 +18,6 @@ def extract_filename_from_path(path):
 
 def get_tempfile_name(infile, outfile):
     infile_path = infile.name
-    outfile_path = outfile.name
-
-    if outfile_path != '<stdout>':
-        return extract_filename_from_path(outfile_path)
     
     if infile_path != '<stdin>':
         return extract_filename_from_path(infile_path)
@@ -36,7 +32,7 @@ def write_tempfile(path, code):
         f.write(code)
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, disable_minimization) :       
+    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization) :       
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
@@ -48,7 +44,7 @@ class PropertySynthesizer:
         self.__template = infile.read()
 
         # Sketch Input File Generator
-        self.__input_generator = InputGenerator(self.__template, disable_minimization)
+        self.__input_generator = InputGenerator(self.__template, enable_minimization)
         self.__input_generator.set_num_atom(num_atom_max)
 
         # Initial list of positive/negative examples
@@ -66,9 +62,9 @@ class PropertySynthesizer:
         self.__is_precise = True
 
         # Options
-        self.__verbose = True
+        self.__verbose = verbose
         self.__check_soundness_first = True
-        self.__disable_minimization = disable_minimization
+        self.__enable_minimization = enable_minimization
 
         # Iterators for descriptive message
         self.__inner_iterator = 0
@@ -187,7 +183,7 @@ class PropertySynthesizer:
         if output != None:
             output_parser = OutputParser(output)
             pos_example = output_parser.parse_positive_example_precision() \
-                if not self.__disable_minimization else None
+                if self.__enable_minimization else None
             neg_example = output_parser.parse_negative_example_precision() 
             phi = output_parser.parse_property()
             return (False, pos_example, neg_example, phi)
@@ -303,11 +299,31 @@ class PropertySynthesizer:
             self.__neg_examples = [e for e in self.__discarded_examples if self.__model_check(e)]
             self.__discarded_examples = []
 
-            print("Obtained a best L-property")
-            self.__write_output(self.__phi + '\n')
+            if self.__verbose:
+                print("Obtained a best L-property")
+                print(self.__phi + '\n')
 
             self.__outer_iterator += 1
             self.__inner_iterator = 0
+
+    def __statisticsList(self):
+        statistics = []
+
+        statistics.append(f'{self.__num_synthesis}')
+        statistics.append(f'{self.__time_synthesis:.2f}s')
+        statistics.append(f'{self.__num_maxsat}')
+        statistics.append(f'{self.__time_maxsat:.2f}s')
+        statistics.append(f'{self.__num_soundness}')
+        statistics.append(f'{self.__time_soundness:.2f}s')
+        statistics.append(f'{self.__num_precision}')
+        statistics.append(f'{self.__time_precision:.2f}s')
+
+        for i in range(len(self.__phi_list)):
+            statistics.append(f'{self.__num_pos_examples[i]}')
+            statistics.append(f'{self.__num_used_neg_examples[i]}')
+            statistics.append(f'{self.__num_discarded_neg_examples[i]}')
+
+        return statistics
 
     def __printStatistics(self):
         self.__write_output('-- Statistics --\n')
@@ -326,9 +342,6 @@ class PropertySynthesizer:
 
         self.__write_output('----------------\n')
 
-    def run(self):
-        self.__synthesizeAllProperties()
-        self.__printStatistics()
         for i, phi in enumerate(self.__phi_list):
             self.__write_output(f'--- Output {i} ---\n')
             self.__write_output(phi)
@@ -339,3 +352,15 @@ class PropertySynthesizer:
             self.__write_output(f'# discarded neg. examples: {self.__num_discarded_neg_examples[i]}\n')
             
             self.__write_output(f'----------------\n')
+
+    def run(self):
+        self.__synthesizeAllProperties()
+        self.__printStatistics()
+
+
+    def run_benchmark(self):
+        self.__synthesizeAllProperties()
+        statistics = self.__statisticsList()
+        statistics = ','.join(statistics)
+
+        self.__write_output(f'{statistics}\n')

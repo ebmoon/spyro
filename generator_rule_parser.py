@@ -97,7 +97,7 @@ def p_expr_num(p):
 def p_expr_call(p):
     '''expr : ID LPAREN RPAREN
             | ID LPAREN args RPAREN'''
-    if len(p) > 3:
+    if len(p) > 4:
         p[0] = ('FCALL', p[1], p[3])
     else:
         p[0] = ('FCALL', p[1], [])

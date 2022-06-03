@@ -6,12 +6,12 @@ from util import *
 class InputGenerator:
     # To-Do: Generate codes from variables and relations
 
-    def __init__(self, code, disable_minimization):
+    def __init__(self, code, enable_minimization):
         # Input code
         self.__template = TemplateParser(code)
         self.__fresh_num = 0
         self.__num_atom = 1
-        self.__use_minimization = not disable_minimization
+        self.__use_minimization = enable_minimization
 
     def set_num_atom(self, num_atom):
         self.__num_atom = num_atom
@@ -330,7 +330,7 @@ class InputGenerator:
             num_calls_prev = max_dict(num_calls_prev, num_calls)
 
             cxt_init = {k:0 for k in cxt.keys()}
-            _, e_code, e_out = self.__expr_to_code(cxt_init, e)
+            _, e_code, e_out = self.__expr_to_code(cxt_init, e, typ)
 
             code += f'\tif (t == {n}) {{\n'
             code += e_code

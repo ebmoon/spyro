@@ -24,8 +24,8 @@ relation {
 generator {
     boolean AP -> TAP | SAP | is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L);
     boolean TAP -> T == T | T != T ;
-    boolean SAP -> S + S < S + S | S + S == S + S | S + S != S + S ;
-    int S -> len(L) | 0 | 1 ;
+    boolean SAP -> S < S + ??(1) | S == S + ??(1) | S > S + ??(1) | S != S + ??(1) ;
+    int S -> len(L) | 0 ;
     int T -> cons_hd | head_out ;
     list L -> nil_out | cons_tl | cons_out | head_in | tail_in | tail_out ;
 }

@@ -31,12 +31,12 @@ generator {
     boolean IAP -> I == I | I != I;
     boolean LAP -> L + L == L + L | L + L < L + L | L + L != L + L;
     int I -> branch_in_val | root_val_out;
-    int L -> tree_size(T) | 0 | 1 | -1;
+    int L -> tree_size(T) | ??(1);
     tree_node T -> branch_in_left | branch_in_right | branch_in_out | left_in | left_out | right_in | right_out | root_val_in | empty_out;
 }
 
 example {
-    int -> ??(5) | -1 * ??(5) ;
+    int -> ??(2) | -1 * ??(2) ;
     tree_node -> empty() | branch(int, tree_node, tree_node);
 }
 
