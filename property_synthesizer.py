@@ -363,4 +363,4 @@ class PropertySynthesizer:
         statistics = self.__statisticsList()
         statistics = ','.join(statistics)
 
-        self.__write_output(f'{statistics}\n')
+        self.__write_output(f'{self.__infile.name},{statistics}\n')

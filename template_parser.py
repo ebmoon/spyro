@@ -107,15 +107,19 @@ class TemplateParser():
         return ','.join([symbol + "_copy" for _, symbol in self.__int_decls])
 
     def get_variables_with_hole(self):
+        bnds = self.get_bounds()
+
         def decl(typ, symbol):
-            hole = f'{typ}_gen()'
+            hole = f'{typ}_gen({bnds[typ]})' if bnds[typ] > 0 else f'{typ}_gen()'
             return f'\t{typ} {symbol} = {hole};'
 
         return '\n'.join([decl(typ, symbol) for typ, symbol in self.__var_decls])
 
     def get_copied_variables_with_hole(self):
+        bnds = self.get_bounds()
+
         def decl(typ, symbol):
-            hole = f'{typ}_gen()'
+            hole = f'{typ}_gen({bnds[typ]})' if bnds[typ] > 0 else f'{typ}_gen()'
             return f'\t{typ} {symbol}_copy = {hole};'
 
         return '\n'.join([decl(typ, symbol) for typ, symbol in self.__var_decls])
@@ -136,3 +140,6 @@ class TemplateParser():
 
     def get_structs(self):
         return self.__structs
+
+    def get_bounds(self):
+        return {rule[0]:rule[2] for rule in self.__example_generators}

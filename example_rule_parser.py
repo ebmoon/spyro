@@ -20,9 +20,13 @@ def p_exrulelist(p):
         p[0] = [p[1]]  
 
 def p_exrule(p):
-    "exrule : type ARROW exprlist SEMI"
+    '''exrule : type ARROW exprlist SEMI
+              | type LPAREN INT RPAREN ARROW exprlist SEMI'''
 
-    p[0] = (p[1], p[3])
+    if len(p) > 5:
+        p[0] = (p[1], p[6], int(p[3]))
+    else:
+        p[0] = (p[1], p[3], 0)
 
 def p_type(p):
     "type : ID"

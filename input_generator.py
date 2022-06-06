@@ -21,12 +21,12 @@ class InputGenerator:
 
     def __distance(self):
 
+        var_defns = self.__template.get_integer_arguments_defn()
+        copied_defns = self.__template.get_copied_arguments_defn()
+
         l1_code = 'int l1(int x, int y) { '
         l1_code += 'if (x > y) { return x - y; } else { return y - x; } '
         l1_code += '}\n\n'
-
-        var_defns = self.__template.get_integer_arguments_defn()
-        copied_defns = self.__template.get_copied_arguments_defn()
 
         dist_code = f'int distance({var_defns},{copied_defns}) {{\n'
         dist_code += '\tint dist = 0;\n'
@@ -255,15 +255,17 @@ class InputGenerator:
 
     def __subcall_gen_example(self, cxt, num_calls_prev, num_calls):
         arg_call = self.__template.get_arguments_call()
+        bnds = self.__template.get_bounds()
 
         code = ''
         for symbol, n in num_calls.items():
+            call_code = f'{symbol}_gen(bnd - 1)' if bnds[symbol] > 0 else f'{symbol}_gen()'
             if symbol not in num_calls_prev:
                 for i in range(n):
-                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {symbol}_gen();\n'
+                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {call_code};\n'
             elif num_calls_prev[symbol] < n:
                 for i in range(num_calls_prev[symbol], n):
-                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {symbol}_gen();\n'
+                    code += f'\t{cxt[symbol]} var_{symbol}_{i} = {call_code};\n'
 
         return code + '\n'
 
@@ -370,11 +372,16 @@ class InputGenerator:
     def __example_rule_to_code(self, rule):
         typ = rule[0]
         exprlist = rule[1]
+        bnd = rule[2]
 
-        cxt = {typ:typ for (typ, _) in self.__template.get_example_rules()}
+        cxt = {typ:typ for (typ, _, _) in self.__template.get_example_rules()}
         num_calls_prev = dict()
 
-        code = f'generator {typ} {typ}_gen() {{\n'
+        if bnd > 0:
+            code = f'generator {typ} {typ}_gen(int bnd) {{\n'
+            code += '\tassert bnd > 0;\n'
+        else:
+            code = f'generator {typ} {typ}_gen() {{\n'
         code += '\tint t = ??;\n'
         
         for n, e in enumerate(exprlist):
@@ -416,7 +423,8 @@ class InputGenerator:
         code = self.__template.get_implementation()
         code += self.__obtained_property_code(phi)
         code += self.__example_generators()
-        code += self.__distance()
+        if maximize_dist:
+            code += self.__distance()
         code += self.__soundness_code(maximize_dist)
 
         return code
@@ -430,7 +438,8 @@ class InputGenerator:
         code += self.__obtained_property_code(phi)
         code += self.__property_conj_code(phi_list)
         code += self.__example_generators()
-        code += self.__distance()
+        if minimize_dist:
+            code += self.__distance()
         code += self.__precision_code(minimize_dist)
 
         return code

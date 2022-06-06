@@ -1,6 +1,8 @@
 //@Description Sketch to reverse a list.
 
 var {
+    queue empty_out;
+
     queue enqueue_input_queue;
     int enqueue_input_val;
     queue enqueue_out_queue;
@@ -11,14 +13,18 @@ var {
 }
 
 relation {
+    empty(empty_out);
     enqueue(enqueue_input_queue, enqueue_input_val, enqueue_out_queue);
     dequeue(dequeue_input_queue, dequeue_out_queue, dequeue_out_val);
 }
 
 generator {
-    boolean AP -> I < I | I <= I | I == I | I != I | queue_equal(Q, Q) | !queue_equal(Q, Q);
+    boolean AP -> LAP | IAP | queue_equal(Q, Q) | !queue_equal(Q, Q);
+    boolean IAP -> I == I | I != I;
+    boolean LAP -> L == L + ??(1) | L < L + ??(1) | L > L + ??(1) | L != L + ??(1);
+    int L -> queue_len(Q) | 0;
     int I -> enqueue_input_val | dequeue_out_val;
-    queue Q -> enqueue_input_queue | enqueue_out_queue | dequeue_input_queue | dequeue_out_queue | null;
+    queue Q -> enqueue_input_queue | enqueue_out_queue | dequeue_input_queue | dequeue_out_queue | empty_out;
 }
 
 example {
@@ -89,5 +95,22 @@ void queue_equal(queue q1, queue q2, ref boolean out) {
         out = q1 == q2;
     } else {
         out = node_equal(q1.front, q2.front);
+    }
+}
+
+void node_len(node n, ref int ret) {
+    if (n == null) {
+        ret = 0;
+    } else {
+        node_len(n.next, ret);
+        ret = ret + 1;
+    }
+}
+
+void queue_len(queue q, ref int ret) {
+    if (q == null) {
+        ret = 0;
+    } else {
+        node_len(q.front, ret);
     }
 }

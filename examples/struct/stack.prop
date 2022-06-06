@@ -1,6 +1,8 @@
 //@Description Sketch to reverse a list.
 
 var {
+    stack empty_out;
+
     stack push_input_stack;
     int push_input_val;
     stack push_out_stack;
@@ -11,18 +13,23 @@ var {
 }
 
 relation {
+    empty(empty_out);
     push(push_input_stack, push_input_val, push_out_stack);
     pop(pop_input_stack, pop_out_stack, pop_out_val);
 }
 
 generator {
-    boolean AP -> I < I | I <= I | I == I | I != I | stack_equal(S, S) | !stack_equal(S, S);
+    boolean AP -> IAP | LAP | stack_equal(S, S) | !stack_equal(S, S);
+    boolean IAP -> I == I | I != I;
+    boolean LAP -> L == L + ??(1) | L < L + ??(1) | L > L + ??(1) | L != L + ??(1);
     int I -> push_input_val | pop_out_val;
-    stack S -> push_input_stack | push_out_stack | pop_input_stack | pop_out_stack | null;
+    int L -> stack_len(S) | 0;
+    stack S -> push_input_stack | push_out_stack | pop_input_stack | pop_out_stack | empty_out;
 }
 
 example {
-    int -> ?? | -1 * ?? ;
+    int -> ??(5) | -1 * ??(5) ;
+    stack -> empty() | push(stack, int);
 }
 
 struct node {
@@ -32,6 +39,11 @@ struct node {
 
 struct stack {
 	node top;
+}
+
+void empty(ref stack ret) {
+    ret = new stack();
+    ret.top = null;
 }
 
 void push(stack s, int val, ref stack ret) {
@@ -67,5 +79,23 @@ void stack_equal(stack s1, stack s2, ref boolean out) {
         out = s1 == s2;
     } else {
         out = node_equal(s1.top, s2.top);
+    }
+}
+
+
+void node_len(node n, ref int ret) {
+    if (n == null) {
+        ret = 0;
+    } else {
+        node_len(n.next, ret);
+        ret = ret + 1;
+    }
+}
+
+void stack_len(stack s, ref int ret) {
+    if (s == null) {
+        ret = 0;
+    } else {
+        node_len(s.top, ret);
     }
 }

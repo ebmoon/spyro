@@ -21,11 +21,10 @@ def main():
     num_atom_max = args.num_atom_max
     enable_minimization = args.enable_minimization
 
-    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if '.prop' in f]
+    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f) and ('sum_nonlin' in f)]
 
     for path in files:
         with open(path, 'r') as infile:
-            print(f"Synthesizing properties of {path}")
             PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization).run_benchmark()
 
     outfile.close()
