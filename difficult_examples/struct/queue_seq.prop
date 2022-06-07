@@ -69,21 +69,51 @@ void empty_seq(ref seq out) {
     out.head = null;
 }
 
+void node_copy(node n, ref node out) {
+    if (n == null) {
+        out = null;
+    } else {
+        out = new node();
+        out.val = n.val;
+
+        node next_copy;
+        node_copy(n.next, next_copy);
+        out.next = next_copy;
+    }
+}
+
+void queue_copy(queue q, ref queue out) {
+    node front_copy;
+    node_copy(q.front, front_copy);
+
+    out = new queue();
+    out.front = front_copy;
+
+    if (front_copy == null) {
+        out.rear = null;
+    } else {
+        node cur = out.front;
+        while (cur.next != null) { cur = cur.next; }
+        out.rear = cur;
+    }
+}
+
 void append(seq s, int val, ref seq out) {
 
     node n = new node();
     n.val = val;
     n.next = null;
 
+    out = new seq();
     if (s.head == null) {
         out.head = n;
     } else {
-        out.head = s.head;
+        node s_head_copy;
+        node_copy(s.head, s_head_copy);
+        out.head = s_head_copy;
 
-        node cur = s.head;
-        while(cur.next != null) {
-            cur = cur.next;
-        }
+        node cur = s_head_copy;
+        while(cur.next != null) { cur = cur.next; }
         cur.next = n;
     }
 }
@@ -93,6 +123,7 @@ void prepend(seq s, int val, ref seq out) {
     head.val = val;
     head.next = s.head;
 
+    out = new seq();
     out.head = head;
 }
 
@@ -111,10 +142,8 @@ void enqueue(queue q, int val, ref queue ret) {
 
     ret = new queue(); 
     if (q.rear != null) {
-        q.rear.next = n;
-
-        ret.front = q.front;
-        ret.rear = n;
+        queue_copy(q, ret);
+        ret.rear.next = n;
     } else {
         ret.front = n;
         ret.rear = n;

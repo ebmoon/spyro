@@ -32,7 +32,7 @@ def write_tempfile(path, code):
         f.write(code)
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization) :       
+    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization, minimize_terms) :       
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
@@ -44,7 +44,7 @@ class PropertySynthesizer:
         self.__template = infile.read()
 
         # Sketch Input File Generator
-        self.__input_generator = InputGenerator(self.__template, enable_minimization)
+        self.__input_generator = InputGenerator(self.__template, enable_minimization, minimize_terms)
         self.__input_generator.set_num_atom(num_atom_max)
 
         # Initial list of positive/negative examples

@@ -6,12 +6,13 @@ from util import *
 class InputGenerator:
     # To-Do: Generate codes from variables and relations
 
-    def __init__(self, code, enable_minimization):
+    def __init__(self, code, enable_minimization, minimize_terms):
         # Input code
         self.__template = TemplateParser(code)
         self.__fresh_num = 0
         self.__num_atom = 1
         self.__use_minimization = enable_minimization
+        self.__minimize_terms = minimize_terms
 
     def set_num_atom(self, num_atom):
         self.__num_atom = num_atom
@@ -116,18 +117,29 @@ class InputGenerator:
         return code
 
     def __property_code(self):
+        def property_gen_code(n):
+            return ' || '.join([f'atom_{i}' for i in range(n)])
+
         property_gen_symbol = self.__template.get_generator_rules()[0][1]
         arg_call = self.__template.get_arguments_call()
         arg_defn = self.__template.get_arguments_defn()
-
         atom_gen = f'{property_gen_symbol}_gen({arg_call})'
-        property_gen = ' || '.join([f'atom_{i}' for i in range(self.__num_atom)])
 
         code = self.__generators() + '\n\n'
         code += f'generator boolean property_gen({arg_defn}) {{\n'
-        for i in range(self.__num_atom):
-            code += f'\tboolean atom_{i} = {atom_gen};\n'
-        code += f'\treturn {property_gen};\n'
+
+        if self.__minimize_terms:
+            code += f'\tint t = ??;\n'
+            for i in range(self.__num_atom):
+                property_gen = property_gen_code(i + 1)
+                code += f'\tboolean atom_{i} = {atom_gen};\n'
+                code += f'\tif (t == {i + 1}) {{ return {property_gen}; }}\n'
+            code += f'\tminimize(t);\n'
+        else:
+            for i in range(self.__num_atom):
+                code += f'\tboolean atom_{i} = {atom_gen};\n'
+            property_gen = property_gen_code(self.__num_atom)
+            code += f'\treturn {property_gen};\n'
         code += '}\n\n'
 
         code += f'void property({arg_defn},ref boolean out) {{\n'
