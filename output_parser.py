@@ -8,10 +8,10 @@ def replace_last_argument(text, var):
 
 class OutputParser:
     def __init__(self, text):
-        self._text = text.decode('utf-8')
+        self.__text = text.decode('utf-8')
 
-    def _get_function_code_lines(self, function_name):
-        lines = self._text.splitlines()
+    def __get_function_code_lines(self, function_name):
+        lines = self.__text.splitlines()
         
         target = 'void ' + function_name + ' ('
         start = find_linenum_starts_with(lines, target)
@@ -19,8 +19,21 @@ class OutputParser:
 
         return lines[start+2:end]
 
+    def get_lam_functions(self):
+        lines = self.__text.splitlines()
+
+        lam_functions = {}
+        for n, line in enumerate(lines):
+            if ('void' in line) and ('lam' in line):
+                end = find_linenum_starts_with(lines, '}', n)
+                lam_code = "\n".join(lines[n:end+1])
+                fun_name = line[6:line.find("(")]
+                lam_functions[fun_name] = lam_code
+
+        return lam_functions
+
     def parse_positive_example(self):       
-        soundness_code_lines = self._get_function_code_lines('soundness')
+        soundness_code_lines = self.__get_function_code_lines('soundness')
         soundness_code_lines = [line for line in soundness_code_lines if 'distance' not in line]
         soundness_code_lines = [line for line in soundness_code_lines if 'copy' not in line]
         soundness_code_lines = [line for line in soundness_code_lines if 'minimize' not in line]
@@ -34,10 +47,12 @@ class OutputParser:
         positive_example_code += '\n' + property_call
         positive_example_code += '\n\tassert out;' 
 
+        positive_example_code = positive_example_code.replace("//{}", "")
+
         return positive_example_code
 
     def parse_positive_example_precision(self):
-        precision_code_lines = self._get_function_code_lines('precision')
+        precision_code_lines = self.__get_function_code_lines('precision')
         distance_line = find_linenum_with(precision_code_lines, 'distance')
         decl_lines = precision_code_lines[:distance_line]
         
@@ -49,10 +64,12 @@ class OutputParser:
         positive_example_code += '\n' + property_call
         positive_example_code += '\n\tassert out;'
 
+        positive_example_code = positive_example_code.replace("//{}", "")
+
         return positive_example_code 
 
     def parse_negative_example_precision(self):
-        precision_code_lines = self._get_function_code_lines('precision')
+        precision_code_lines = self.__get_function_code_lines('precision')
         precision_code_lines = [line for line in precision_code_lines if 'distance' not in line]
         precision_code_lines = [line for line in precision_code_lines if 'copy' not in line]
         precision_code_lines = [line for line in precision_code_lines if 'minimize' not in line]
@@ -65,10 +82,12 @@ class OutputParser:
         negative_example_code += '\n' + property_call
         negative_example_code += '\n\tassert !out;'
 
+        negative_example_code = negative_example_code.replace("//{}", "")
+
         return negative_example_code       
 
     def parse_maxsat(self, neg_examples):
-        maxsat_code_lines = self._get_function_code_lines('maxsat') 
+        maxsat_code_lines = self.__get_function_code_lines('maxsat') 
         maxsat_code = '\n'.join(maxsat_code_lines)
 
         used_neg_examples = []
@@ -82,9 +101,10 @@ class OutputParser:
         return used_neg_examples, discarded_examples
 
     def parse_property(self):
-        property_code_lines = self._get_function_code_lines('property')
+        property_code_lines = self.__get_function_code_lines('property')
         property_code_lines = ['\t' + line.strip() for line in property_code_lines]
 
         property_code = '\n'.join(property_code_lines)
+        property_code = property_code.replace("//{}", "")
 
         return property_code.strip()

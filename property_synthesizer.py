@@ -3,6 +3,7 @@ import os
 import random
 import time
 
+from util import union_dict
 from input_generator import InputGenerator
 from output_parser import OutputParser
 
@@ -51,6 +52,7 @@ class PropertySynthesizer:
         self.__pos_examples = []
         self.__neg_examples = []
         self.__discarded_examples = []
+        self.__lam_functions = {}
         
         # Synthesized property
         self.__phi_initial = "out = false;"
@@ -118,7 +120,7 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_synthesis_input(self.__phi, self.__pos_examples, self.__neg_examples)        
+            .generate_synthesis_input(self.__phi, self.__pos_examples, self.__neg_examples, self.__lam_functions)        
 
         start_time = time.time()
 
@@ -132,9 +134,11 @@ class PropertySynthesizer:
 
         if output != None:
             output_parser = OutputParser(output)
-            return output_parser.parse_property()
+            prop = output_parser.parse_property()
+            lam_functions = output_parser.get_lam_functions()
+            return (prop, lam_functions)
         else:
-            return None
+            return (None, None)
 
     def __run_soundness_check(self):
         if self.__verbose:
@@ -142,7 +146,7 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_soundness_input(self.__phi, self.__pos_examples, self.__neg_examples)        
+            .generate_soundness_input(self.__phi, self.__pos_examples, self.__neg_examples, self.__lam_functions)        
         
         start_time = time.time()
 
@@ -156,10 +160,11 @@ class PropertySynthesizer:
 
         if output != None:
             output_parser = OutputParser(output)
-            pos_example = output_parser.parse_positive_example() 
-            return (False, pos_example)
+            pos_example = output_parser.parse_positive_example()
+            lam_functions = output_parser.get_lam_functions()
+            return (False, pos_example, lam_functions)
         else:
-            return (True, None)
+            return (True, None, None)
 
     def __run_precision_check(self):
         if self.__verbose:
@@ -168,7 +173,7 @@ class PropertySynthesizer:
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
             .generate_precision_input(
-                self.__phi, self.__phi_list, self.__pos_examples, self.__neg_examples)        
+                self.__phi, self.__phi_list, self.__pos_examples, self.__neg_examples, self.__lam_functions)        
         
         start_time = time.time()
 
@@ -186,9 +191,10 @@ class PropertySynthesizer:
                 if self.__enable_minimization else None
             neg_example = output_parser.parse_negative_example_precision() 
             phi = output_parser.parse_property()
-            return (False, pos_example, neg_example, phi)
+            lam_functions = output_parser.get_lam_functions()
+            return (False, pos_example, neg_example, phi, lam_functions)
         else:
-            return (True, None, None, None)
+            return (True, None, None, None, None)
 
     def __run_max_sat(self):
         if self.__verbose:
@@ -196,7 +202,7 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_maxsat_input(self.__pos_examples, self.__neg_examples)        
+            .generate_maxsat_input(self.__pos_examples, self.__neg_examples, self.__lam_functions)        
         
         start_time = time.time()
 
@@ -212,12 +218,17 @@ class PropertySynthesizer:
             output_parser = OutputParser(output)
             neg_examples, discarded_examples = output_parser.parse_maxsat(self.__neg_examples) 
             phi = output_parser.parse_property()
-            return (neg_examples, discarded_examples, phi)
+            lam_functions = output_parser.get_lam_functions()
+            return (neg_examples, discarded_examples, phi, lam_functions)
         else:
             neg_examples = []
             discarded_examples = self.__neg_examples
             phi = 'out = true;'
-            return (neg_examples, discarded_examples, phi)
+            lam_functions = self.__lam_functions
+            return (neg_examples, discarded_examples, phi, lam_functions)
+
+    def __add_lam_functions(self, lam_functions):
+        self.__lam_functions = union_dict(self.__lam_functions, lam_functions)
 
     def __synthesizeProperty(self):
         self.__phi = self.__phi_initial
@@ -227,29 +238,33 @@ class PropertySynthesizer:
 
         while not is_sound or not is_precise:
             if not is_sound and not is_precise and try_synthesis:
-                phi = self.__run_synthesize()
+                (phi, lam_functions) = self.__run_synthesize()
                 if phi == None:
-                    neg_examples, discarded_examples, phi = self.__run_max_sat()
+                    neg_examples, discarded_examples, phi, lam_functions = self.__run_max_sat()
                     self.__neg_examples = neg_examples
                     self.__discarded_examples += discarded_examples
                     self.__phi = phi
+                    self.__add_lam_functions(lam_functions)
                 else:
                     self.__phi = phi
+                    self.__add_lam_functions(lam_functions)
             
             if not is_sound:
-                is_sound, e = self.__run_soundness_check()
+                is_sound, e, lam_functions = self.__run_soundness_check()
                 if not is_sound:
                     is_precise = False
                     self.__pos_examples.append(e)
+                    self.__add_lam_functions(lam_functions)
                 try_synthesis = True
             else:
-                is_precise, e_pos, e_neg, phi = self.__run_precision_check()
+                is_precise, e_pos, e_neg, phi, lam_functions = self.__run_precision_check()
                 if not is_precise:
                     is_sound = False
                     self.__phi = phi
                     self.__neg_examples.append(e_neg)
                     if e_pos != None:
                         self.__pos_examples.append(e_pos)
+                    self.__add_lam_functions(lam_functions)
                     try_synthesis = False
 
     def __add_prop_to_conjunction(self):
@@ -264,7 +279,7 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_change_behavior_input(self.__phi, self.__phi_list)        
+            .generate_change_behavior_input(self.__phi, self.__phi_list, self.__lam_functions)        
         
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
@@ -277,7 +292,7 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_model_check_input(self.__phi_list, neg_example)
+            .generate_model_check_input(self.__phi_list, neg_example, self.__lam_functions)
 
         write_tempfile(path, code)
         output = self.__try_synthesis(path)

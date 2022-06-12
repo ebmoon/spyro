@@ -31,3 +31,11 @@ def max_dict(d1, d2):
             d[k] = v
     
     return d
+
+def union_dict(d1, d2):
+    d = d1.copy()
+    for k, v in d2.items():
+        if k not in d.keys():
+            d[k] = v
+
+    return d

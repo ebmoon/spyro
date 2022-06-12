@@ -248,6 +248,8 @@ class InputGenerator:
         elif expr[0] == 'FCALL':
             dicts = [self.__count_generator_calls(cxt, e) for e in expr[2]]
             return functools.reduce(sum_dict, dicts) if len(dicts) > 0 else dict()
+        elif expr[0] == 'LAMBDA':
+            return self.__count_generator_calls(cxt, expr[2])
         else:
             raise Exception(f'Unhandled case: {expr[0]}')
 
@@ -322,6 +324,9 @@ class InputGenerator:
             code += f'\t\t{out_type} {fresh_var};\n'
             code += f'\t\t{expr[1]}({args_call});\n'
             return (cxt, code, fresh_var)
+        elif expr[0] == 'LAMBDA':
+            cxt, code, out = self.__expr_to_code(cxt, expr[2])
+            return (cxt, code, f'({expr[1]}) -> {out}')
         else:
             raise Exception(f'Unhandled case: {expr}')
 
@@ -422,17 +427,22 @@ class InputGenerator:
 
         return code
 
-    def generate_synthesis_input(self, phi, pos_examples, neg_examples):
+    def __lam_functions(self, lam_functions):
+        return "\n\n".join(lam_functions.values()) + "\n\n"
+
+    def generate_synthesis_input(self, phi, pos_examples, neg_examples, lam_functions):
         code = self.__template.get_implementation()
+        code += self.__lam_functions(lam_functions)
         code += self.__examples(pos_examples, neg_examples)
         code += self.__property_code()
 
         return code
 
-    def generate_soundness_input(self, phi, pos_examples, neg_examples):
+    def generate_soundness_input(self, phi, pos_examples, neg_examples, lam_functions):
         maximize_dist = len(pos_examples) != 0 and self.__use_minimization
         
         code = self.__template.get_implementation()
+        code += self.__lam_functions(lam_functions)
         code += self.__obtained_property_code(phi)
         code += self.__example_generators()
         if maximize_dist:
@@ -441,10 +451,11 @@ class InputGenerator:
 
         return code
 
-    def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples):
+    def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples, lam_functions):
         minimize_dist = len(pos_examples) != 0 and self.__use_minimization
 
         code = self.__template.get_implementation()
+        code += self.__lam_functions(lam_functions)
         code += self.__examples(pos_examples, neg_examples)
         code += self.__property_code()
         code += self.__obtained_property_code(phi)
@@ -456,8 +467,9 @@ class InputGenerator:
 
         return code
 
-    def generate_maxsat_input(self, pos_examples, neg_examples):
+    def generate_maxsat_input(self, pos_examples, neg_examples, lam_functions):
         code = self.__template.get_implementation()
+        code += self.__lam_functions(lam_functions)
         code += self.__examples(pos_examples, neg_examples, True)
         code += self.__example_generators()
         code += self.__property_code()
@@ -465,8 +477,9 @@ class InputGenerator:
 
         return code
 
-    def generate_change_behavior_input(self, phi, phi_list):
+    def generate_change_behavior_input(self, phi, phi_list, lam_functions):
         code = self.__template.get_implementation()
+        code += self.__lam_functions(lam_functions)
         code += self.__property_conj_code(phi_list)
         code += self.__obtained_property_code(phi)
         code += self.__example_generators()
@@ -474,8 +487,9 @@ class InputGenerator:
 
         return code
 
-    def generate_model_check_input(self, phi_list, neg_example):
+    def generate_model_check_input(self, phi_list, neg_example, lam_functions):
         code = self.__template.get_implementation()
+        code += self.__lam_functions(lam_functions)
         code += self.__property_conj_code(phi_list)
         code += self.__example_generators()
         code += self.__model_check(neg_example)

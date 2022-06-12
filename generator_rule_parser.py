@@ -44,6 +44,11 @@ def p_exprlist(p):
     else:
         p[0] = [p[1]]    
 
+def p_expr_lambda(p):
+    "expr : LPAREN ID RPAREN ARROW expr"
+
+    p[0] = ('LAMBDA', p[2], p[5])
+
 def p_expr_uminus(p):
     "expr : MINUS expr %prec UMINUS"
     
