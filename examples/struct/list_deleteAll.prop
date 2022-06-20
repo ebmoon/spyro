@@ -1,4 +1,4 @@
-//@Description 
+//@Description delete all the occurence of the input value
 
 var {
     list delete_in_list;
@@ -11,9 +11,9 @@ relation {
 }
 
 generator {
-    boolean AP -> U | E | SAP | is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L);
-    boolean U -> forall((x) -> x <= I, L) | forall((x) -> x == I, L) | forall((x) -> x >= I, L) ;
-    boolean E -> exists((x) -> x <= I, L) | exists((x) -> x == I, L) | exists((x) -> x >= I, L) ;
+    boolean AP -> is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L) | SAP | U | E;
+    boolean U -> forall((x) -> x <= I, L) | forall((x) -> x == I, L) | forall((x) -> x >= I, L) | forall((x) -> x != I, L) ;
+    boolean E -> exists((x) -> x <= I, L) | exists((x) -> x == I, L) | exists((x) -> x >= I, L) | exists((x) -> x != I, L) ;
     boolean SAP -> S < S + ??(1) | S == S + ??(1) | S > S + ??(1) | S != S + ??(1) ;
     int I -> delete_in_val ;
     int S -> len(L) | 0 ;

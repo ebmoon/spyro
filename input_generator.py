@@ -351,10 +351,14 @@ class InputGenerator:
             cxt_init = {k:0 for k in cxt.keys()}
             _, e_code, e_out = self.__expr_to_code(cxt_init, e, typ)
 
-            code += f'\tif (t == {n}) {{\n'
-            code += e_code
-            code += f'\t\treturn {e_out};\n'
-            code += '\t}\n'
+            if (n + 1 == len(exprlist)):
+                code += e_code
+                code += f'\treturn {e_out};\n'            
+            else:
+                code += f'\tif (t == {n}) {{\n'
+                code += e_code
+                code += f'\t\treturn {e_out};\n'
+                code += '\t}\n'
 
         code += '}\n'
 
@@ -409,10 +413,14 @@ class InputGenerator:
             cxt_init = {k:0 for k in cxt.keys()}
             _, e_code, e_out = self.__expr_to_code(cxt_init, e, typ)
 
-            code += f'\tif (t == {n}) {{\n'
-            code += e_code
-            code += f'\t\treturn {e_out};\n'
-            code += '\t}\n'
+            if (n + 1 == len(exprlist)):
+                code += e_code
+                code += f'\treturn {e_out};\n'            
+            else:
+                code += f'\tif (t == {n}) {{\n'
+                code += e_code
+                code += f'\t\treturn {e_out};\n'
+                code += '\t}\n'
 
         code += '}\n'
 
