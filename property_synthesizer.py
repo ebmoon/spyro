@@ -106,7 +106,8 @@ class PropertySynthesizer:
         inline_bnd = self.__inline_bnd if not check_sound else self.__inline_bnd_sound
         try:
             return subprocess.check_output( \
-                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(inline_bnd)], \
+                [SKETCH_BINARY_PATH, path, \
+                    '--bnd-inline-amnt', str(inline_bnd)], \
                 stderr=subprocess.PIPE, timeout=300)
         except subprocess.CalledProcessError as e:
             return None

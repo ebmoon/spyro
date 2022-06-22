@@ -1,23 +1,24 @@
 //@Description delete the first occurence of the input value
 
 var {
-    list delete_in_list;
-    int delete_in_val;
-    list delete_out_list;
+    list l;
+    int target;
+    list lout;
 }
 
 relation {
-    delete(delete_in_list, delete_in_val, delete_out_list);
+    delete(l, target, lout);
 }
 
 generator {
-    boolean AP -> is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L) | SAP | U | E;
-    boolean U -> forall((x) -> x <= I, L) | forall((x) -> x == I, L) | forall((x) -> x >= I, L) | forall((x) -> x != I, L) ;
-    boolean E -> exists((x) -> x <= I, L) | exists((x) -> x == I, L) | exists((x) -> x >= I, L) | exists((x) -> x != I, L) ;
-    boolean SAP -> S < S + ??(1) | S == S + ??(1) | S > S + ??(1) | S != S + ??(1) ;
-    int I -> delete_in_val ;
+    boolean AP -> is_empty(L) | !is_empty(L) 
+                | equal_list(L, L) | !equal_list(L, L) 
+                | compare(S, S + ??(1))
+                | forall((x) -> compare(x, I), L) 
+                | exists((x) -> compare(x, I), L);
+    int I -> target ;
     int S -> len(L) | 0 ;
-    list L -> delete_in_list | delete_out_list ;
+    list L -> l | lout ;
 }
 
 example {

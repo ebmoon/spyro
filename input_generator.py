@@ -125,7 +125,7 @@ class InputGenerator:
         arg_defn = self.__template.get_arguments_defn()
         atom_gen = f'{property_gen_symbol}_gen({arg_call})'
 
-        code = self.__generators() + '\n\n'
+        code = self.__generators() + '\n\n' + self.__compare() + '\n\n'
         code += f'generator boolean property_gen({arg_defn}) {{\n'
 
         if self.__minimize_terms:
@@ -289,6 +289,19 @@ class InputGenerator:
 
         return f'var_{n}'
 
+    def __compare(self):
+        code = 'generator boolean compare(int x, int y) {\n'
+        code += '\tint t = ??;\n'
+        code += '\tif (t == 0) { return x == y; }\n'
+        code += '\tif (t == 1) { return x <= y; }\n'
+        code += '\tif (t == 2) { return x >= y; }\n'
+        code += '\tif (t == 3) { return x < y; }\n'
+        code += '\tif (t == 4) { return x > y; }\n'
+        code += '\treturn x != y; \n'
+        code += '}'
+
+        return code
+
     def __expr_to_code(self, cxt, expr, out_type = 'boolean'):
         if expr[0] == 'BINOP':
             cxt1, code1, out1 = self.__expr_to_code(cxt, expr[2])
@@ -318,12 +331,15 @@ class InputGenerator:
                 code += code_sub
                 args.append(out_sub)
 
-            
-            fresh_var = self.__fresh_variable()
-            args_call = ','.join(args + [fresh_var])
-            code += f'\t\t{out_type} {fresh_var};\n'
-            code += f'\t\t{expr[1]}({args_call});\n'
-            return (cxt, code, fresh_var)
+            if (expr[1] == 'compare'):
+                args_call = ','.join(args)
+                return (cxt, code, f'{expr[1]}({args_call})')
+            else:
+                fresh_var = self.__fresh_variable()
+                args_call = ','.join(args + [fresh_var])
+                code += f'\t\t{out_type} {fresh_var};\n'
+                code += f'\t\t{expr[1]}({args_call});\n'
+                return (cxt, code, fresh_var)
         elif expr[0] == 'LAMBDA':
             cxt, code, out = self.__expr_to_code(cxt, expr[2])
             return (cxt, code, f'({expr[1]}) -> {out}')

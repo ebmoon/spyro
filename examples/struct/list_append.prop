@@ -1,20 +1,21 @@
 //@Description 
 
 var {
-    list append_l1;
-    list append_l2;
-    list append_out;
+    list l1;
+    list l2;
+    list lout;
 }
 
 relation {
-    append(append_l1, append_l2, append_out);
+    append(l1, l2, lout);
 }
 
 generator {
-    boolean AP -> SAP | is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L);
-    boolean SAP -> S < S + S + ??(1) | S == S + S + ??(1) | S > S + S + ??(1) | S != S + S + ??(1) ;
+    boolean AP -> compare(S, S + S + ??(1)) 
+                | is_empty(L) | !is_empty(L) 
+                | equal_list(L, L) | !equal_list(L, L);
     int S -> len(L) | 0 ;
-    list L -> append_l1 | append_l2 | append_out ;
+    list L -> l1 | l2 | lout ;
 }
 
 example {
