@@ -1,25 +1,26 @@
-//@Description 
+//@Description need inline bnd 10
 
 var {
-    list l1;
-    list l2;
-    list lout;
+    list l;
+    int val;
+    boolean elem_out;
 }
 
 relation {
-    append(l1, l2, lout);
+    elem(l, val, elem_out);
 }
 
 generator {
-    boolean AP -> compare(S, S + S + ??(1)) 
-                | is_empty(L) | !is_empty(L) 
-                | equal_list(L, L) | !equal_list(L, L);
-    int S -> len(L) | 0 ;
-    list L -> l1 | l2 | lout ;
+    boolean AP -> is_empty(L) | !is_empty(L) 
+                | elem_out | !elem_out;
+                | forall((x) -> compare(x, I), L) 
+                | exists((x) -> compare(x, I), L);
+    list L -> l ;
+    int I -> val ;
 }
 
 example {
-    int -> ?? | -1 * ?? ;
+    int -> ??(3) | -1 * ??(3) ;
     boolean -> ?? ;
     list -> nil() | cons(int, list);
 }
@@ -51,35 +52,31 @@ void tail(list l, ref list ret) {
     ret = l.tl;
 }
 
-void list_copy(list l, ref list ret) {
+void elem(list l, int val, ref boolean ret) {
     if (l == null) {
-        ret = null;
+        ret = false;
+    } else if (val == l.hd) {
+        ret = true;
     } else {
-        ret = new list();
-        ret.hd = l.hd;
-
-        list tl_copy;
-        list_copy(l.tl, tl_copy);
-        ret.tl = tl_copy;
-    } 
-}
-
-void append(list l1, list l2, ref list ret) {
-    if (l1 == null) {
-        list_copy(l2, ret);
-    } else {
-        list tl_append;
-        append(l1.tl, l2, tl_append);
-        cons(l1.hd, tl_append, ret);
+        elem(l.tl, val, ret);
     }
 }
 
-void len(list l, ref int ret) {
+void forall(fun f, list l, ref boolean ret) {
     if (l == null) {
-        ret = 0;
+        ret = true;
     } else {
-        len(l.tl, ret);
-        ret = ret + 1;
+        forall(f, l.tl, ret);        
+        ret = ret && f(l.hd);
+    }
+}
+
+void exists(fun f, list l, ref boolean ret) {
+    if (l == null) {
+        ret = false;
+    } else {
+        exists(f, l.tl, ret);
+        ret = ret || f(l.hd);
     }
 }
 

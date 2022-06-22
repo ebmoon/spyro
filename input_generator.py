@@ -291,13 +291,7 @@ class InputGenerator:
 
     def __compare(self):
         code = 'generator boolean compare(int x, int y) {\n'
-        code += '\tint t = ??;\n'
-        code += '\tif (t == 0) { return x == y; }\n'
-        code += '\tif (t == 1) { return x <= y; }\n'
-        code += '\tif (t == 2) { return x >= y; }\n'
-        code += '\tif (t == 3) { return x < y; }\n'
-        code += '\tif (t == 4) { return x > y; }\n'
-        code += '\treturn x != y; \n'
+        code += '\t return {| x (== | <= | >= | < | > | !=) y|} ;'
         code += '}'
 
         return code

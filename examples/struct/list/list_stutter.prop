@@ -1,24 +1,24 @@
 //@Description 
 
 var {
-    int take_in_n;
-    list take_in_list;
-    list take_out_list;
+    list l;
+    list lout;
 }
 
 relation {
-    take(take_in_n, take_in_list, take_out_list);
+    stutter(l, lout);
 }
 
 generator {
-    boolean AP -> SAP | is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L);
-    boolean SAP -> S < S + S + ??(1) | S == S + S + ??(1) | S > S + S + ??(1) | S != S + S + ??(1) ;
-    int S -> len(L) | take_in_n | 0 ;
-    list L -> take_in_list | take_out_list ;
+    boolean AP -> is_empty(L) | !is_empty(L) 
+                | equal_list(L, L) | !equal_list(L, L)
+                | compare(S, S + ??(1));
+    int S -> len(L) | 0 ;
+    list L -> l | lout ;
 }
 
 example {
-    int -> ?? | -1 * ?? ;
+    int -> ??(3) | -1 * ??(3) ;
     list -> nil() | cons(int, list);
 }
 
@@ -62,15 +62,19 @@ void list_copy(list l, ref list ret) {
     } 
 }
 
-void take(int n, list l, ref list ret) {
-    assert (n >= 0);
-    if (n > 0) {
-        assert (l != null);
-        ret = new list();
-        ret.hd = l.hd;
-        take(n-1, l.tl, ret.tl);
+void stutter(list l, ref list ret) {
+    if (l == null) {
+        ret = null;    
     } else {
-        ret = null;        
+        list n1 = new list();
+        list n2 = new list();
+
+        n1.hd = l.hd;
+        n2.hd = l.hd;
+
+        n1.tl = n2;
+        stutter(l.tl, n2.tl);
+        ret = n1;
     }
 }
 

@@ -1,25 +1,25 @@
 //@Description 
 
 var {
-    int replicate_in_n;
-    int replicate_in_val;
-    list replicate_out_list;
+    list l;
+    int n;
+    list lout;
 }
 
 relation {
-    replicate(replicate_in_n, replicate_in_val, replicate_out_list);
+    take(l, n, lout);
 }
 
 generator {
-    boolean AP -> SAP | is_empty(L) | !is_empty(L) | equal_list(L, L) | !equal_list(L, L);
-    boolean SAP -> S < S + S + ??(1) | S == S + S + ??(1) | S > S + S + ??(1) | S != S + S + ??(1) ;
-    int S -> len(L) | replicate_in_n | 0 ;
-    list L -> replicate_out_list ;
+    boolean AP -> compare(S, S + ??(1)) 
+                | is_empty(L) | !is_empty(L) 
+                | equal_list(L, L) | !equal_list(L, L);
+    int S -> len(L) | n | 0 ;
+    list L -> l | lout ;
 }
 
 example {
-    int -> ?? | -1 * ?? ;
-    boolean -> ?? ;
+    int -> ??(3) | -1 * ??(3) ;
     list -> nil() | cons(int, list);
 }
 
@@ -63,13 +63,14 @@ void list_copy(list l, ref list ret) {
     } 
 }
 
-void replicate(int n, int val, ref list ret) {
+void take(list l, int n, ref list ret) {
     assert (n >= 0);
     if (n > 0) {
+        assert (l != null);
+        
         ret = new list();
-
-        ret.hd = val;
-        replicate(n-1, val, ret.tl);
+        ret.hd = l.hd;
+        take(l.tl, n-1, ret.tl);
     } else {
         ret = null;        
     }

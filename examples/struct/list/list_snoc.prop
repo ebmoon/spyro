@@ -1,20 +1,24 @@
 //@Description 
 
 var {
-    list min_in_list;
-    int min_out_val;
+    list l;
+    int val;
+    list lout;
 }
 
 relation {
-    min(min_in_list, min_out_val);
+    snoc(l, val, lout);
 }
 
 generator {
-    boolean AP -> U | E | is_empty(L) | !is_empty(L);
-    boolean U -> forall((x) -> x <= I, L) | forall((x) -> x == I, L) | forall((x) -> x >= I, L) ;
-    boolean E -> exists((x) -> x <= I, L) | exists((x) -> x == I, L) | exists((x) -> x >= I, L) ;
-    list L -> min_in_list ;
-    int I -> min_out_val ;
+    boolean AP -> is_empty(L) | !is_empty(L) 
+                | equal_list(L, L) | !equal_list(L, L)
+                | compare(S, S + ??(1))
+                | forall((x) -> compare(x, I), L) 
+                | exists((x) -> compare(x, I), L);
+    int I -> val ;
+    int S -> len(L) | 0 ;
+    list L -> l | lout ;
 }
 
 example {
@@ -49,16 +53,37 @@ void tail(list l, ref list ret) {
     ret = l.tl;
 }
 
-void min(list l, ref int ret) {
-    assert (l != null);
-
-    if (l.tl != null) {
-        min(l.tl, ret);
-        if (l.hd < ret) {
-            ret = l.hd;
-        }
+void list_copy(list l, ref list ret) {
+    if (l == null) {
+        ret = null;
     } else {
-        ret = l.hd;
+        ret = new list();
+        ret.hd = l.hd;
+
+        list tl_copy;
+        list_copy(l.tl, tl_copy);
+        ret.tl = tl_copy;
+    } 
+}
+
+void snoc(list l, int val, ref list ret) {
+    if (l == null) {
+        ret = new list();
+        ret.hd = val;
+        ret.tl = null;
+    } else {
+        ret = new list();
+        ret.hd = l.hd;
+        snoc(l.tl, val, ret.tl);
+    }
+}
+
+void len(list l, ref int ret) {
+    if (l == null) {
+        ret = 0;
+    } else {
+        len(l.tl, ret);
+        ret = ret + 1;
     }
 }
 
