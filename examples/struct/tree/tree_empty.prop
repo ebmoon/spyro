@@ -1,21 +1,17 @@
 //@Description Binary tree
 
 var {
-    int branch_in_val;
-    tree_node branch_in_left;
-    tree_node branch_in_right;
-    tree_node branch_in_out;
+    tree_node empty_out;
 }
 
 relation {
-    branch(branch_in_val, branch_in_left, branch_in_right, branch_in_out);
+    empty(empty_out);
 }
 
 generator {
-    boolean AP -> LAP | tree_equal(T, T) | !tree_equal(T, T);
-    boolean LAP -> L == L + L + ??(1) | L < L + L + ??(1) | L > L + L + ??(1) | L != L + L + ??(1);
-    int L -> tree_size(T) | 0;
-    tree_node T -> branch_in_left | branch_in_right | branch_in_out;
+    boolean AP -> compare(S, S + ??(1)) | tree_equal(T, T) | !tree_equal(T, T);
+    int S -> tree_size(T) | 0;
+    tree_node T -> empty_out;
 }
 
 example {

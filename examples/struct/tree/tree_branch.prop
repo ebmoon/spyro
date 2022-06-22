@@ -1,27 +1,27 @@
 //@Description Binary tree
 
 var {
-    tree_node elem_in_tree;
-    int elem_in_val;
-    boolean elem_out;
+    int val;
+    tree_node t_left;
+    tree_node t_right;
+    tree_node t_out;
 }
 
 relation {
-    elem(elem_in_tree, elem_in_val, elem_out);
+    branch(val, t_left, t_right, t_out);
 }
 
 generator {
-    boolean AP -> elem_out | !elem_out | is_empty(T) | !is_empty(T) | U | E ;
-    boolean U -> forall((x) -> x <= I, T) | forall((x) -> x == I, T) | forall((x) -> x >= I, T) | forall((x) -> x != I, T) ;
-    boolean E -> exists((x) -> x <= I, T) | exists((x) -> x == I, T) | exists((x) -> x >= I, T) | exists((x) -> x != I, T) ;
-    int I -> elem_in_val;
-    int L -> tree_size(T) | 0;
-    tree_node T -> elem_in_tree;
+    boolean AP -> tree_equal(T, T) | !tree_equal(T, T)
+                | compare(S, S + S + ??(1))
+                | forall((x) -> compare(x, I), T)
+                | exists((x) -> compare(x, I), T);
+    int S -> tree_size(T) | 0;
+    tree_node T -> t_left | t_right | t_out;
 }
 
 example {
     int -> ??(2) | -1 * ??(2) ;
-    boolean -> ??;
     tree_node(3) -> empty() | branch(int, tree_node, tree_node);
 }
 
@@ -60,20 +60,6 @@ void root_val(tree_node t, ref int ret) {
     ret = t.val;
 }
 
-void elem(tree_node t, int val, ref boolean ret) {
-    if (t == null) {
-        ret = false;
-    } else {
-        boolean left_elem;
-        boolean right_elem;
-
-        elem(t.left, val, left_elem);
-        elem(t.right, val, right_elem);
-
-        ret = (t.val == val) || left_elem || right_elem;
-    }
-}
-
 void forall(fun f, tree_node t, ref boolean ret) {
     if (t == null) {
         ret = true;
@@ -100,10 +86,6 @@ void exists(fun f, tree_node t, ref boolean ret) {
 
         ret = left_ret || right_ret || f(t.val);
     }
-}
-
-void is_empty(tree_node t, ref boolean ret) {
-    ret = (t == null);
 }
 
 void tree_equal(tree_node t1, tree_node t2, ref boolean ret) {

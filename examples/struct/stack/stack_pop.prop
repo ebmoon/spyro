@@ -1,0 +1,95 @@
+//@Description Sketch to reverse a list.
+
+var {
+    stack s;
+    stack s_out;
+    int val_out;
+}
+
+relation {
+    pop(s, s_out, val_out);
+}
+
+generator {
+    boolean AP -> is_empty(ST) | !is_empty(ST)
+                | stack_equal(ST, ST) | !stack_equal(ST, ST)
+                | compare(S, S + ??(1));
+    int S -> stack_len(ST) | 0;
+    stack ST -> s | s_out;
+}
+
+example {
+    int -> ??(3) | -1 * ??(3) ;
+    stack -> empty() | push(stack, int);
+}
+
+struct node {
+	node next;
+	int val;	
+}
+
+struct stack {
+	node top;
+}
+
+void empty(ref stack ret) {
+    ret = new stack();
+    ret.top = null;
+}
+
+void push(stack s, int val, ref stack ret) {
+    assert s != null;
+
+    node n = new node();
+    n.val = val;
+    n.next = s.top;
+
+    ret = new stack();   
+    ret.top = n;
+}
+
+void pop(stack s, ref stack ret_stack, ref int ret_val) {
+    assert s != null;
+    assert s.top != null;
+    
+    ret_stack = new stack();
+    ret_stack.top = s.top.next;
+    ret_val = s.top.val;
+}
+
+void is_empty(stack s, ref boolean ret) {
+    ret = (s.top == null);
+}
+
+boolean node_equal(node n1, node n2) {
+    if (n1 == null || n2 == null) {
+        return n1 == n2;
+    } else {
+        return n1.val == n2.val && node_equal(n1.next, n2.next);
+    }
+}
+
+void stack_equal(stack s1, stack s2, ref boolean ret) {
+    if (s1 == null || s2 == null) {
+        ret = s1 == s2;
+    } else {
+        ret = node_equal(s1.top, s2.top);
+    }
+}
+
+void node_len(node n, ref int ret) {
+    if (n == null) {
+        ret = 0;
+    } else {
+        node_len(n.next, ret);
+        ret = ret + 1;
+    }
+}
+
+void stack_len(stack s, ref int ret) {
+    if (s == null) {
+        ret = 0;
+    } else {
+        node_len(s.top, ret);
+    }
+}
