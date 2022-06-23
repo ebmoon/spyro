@@ -10,13 +10,13 @@ relation {
 }
 
 generator {
-    boolean AP -> E < C | E > C | E == C | E != C ;
+    boolean AP -> compare(E, C) ;
     int E -> C * x + C * o + C * x * x;
     int C -> ??(3) - 4  ;
 }
 
 example {
-    int -> ?? | -1 * ?? ;
+    int -> ??(5) | -1 * ??(5) ;
 }
 
 void sum(int x, ref int out){

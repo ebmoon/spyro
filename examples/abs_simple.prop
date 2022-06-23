@@ -10,8 +10,8 @@ relation {
 }
 
 generator {
-    boolean B -> I < I | I <= I | I == I | I != I ;
-    int I -> x | -x | o | -o | 0 ;
+    boolean AP -> compare(I, I) ;
+    int I -> x | -x | o | 0 ;
 }
 
 example {

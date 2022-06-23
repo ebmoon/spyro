@@ -1,13 +1,13 @@
 //@Description Binary tree
 
 var {
-    tree_node t;
+    tree_node tree;
     int val;
     boolean elem_out;
 }
 
 relation {
-    elem(t, val, elem_out);
+    elem(tree, val, elem_out);
 }
 
 generator {
@@ -18,13 +18,13 @@ generator {
                 | exists((x) -> compare(x, I), T);
     int I -> val;
     int S -> tree_size(T) | 0;
-    tree_node T -> t;
+    tree_node T -> tree;
 }
 
 example {
     int -> ??(2) | -1 * ??(2) ;
     boolean -> ??;
-    tree_node(3) -> empty() | branch(int, tree_node, tree_node);
+    tree_node(4) -> empty() | branch(int, tree_node, tree_node);
 }
 
 struct tree_node {

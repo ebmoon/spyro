@@ -10,9 +10,11 @@ relation {
 }
 
 generator {
-    boolean AP -> is_empty(L) | !is_empty(L)
+    boolean AP -> compare(S, S + ??(1))
+                | is_empty(L) | !is_empty(L)
                 | forall((x) -> compare(x, I), L) 
                 | exists((x) -> compare(x, I), L);
+    int S -> len(L) | 0 ;
     list L -> l ;
     int I -> min_out ;
 }
@@ -77,6 +79,15 @@ void exists(fun f, list l, ref boolean ret) {
     } else {
         exists(f, l.tl, ret);
         ret = ret || f(l.hd);
+    }
+}
+
+void len(list l, ref int ret) {
+    if (l == null) {
+        ret = 0;
+    } else {
+        len(l.tl, ret);
+        ret = ret + 1;
     }
 }
 

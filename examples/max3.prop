@@ -3,26 +3,25 @@
 var {
     int x1;
     int x2;
+    int x3;
     int o;
 }
 
 relation {
-    max2(x1, x2, o);
+    max3(x1, x2, x3, o);
 }
 
 generator {
     boolean AP -> compare(I, I) ;
-    int I -> x1 | x2 | o ;
+    int I -> x1 | x2 | x3 | o ;
 }
 
 example {
     int -> ??(5) | -1 * ??(5) ;
 }
 
-void max2(int x, int y, ref int out){
-    if (x > y) {
-        out = x;
-    } else {
-        out = y;
-    }
+void max3(int x1, int x2, int x3, ref int out){
+    out = x1;
+    if (x2 > out) { out = x2; }
+    if (x3 > out) { out = x3; }
 }

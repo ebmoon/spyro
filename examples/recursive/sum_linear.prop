@@ -10,7 +10,7 @@ relation {
 }
 
 generator {
-    boolean B -> C * x + C * o + C < 0 | C * x + C * o + C == 0 ;
+    boolean AP -> C * x + C * o + C < 0 | C * x + C * o + C == 0 ;
     int C -> ??(2) | -??(2);
 }
 
