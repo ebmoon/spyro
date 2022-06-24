@@ -18,8 +18,7 @@ relation {
 generator {
     boolean AP -> compare(I, I)
                 | is_empty(ST) | !is_empty(ST)
-                | stack_equal(ST, ST) | !stack_equal(ST, ST)
-                | compare(S, S + ??(1));
+                | stack_equal(ST, ST) | !stack_equal(ST, ST);
     int I -> push_val | pop_val_out;
     int S -> stack_len(ST) | 0;
     stack ST -> push_s | push_s_out | pop_s | pop_s_out;

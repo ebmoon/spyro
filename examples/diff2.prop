@@ -16,8 +16,8 @@ relation {
 }
 
 generator {
-    boolean AP -> compare(I, I + I);
-    int I -> x1 | x2 | y1 | y2 | o1 | o2 | 0 ;
+    boolean AP -> I == I | I != I;
+    int I -> x1 | x2 | y1 | y2 | o1 | o2;
 }
 
 example {

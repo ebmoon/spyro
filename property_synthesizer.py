@@ -82,6 +82,8 @@ class PropertySynthesizer:
         self.__time_maxsat = 0
         self.__time_synthesis = 0
 
+        self.__synthesis_statistics = []     
+
         self.__num_pos_examples = []
         self.__num_used_neg_examples = []
         self.__num_discarded_neg_examples = []
@@ -265,7 +267,7 @@ class PropertySynthesizer:
                     self.__neg_examples.append(e_neg)
                     if e_pos != None:
                         self.__pos_examples.append(e_pos)
-                    self.__add_lam_functions(lam_functions)
+                    self.__lam_functions = lam_functions
                     try_synthesis = False
 
     def __add_prop_to_conjunction(self):
