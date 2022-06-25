@@ -25,7 +25,8 @@ def main():
     enable_minimization = args.enable_minimization
     minimize_terms = args.minimize_terms
 
-    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization, minimize_terms).run()
+    # PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization, minimize_terms).run()
+    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization, minimize_terms).run_benchmark()
 
     infile.close()
     outfile.close()
