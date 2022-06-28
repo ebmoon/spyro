@@ -116,7 +116,7 @@ class InputGenerator:
 
         return code
 
-    def __property_code(self):
+    def __property_code(self, maxsat=False):
         def property_gen_code(n):
             return ' || '.join([f'atom_{i}' for i in range(n)])
 
@@ -128,7 +128,7 @@ class InputGenerator:
         code = self.__generators() + '\n\n' + self.__compare() + '\n\n'
         code += f'generator boolean property_gen({arg_defn}) {{\n'
 
-        if self.__minimize_terms:
+        if self.__minimize_terms and not maxsat:
             code += f'\tint t = ??;\n'
             for i in range(self.__num_atom):
                 property_gen = property_gen_code(i + 1)
@@ -499,7 +499,7 @@ class InputGenerator:
         code += self.__lam_functions(lam_functions)
         code += self.__examples(pos_examples, neg_examples, True)
         code += self.__example_generators()
-        code += self.__property_code()
+        code += self.__property_code(maxsat=True)
         code += self.__maxsat(len(neg_examples))
 
         return code

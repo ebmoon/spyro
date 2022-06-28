@@ -57,6 +57,7 @@ class PropertySynthesizer:
         # Synthesized property
         self.__phi_initial = "out = false;"
         self.__phi_conj = "out = true;"
+        self.__phi_last_sound_initial = "out = true;"
         self.__phi_list = []
 
         # Boolean variables for iteration
@@ -93,6 +94,8 @@ class PropertySynthesizer:
         self.__min_time_maxsat = self.__timeout
         self.__min_time_synthesis = self.__timeout
 
+        self.__time_last_query = 0
+
         self.__statistics = []     
 
         self.__num_pos_examples = []
@@ -108,7 +111,8 @@ class PropertySynthesizer:
     def __get_new_tempfile_path(self):
         path = TEMP_FILE_PATH
         path += self.__tempfile_name
-        path += f'_{self.__outer_iterator}_{self.__inner_iterator}'
+        if self.__verbose:
+            path += f'_{self.__outer_iterator}_{self.__inner_iterator}'
         path += ".sk"
 
         self.__inner_iterator += 1
@@ -188,9 +192,9 @@ class PropertySynthesizer:
             output_parser = OutputParser(output)
             pos_example = output_parser.parse_positive_example()
             lam_functions = output_parser.get_lam_functions()
-            return (False, pos_example, lam_functions)
+            return (False, pos_example, lam_functions, False)
         else:
-            return (True, None, None)
+            return (True, None, None, elapsed_time >= self.__timeout)
 
     def __run_precision_check(self):
         if self.__verbose:
@@ -226,6 +230,7 @@ class PropertySynthesizer:
             lam_functions = output_parser.get_lam_functions()
             return (False, pos_example, neg_example, phi, lam_functions)
         else:
+            self.__time_last_query = elapsed_time
             return (True, None, None, None, None)
 
     def __run_max_sat(self):
@@ -270,6 +275,7 @@ class PropertySynthesizer:
 
     def __synthesizeProperty(self):
         self.__phi = self.__phi_initial
+        self.__phi_last_sound = self.__phi_last_sound_initial
         is_sound = False
         is_precise = len(self.__pos_examples) == 0
         try_synthesis = True
@@ -288,11 +294,16 @@ class PropertySynthesizer:
                     self.__add_lam_functions(lam_functions)
             
             if not is_sound:
-                is_sound, e, lam_functions = self.__run_soundness_check()
+                is_sound, e, lam_functions, timeout = self.__run_soundness_check()
                 if not is_sound:
                     is_precise = False
                     self.__pos_examples.append(e)
                     self.__add_lam_functions(lam_functions)
+                elif timeout:
+                    is_precise = True
+                    self.__phi = self.__phi_last_sound
+                else:
+                    self.__phi_last_sound = self.__phi
                 try_synthesis = True
             else:
                 is_precise, e_pos, e_neg, phi, lam_functions = self.__run_precision_check()
@@ -351,7 +362,7 @@ class PropertySynthesizer:
         statistics["time_synthesis"] = self.__time_synthesis
         statistics["avg_time_synthesis"] = avg_time_synthesis
         statistics["max_time_synthesis"] = self.__max_time_synthesis
-        statistics["min_time_synthesis"] = self.__min_time_synthesis
+        statistics["min_time_synthesis"] = self.__min_time_synthesis if self.__num_synthesis > 0 else 0
 
         avg_time_maxsat = self.__time_maxsat / self.__num_maxsat \
             if self.__num_maxsat > 0 else 0
@@ -360,16 +371,16 @@ class PropertySynthesizer:
         statistics["time_maxsat"] = self.__time_maxsat
         statistics["avg_time_maxsat"] = avg_time_maxsat
         statistics["max_time_maxsat"] = self.__max_time_maxsat
-        statistics["min_time_maxsat"] = self.__min_time_maxsat
+        statistics["min_time_maxsat"] = self.__min_time_maxsat if self.__num_maxsat > 0 else 0
 
         avg_time_soundness = self.__time_soundness / self.__num_soundness \
             if self.__num_soundness > 0 else 0
 
         statistics["num_soundness"] = self.__num_soundness
         statistics["time_soundness"] = self.__time_soundness
-        statistics["avg_time_soundness"] = avg_time_maxsat
+        statistics["avg_time_soundness"] = avg_time_soundness
         statistics["max_time_soundness"] = self.__max_time_soundness
-        statistics["min_time_soundness"] = self.__min_time_soundness
+        statistics["min_time_soundness"] = self.__min_time_soundness if self.__num_soundness > 0 else 0
 
         avg_time_precision = self.__time_precision / self.__num_precision \
             if self.__num_precision > 0 else 0
@@ -378,23 +389,26 @@ class PropertySynthesizer:
         statistics["time_precision"] = self.__time_precision
         statistics["avg_time_precision"] = avg_time_precision
         statistics["max_time_precision"] = self.__max_time_precision
-        statistics["min_time_precision"] = self.__min_time_precision
+        statistics["min_time_precision"] = self.__min_time_precision if self.__num_precision > 0 else 0
 
         statistics["time_conjunct"] = self.__time_synthesis
         statistics["time_conjunct"] += self.__time_maxsat
         statistics["time_conjunct"] += self.__time_soundness
         statistics["time_conjunct"] += self.__time_precision
 
+        statistics["last_call"] = self.__time_last_query
+
         return statistics
 
     def __synthesizeAllProperties(self):
         while True:
             self.__synthesizeProperty()
+            self.__statistics.append(self.__statisticsCurrentProperty())
+
             if not self.__check_change_behavior():
                 break
 
             self.__phi_list.append(self.__phi)
-            self.__statistics.append(self.__statisticsCurrentProperty())
 
             self.__add_prop_to_conjunction()
             self.__neg_examples = [e for e in self.__discarded_examples if self.__model_check(e)]
@@ -423,121 +437,105 @@ class PropertySynthesizer:
         self.__min_time_maxsat = self.__timeout
         self.__min_time_synthesis = self.__timeout
 
+        self.__max_time_synthesis_query = 0
+        self.__max_time_maxsat_query = 0
+        self.__max_time_soundness_query = 0
+        self.__max_time_precision_query = 0
+
+        self.__time_last_query = 0
+
+    def __statisticsFromList(self, l):
+        if len(l) == 0:
+            return (0, 0, 0, 0)
+        else:
+            return (sum(l), sum(l) / len(l), max(l), min(l), )
+
     def __statisticsList(self):
         statistics = []
 
-        num_conjunct = len(self.__statistics)
+        # The last cycle is not used as a clause, since it doesn't change any behavior
+        num_conjunct = len(self.__statistics) - 1
 
-        total_num_synthesis = 0
-        total_num_maxsat = 0
-        total_num_soundness = 0
-        total_num_precision = 0
+        nums_synthesis = []
+        nums_maxsat = []
+        nums_soundness = []
+        nums_precision = []
 
-        total_time_synthesis = 0
-        total_time_maxsat = 0
-        total_time_soundness = 0
-        total_time_precision = 0
-        total_time = 0
+        times_synthesis = []
+        times_maxsat = []
+        times_soundness = []
+        times_precision = []
+        times_conjunct = []
 
-        total_max_time_synthesis = 0
-        total_max_time_maxsat = 0
-        total_max_time_soundness = 0
-        total_max_time_precision = 0
-        total_max_time_conjunct = 0
+        max_times_synthesis = []
+        max_times_maxsat = []
+        max_times_soundness = []
+        max_times_precision = []
 
-        total_min_time_synthesis = self.__timeout
-        total_min_time_maxsat = self.__timeout
-        total_min_time_soundness = self.__timeout
-        total_min_time_precision = self.__timeout
-        total_min_time_conjunct = self.__timeout
+        min_times_synthesis = []
+        min_times_maxsat = []
+        min_times_soundness = []
+        min_times_precision = []
 
-        min_pos_examples = 100000
-        min_used_neg_examples = 100000
-        min_discarded_neg_examples = 100000
+        num_pos_examples = []
+        num_used_neg_examples = []
+        num_discarded_neg_examples = []
 
-        max_pos_examples = 0
-        max_used_neg_examples = 0
-        max_discarded_neg_examples = 0
-
-        total_pos_examples = 0
-        total_used_neg_examples = 0
-        total_discarded_neg_examples = 0
+        last_calls = []
 
         for conj_statistics in self.__statistics:
-            total_time_synthesis += conj_statistics["time_synthesis"]
-            total_time_maxsat += conj_statistics["time_maxsat"]
-            total_time_soundness += conj_statistics["time_soundness"]
-            total_time_precision += conj_statistics["time_precision"]
-            total_time += conj_statistics["time_conjunct"]
+            nums_synthesis.append(conj_statistics["num_synthesis"])
+            nums_maxsat.append(conj_statistics["num_maxsat"])
+            nums_soundness.append(conj_statistics["num_soundness"])
+            nums_precision.append(conj_statistics["num_precision"])
 
-            total_num_synthesis += conj_statistics["num_synthesis"]
-            total_num_maxsat += conj_statistics["num_maxsat"]
-            total_num_soundness += conj_statistics["num_soundness"]
-            total_num_precision += conj_statistics["num_precision"]
+            times_synthesis.append(conj_statistics["time_synthesis"])
+            times_maxsat.append(conj_statistics["time_maxsat"])
+            times_soundness.append(conj_statistics["time_soundness"])
+            times_precision.append(conj_statistics["time_precision"])
+            times_conjunct.append(conj_statistics["time_conjunct"])
 
-            if total_max_time_synthesis < conj_statistics["time_synthesis"]:
-                total_max_time_synthesis = conj_statistics["time_synthesis"]
-            if total_max_time_maxsat < conj_statistics["time_maxsat"]:
-                total_max_time_maxsat = conj_statistics["time_maxsat"]
-            if total_max_time_soundness < conj_statistics["time_soundness"]:
-                total_max_time_soundness = conj_statistics["time_soundness"]
-            if total_max_time_precision < conj_statistics["time_precision"]:
-                total_max_time_precision = conj_statistics["time_precision"]
-            if total_max_time_conjunct < conj_statistics["time_conjunct"]:
-                total_max_time_conjunct = conj_statistics["time_conjunct"]
+            max_times_synthesis.append(conj_statistics["max_time_synthesis"])
+            max_times_maxsat.append(conj_statistics["max_time_maxsat"])
+            max_times_soundness.append(conj_statistics["max_time_soundness"])
+            max_times_precision.append(conj_statistics["max_time_precision"])
 
-            if total_min_time_synthesis > conj_statistics["time_synthesis"]:
-                total_min_time_synthesis = conj_statistics["time_synthesis"]
-            if total_min_time_maxsat > conj_statistics["time_maxsat"]:
-                total_min_time_maxsat = conj_statistics["time_maxsat"]
-            if total_min_time_soundness > conj_statistics["time_soundness"]:
-                total_min_time_soundness = conj_statistics["time_soundness"]
-            if total_min_time_precision > conj_statistics["time_precision"]:
-                total_min_time_precision = conj_statistics["time_precision"]
-            if total_min_time_conjunct > conj_statistics["time_conjunct"]:
-                total_min_time_conjunct = conj_statistics["time_conjunct"]
+            min_times_synthesis.append(conj_statistics["min_time_synthesis"])
+            min_times_maxsat.append(conj_statistics["min_time_maxsat"])
+            min_times_soundness.append(conj_statistics["min_time_soundness"])
+            min_times_precision.append(conj_statistics["min_time_precision"])
 
-            num_pos_examples = conj_statistics["num_pos_examples"]
-            num_used_neg_examples = conj_statistics["num_used_neg_examples"]
-            num_discarded_neg_examples = conj_statistics["num_discarded_neg_examples"]
+            num_pos_examples.append(conj_statistics["num_pos_examples"])
+            num_used_neg_examples.append(conj_statistics["num_used_neg_examples"])
+            num_discarded_neg_examples.append(conj_statistics["num_discarded_neg_examples"])
 
-            total_pos_examples += num_pos_examples
-            total_used_neg_examples += num_used_neg_examples
-            total_discarded_neg_examples += num_discarded_neg_examples
+            last_calls.append(conj_statistics["last_call"])
 
-            if max_pos_examples < num_pos_examples:
-                max_pos_examples = num_pos_examples
-            if max_used_neg_examples < num_used_neg_examples:
-                max_used_neg_examples = num_used_neg_examples
-            if max_discarded_neg_examples < num_discarded_neg_examples:
-                max_discarded_neg_examples = num_discarded_neg_examples
-            
-            if min_pos_examples > num_pos_examples:
-                min_pos_examples = num_pos_examples
-            if min_used_neg_examples > num_used_neg_examples:
-                min_used_neg_examples = num_used_neg_examples
-            if min_discarded_neg_examples > num_discarded_neg_examples:
-                min_discarded_neg_examples = num_discarded_neg_examples
+        total_num_synth, avg_num_synth, max_num_synth, min_num_synth = self.__statisticsFromList(nums_synthesis)
+        total_num_maxsat, avg_num_maxsat, max_num_maxsat, min_num_maxsat = self.__statisticsFromList(nums_maxsat)
+        total_num_soundness, avg_num_soundness, max_num_soundness, min_num_soundness = self.__statisticsFromList(nums_soundness)
+        total_num_precision, avg_num_precision, max_num_precision, min_num_precision = self.__statisticsFromList(nums_precision)
 
-
-        num_query = total_num_synthesis
+        num_query = total_num_synth
         num_query += total_num_maxsat
         num_query += total_num_soundness
         num_query += total_num_precision
 
         statistics.append(f'{num_conjunct}')
         
-        avg_time = total_time / num_query if num_query > 0 else 0
-        avg_time_per_conjunct = total_time / num_conjunct if num_conjunct > 0 else 0
+        total_time, avg_time, max_time, min_time = self.__statisticsFromList(times_conjunct)
+        avg_time_per_query = total_time / num_query if num_query > 0 else 0
 
         statistics.append(f'{num_query}')
         statistics.append(f'{total_time:.2f}')
+        statistics.append(f'{avg_time_per_query:.2f}')
         statistics.append(f'{avg_time:.2f}')
-        statistics.append(f'{avg_time_per_conjunct:.2f}')
+        statistics.append(f'{max_time:.2f}')
+        statistics.append(f'{min_time:.2f}')
 
-        avg_pos_examples = total_pos_examples / num_conjunct if num_conjunct > 0 else 0
-        avg_used_neg_examples =  total_used_neg_examples / num_conjunct if num_conjunct > 0 else 0
-        avg_discarded_neg_examples = total_discarded_neg_examples / num_conjunct if num_conjunct > 0 else 0
+        _, avg_pos_examples, max_pos_examples, min_pos_examples = self.__statisticsFromList(num_pos_examples)
+        _, avg_used_neg_examples, max_used_neg_examples, min_used_neg_examples = self.__statisticsFromList(num_used_neg_examples)
+        _, avg_discarded_neg_examples, max_discarded_neg_examples, min_discarded_neg_examples = self.__statisticsFromList(num_discarded_neg_examples)
 
         statistics.append(f'{avg_pos_examples:.2f}')
         statistics.append(f'{min_pos_examples}')
@@ -551,53 +549,104 @@ class PropertySynthesizer:
         statistics.append(f'{min_discarded_neg_examples}')
         statistics.append(f'{max_discarded_neg_examples}')
 
-        avg_time_synthesis = total_time_synthesis / total_num_synthesis \
-            if total_num_synthesis > 0 else 0
-        avg_time_synthesis_per_clause = total_time_synthesis / num_conjunct \
-            if num_conjunct > 0 else 0
+        total_time_synthesis, avg_time_synthesis_per_clause, total_max_time_synthesis, total_min_time_synthesis = self.__statisticsFromList(times_synthesis)
+        avg_time_synthesis = total_time_synthesis / total_num_synth if total_num_synth > 0 else 0
+        _, avg_max_synthesis, max_max_synthesis, min_max_synthesis = self.__statisticsFromList(max_times_synthesis)
+        _, avg_min_synthesis, max_min_synthesis, min_min_synthesis = self.__statisticsFromList(min_times_synthesis)
 
-        statistics.append(f'{total_num_synthesis}')
+        statistics.append(f'{total_num_synth}')
+        statistics.append(f'{avg_num_synth:.2f}')
+        statistics.append(f'{max_num_synth}')
+        statistics.append(f'{min_num_synth}')
+
         statistics.append(f'{total_time_synthesis:.2f}')
         statistics.append(f'{avg_time_synthesis:.2f}')
         statistics.append(f'{avg_time_synthesis_per_clause:.2f}')
         statistics.append(f'{total_max_time_synthesis:.2f}')
         statistics.append(f'{total_min_time_synthesis:.2f}')
+        
+        statistics.append(f'{avg_max_synthesis:.2f}')
+        statistics.append(f'{max_max_synthesis:.2f}')
+        statistics.append(f'{min_max_synthesis:.2f}')
+        statistics.append(f'{avg_min_synthesis:.2f}')
+        statistics.append(f'{max_min_synthesis:.2f}')
+        statistics.append(f'{min_min_synthesis:.2f}')
 
-        avg_time_maxsat = total_time_maxsat / total_num_maxsat \
-            if total_num_maxsat > 0 else 0
-        avg_time_maxsat_per_clause = total_time_maxsat / num_conjunct \
-            if num_conjunct > 0 else 0
+        total_time_maxsat, avg_time_maxsat_per_clause, total_max_time_maxsat, total_min_time_maxsat = self.__statisticsFromList(times_maxsat)
+        avg_time_maxsat = total_time_maxsat / total_num_maxsat if total_num_maxsat > 0 else 0
+        _, avg_max_maxsat, max_max_maxsat, min_max_maxsat = self.__statisticsFromList(max_times_maxsat)
+        _, avg_min_maxsat, max_min_maxsat, min_min_maxsat = self.__statisticsFromList(min_times_maxsat)
 
         statistics.append(f'{total_num_maxsat}')
+        statistics.append(f'{avg_num_maxsat:.2f}')
+        statistics.append(f'{max_num_maxsat}')
+        statistics.append(f'{min_num_maxsat}')
+
         statistics.append(f'{total_time_maxsat:.2f}')
         statistics.append(f'{avg_time_maxsat:.2f}')
         statistics.append(f'{avg_time_maxsat_per_clause:.2f}')
         statistics.append(f'{total_max_time_maxsat:.2f}')
         statistics.append(f'{total_min_time_maxsat:.2f}')
 
-        avg_time_soundness = total_time_soundness / total_num_soundness \
-            if total_num_soundness > 0 else 0
-        avg_time_soundness_per_clause = total_time_soundness / num_conjunct \
-            if num_conjunct > 0 else 0
+        statistics.append(f'{avg_max_maxsat:.2f}')
+        statistics.append(f'{max_max_maxsat:.2f}')
+        statistics.append(f'{min_max_maxsat:.2f}')
+        statistics.append(f'{avg_min_maxsat:.2f}')
+        statistics.append(f'{max_min_maxsat:.2f}')
+        statistics.append(f'{min_min_maxsat:.2f}')
+
+        total_time_soundness, avg_time_soundness_per_clause, total_max_time_soundness, total_min_time_soundness= self.__statisticsFromList(times_soundness)
+        avg_time_soundness = total_time_soundness / total_num_soundness if total_num_soundness > 0 else 0
+        _, avg_max_soundness, max_max_soundness, min_max_soundness = self.__statisticsFromList(max_times_soundness)
+        _, avg_min_soundness, max_min_soundness, min_min_soundness = self.__statisticsFromList(min_times_soundness)
 
         statistics.append(f'{total_num_soundness}')
+        statistics.append(f'{avg_num_soundness:.2f}')
+        statistics.append(f'{max_num_soundness}')
+        statistics.append(f'{min_num_soundness}')
+
         statistics.append(f'{total_time_soundness:.2f}')
         statistics.append(f'{avg_time_soundness:.2f}')
         statistics.append(f'{avg_time_soundness_per_clause:.2f}')
         statistics.append(f'{total_max_time_soundness:.2f}')
         statistics.append(f'{total_min_time_soundness:.2f}')
 
-        avg_time_precision = total_time_precision / total_num_precision \
-            if total_num_precision > 0 else 0
-        avg_time_precision_per_clause = total_time_precision / num_conjunct \
-            if num_conjunct > 0 else 0
+        statistics.append(f'{avg_max_soundness:.2f}')
+        statistics.append(f'{max_max_soundness:.2f}')
+        statistics.append(f'{min_max_soundness:.2f}')
+        statistics.append(f'{avg_min_soundness:.2f}')
+        statistics.append(f'{max_min_soundness:.2f}')
+        statistics.append(f'{min_min_soundness:.2f}')
+
+        total_time_precision, avg_time_precision_per_clause, total_max_time_precision, total_min_time_precision = self.__statisticsFromList(times_precision)
+        avg_time_precision = total_time_precision / total_num_precision if total_num_precision > 0 else 0
+        _, avg_max_precision, max_max_precision, min_max_precision = self.__statisticsFromList(max_times_precision)
+        _, avg_min_precision, max_min_precision, min_min_precision = self.__statisticsFromList(min_times_precision)
 
         statistics.append(f'{total_num_precision}')
+        statistics.append(f'{avg_num_precision:.2f}')
+        statistics.append(f'{max_num_precision}')
+        statistics.append(f'{min_num_precision}')
+
         statistics.append(f'{total_time_precision:.2f}')
         statistics.append(f'{avg_time_precision:.2f}')
         statistics.append(f'{avg_time_precision_per_clause:.2f}')
         statistics.append(f'{total_max_time_precision:.2f}')
         statistics.append(f'{total_min_time_precision:.2f}')
+
+        statistics.append(f'{avg_max_precision:.2f}')
+        statistics.append(f'{max_max_precision:.2f}')
+        statistics.append(f'{min_max_precision:.2f}')
+        statistics.append(f'{avg_min_precision:.2f}')
+        statistics.append(f'{max_min_precision:.2f}')
+        statistics.append(f'{min_min_precision:.2f}')
+
+        total_last, avg_last, max_last, min_last = self.__statisticsFromList(last_calls)
+
+        statistics.append(f'{total_last:.2f}')
+        statistics.append(f'{avg_last:.2f}')
+        statistics.append(f'{max_last:.2f}')
+        statistics.append(f'{min_last:.2f}')
 
         return statistics
 
