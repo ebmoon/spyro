@@ -33,7 +33,7 @@ def write_tempfile(path, code):
         f.write(code)
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, enable_minimization, minimize_terms) :       
+    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms) :       
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
@@ -45,29 +45,14 @@ class PropertySynthesizer:
         self.__template = infile.read()
 
         # Sketch Input File Generator
-        self.__input_generator = InputGenerator(self.__template, enable_minimization, minimize_terms)
+        self.__input_generator = InputGenerator(self.__template, minimize_terms)
         self.__input_generator.set_num_atom(num_atom_max)
-
-        # Initial list of positive/negative examples
-        self.__pos_examples = []
-        self.__neg_examples = []
-        self.__discarded_examples = []
-        self.__lam_functions = {}
         
         # Synthesized property
-        self.__phi_initial = "out = false;"
-        self.__phi_conj = "out = true;"
-        self.__phi_last_sound_initial = "out = true;"
-        self.__phi_list = []
-
-        # Boolean variables for iteration
-        self.__is_sound = False
-        self.__is_precise = True
+        self.__phi_truth = "out = true;"
 
         # Options
         self.__verbose = verbose
-        self.__check_soundness_first = True
-        self.__enable_minimization = enable_minimization
         self.__timeout = 300
 
         # Iterators for descriptive message
@@ -138,7 +123,9 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_synthesis_input(self.__phi, self.__pos_examples, self.__neg_examples, self.__lam_functions)        
+            .generate_synthesis_input(
+                self.__pos_examples, self.__neg_must_examples, \
+                self.__neg_may_examples, self.__lam_functions)     
 
         start_time = time.time()
 
@@ -170,7 +157,7 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_soundness_input(self.__phi, self.__pos_examples, self.__neg_examples, self.__lam_functions)        
+            .generate_soundness_input(self.__phi, self.__lam_functions)       
         
         start_time = time.time()
 
@@ -192,9 +179,9 @@ class PropertySynthesizer:
             output_parser = OutputParser(output)
             pos_example = output_parser.parse_positive_example()
             lam_functions = output_parser.get_lam_functions()
-            return (False, pos_example, lam_functions, False)
+            return (pos_example, lam_functions, False)
         else:
-            return (True, None, None, elapsed_time >= self.__timeout)
+            return (None, None, elapsed_time >= self.__timeout)
 
     def __run_precision_check(self):
         if self.__verbose:
@@ -203,7 +190,8 @@ class PropertySynthesizer:
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
             .generate_precision_input(
-                self.__phi, self.__phi_list, self.__pos_examples, self.__neg_examples, self.__lam_functions)        
+                self.__phi, self.__phi_list, self.__pos_examples, \
+                self.__neg_must_examples, self.__neg_may_examples, self.__lam_functions)        
         
         start_time = time.time()
 
@@ -223,15 +211,13 @@ class PropertySynthesizer:
 
         if output != None:
             output_parser = OutputParser(output)
-            pos_example = output_parser.parse_positive_example_precision() \
-                if self.__enable_minimization else None
             neg_example = output_parser.parse_negative_example_precision() 
             phi = output_parser.parse_property()
             lam_functions = output_parser.get_lam_functions()
-            return (False, pos_example, neg_example, phi, lam_functions)
+            return (neg_example, phi, lam_functions)
         else:
             self.__time_last_query = elapsed_time
-            return (True, None, None, None, None)
+            return (None, None, None)
 
     def __run_max_sat(self):
         if self.__verbose:
@@ -239,7 +225,9 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_maxsat_input(self.__pos_examples, self.__neg_examples, self.__lam_functions)        
+            .generate_maxsat_input(
+                self.__pos_examples, self.__neg_must_examples, \
+                self.__neg_may_examples, self.__lam_functions)       
         
         start_time = time.time()
 
@@ -270,68 +258,15 @@ class PropertySynthesizer:
             lam_functions = self.__lam_functions
             return (neg_examples, discarded_examples, phi, lam_functions)
 
-    def __add_lam_functions(self, lam_functions):
-        self.__lam_functions = union_dict(self.__lam_functions, lam_functions)
-
-    def __synthesizeProperty(self):
-        self.__phi = self.__phi_initial
-        self.__phi_last_sound = self.__phi_last_sound_initial
-        is_sound = False
-        is_precise = len(self.__pos_examples) == 0
-        try_synthesis = True
-
-        while not is_sound or not is_precise:
-            if not is_sound and not is_precise and try_synthesis:
-                (phi, lam_functions) = self.__run_synthesis()
-                if phi == None:
-                    neg_examples, discarded_examples, phi, lam_functions = self.__run_max_sat()
-                    self.__neg_examples = neg_examples
-                    self.__discarded_examples += discarded_examples
-                    self.__phi = phi
-                    self.__add_lam_functions(lam_functions)
-                else:
-                    self.__phi = phi
-                    self.__add_lam_functions(lam_functions)
-            
-            if not is_sound:
-                is_sound, e, lam_functions, timeout = self.__run_soundness_check()
-                if not is_sound:
-                    is_precise = False
-                    self.__pos_examples.append(e)
-                    self.__add_lam_functions(lam_functions)
-                elif timeout:
-                    is_precise = True
-                    self.__phi = self.__phi_last_sound
-                else:
-                    self.__phi_last_sound = self.__phi
-                try_synthesis = True
-            else:
-                is_precise, e_pos, e_neg, phi, lam_functions = self.__run_precision_check()
-                if not is_precise:
-                    is_sound = False
-                    self.__phi = phi
-                    self.__neg_examples.append(e_neg)
-                    if e_pos != None:
-                        self.__pos_examples.append(e_pos)
-                    self.__lam_functions = lam_functions
-                    try_synthesis = False
-
-    def __add_prop_to_conjunction(self):
-        self.__phi_conj += f'\n\tboolean prev_out_{self.__outer_iterator} = out;'
-        self.__phi_conj += '\n\t'
-        self.__phi_conj += self.__phi
-        self.__phi_conj += f'\n\tout = prev_out_{self.__outer_iterator} && out;'
-
-    def __check_change_behavior(self):
+    def __check_improve_predicate(self, phi_list, phi, lam_functions):
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} : Check termination')
 
         path = self.__get_new_tempfile_path()
-        code = self.__input_generator \
-            .generate_change_behavior_input(self.__phi, self.__phi_list, self.__lam_functions)        
+        code = self.__input_generator.generate_improve_predicate_input(phi, phi_list, lam_functions)        
         
         write_tempfile(path, code)
-        output = self.__try_synthesis(path)
+        output = self.__synthesize(path)
 
         return output != None
 
@@ -341,12 +276,79 @@ class PropertySynthesizer:
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_model_check_input(self.__phi_list, neg_example, self.__lam_functions)
+            .generate_model_check_input(self.__phi, neg_example, self.__lam_functions)
 
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
         return output != None
+
+    def __synthesizeProperty(self, phi_list, phi_init, pos, neg_must, neg_may, lam_functions):
+        # Assume that current phi is sound
+        phi_e = phi_init
+        phi_last_sound = phi_e
+        have_candidate = True
+        neg_delta = []
+
+        while True:
+            if not have_candidate:
+                phi, lam = self.__synthesize(pos, neg_must, neg_may)
+                if phi == None:
+                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may)
+                    neg_delta += delta
+                    phi_e = phi
+                    have_candidate = True
+                    lam_functions = union_dict(lam_functions, lam)
+                else:
+                    phi_e = phi
+                    lam_functions = union_dict(lam_functions, lam)
+            
+            e_pos, lam_functions, timeout = self.__run_soundness_check(phi_e)
+            if e_pos !- None:
+                pos.append(e_pos)
+                have_candidate = False
+                lam_functions = union_dict(lam_functions, lam)
+            elif timeout:
+                return (phi_last_sound, pos, neg_may, neg_delta)
+            else:
+                phi_last_sound = phi
+                e_neg, phi, lam = self.__check_precision(phi_e, phi_list, pos, neg_must, neg_may)
+                if e_neg != None:
+                    phi_e = phi
+                    neg_may.append(e_neg)
+                    lam_functions = lam
+                else:
+                    self.__neg_delta = [e for e in self.__neg_delta if self.__model_check(e)]
+                    return (phi_e, pos, neg_may, neg_delta)
+
+    def __synthesizeAllProperties(self):
+        phi_list = []
+        pos = []
+        neg_may = []
+        predicateImproves = True
+
+        while predicateImproves:
+            # Find a property improves conjunction as much as possible
+            phi, pos, neg_must, neg_delta = \
+                self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may)
+            
+            # Strengthen the found property to be most precise L-property
+            phi, pos, _, neg_may = \
+                self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may)
+
+            self.__statistics.append(self.__statisticsCurrentProperty())
+
+            # Terminate the synthesis if there is no more properties to improve predicate
+            predicateImproves = self.__check_improve_predicate():
+            if predicateImproves:
+                phi_list.append(phi)
+
+                if self.__verbose:
+                    print("Obtained a best L-property")
+                    print(phi + '\n')
+
+                self.__outer_iterator += 1
+                self.__inner_iterator = 0
 
     def __statisticsCurrentProperty(self):
         statistics = {}
@@ -399,27 +401,6 @@ class PropertySynthesizer:
         statistics["last_call"] = self.__time_last_query
 
         return statistics
-
-    def __synthesizeAllProperties(self):
-        while True:
-            self.__synthesizeProperty()
-            self.__statistics.append(self.__statisticsCurrentProperty())
-
-            if not self.__check_change_behavior():
-                break
-
-            self.__phi_list.append(self.__phi)
-
-            self.__add_prop_to_conjunction()
-            self.__neg_examples = [e for e in self.__discarded_examples if self.__model_check(e)]
-            self.__discarded_examples = []
-
-            if self.__verbose:
-                print("Obtained a best L-property")
-                print(self.__phi + '\n')
-
-            self.__outer_iterator += 1
-            self.__inner_iterator = 0
 
     def __resetStatistics(self):
         self.__num_soundness = 0
@@ -650,37 +631,8 @@ class PropertySynthesizer:
 
         return statistics
 
-    def __printStatistics(self):
-        self.__write_output('-- Statistics --\n')
-
-        self.__write_output(f'# synthesis: {self.__num_synthesis}\n')
-        self.__write_output(f'Time spent on synthesis: {self.__time_synthesis:.2f}s\n\n')
-
-        self.__write_output(f'# maxsat: {self.__num_maxsat}\n')
-        self.__write_output(f'Time spent on maxsat: {self.__time_maxsat:.2f}s\n\n')
-
-        self.__write_output(f'# soundness check: {self.__num_soundness}\n')
-        self.__write_output(f'Time spent on soundness check: {self.__time_soundness:.2f}s\n\n')
-
-        self.__write_output(f'# precision check: {self.__num_precision}\n')
-        self.__write_output(f'Time spent on precision check: {self.__time_precision:.2f}s\n')
-
-        self.__write_output('----------------\n')
-
-        for i, phi in enumerate(self.__phi_list):
-            self.__write_output(f'--- Output {i} ---\n')
-            self.__write_output(phi)
-            self.__write_output('\n')
-
-            self.__write_output(f'# pos. examples: {self.__num_pos_examples[i]}\n')
-            self.__write_output(f'# used neg. examples: {self.__num_used_neg_examples[i]}\n')
-            self.__write_output(f'# discarded neg. examples: {self.__num_discarded_neg_examples[i]}\n')
-            
-            self.__write_output(f'----------------\n')
-
     def run(self):
         self.__synthesizeAllProperties()
-        # self.__printStatistics()
 
     def run_benchmark(self):
         self.__synthesizeAllProperties()

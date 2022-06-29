@@ -14,8 +14,7 @@ relation {
 
 generator {
     boolean AP -> is_empty(L) | !is_empty(L) 
-                | equal_list(L, L) | !equal_list(L, L)
-                | compare(S, S + ??(1));
+                | equal_list(L, L) | !equal_list(L, L);
     int S -> len(L) | 0 ;
     list L -> l1 | l2 | lout1 | lout2 ;
 }

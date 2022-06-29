@@ -6,12 +6,11 @@ from util import *
 class InputGenerator:
     # To-Do: Generate codes from variables and relations
 
-    def __init__(self, code, enable_minimization, minimize_terms):
+    def __init__(self, code, minimize_terms):
         # Input code
         self.__template = TemplateParser(code)
         self.__fresh_num = 0
         self.__num_atom = 1
-        self.__use_minimization = enable_minimization
         self.__minimize_terms = minimize_terms
 
     def set_num_atom(self, num_atom):
@@ -20,26 +19,7 @@ class InputGenerator:
     def num_atom(self):
         return self.__num_atom
 
-    def __distance(self):
-
-        var_defns = self.__template.get_integer_arguments_defn()
-        copied_defns = self.__template.get_copied_arguments_defn()
-
-        l1_code = 'int l1(int x, int y) { '
-        l1_code += 'if (x > y) { return x - y; } else { return y - x; } '
-        l1_code += '}\n\n'
-
-        dist_code = f'int distance({var_defns},{copied_defns}) {{\n'
-        dist_code += '\tint dist = 0;\n'
-        for _, symbol in self.__template.get_int_symbols():
-            dist_code += f'\tdist += l1({symbol}, {symbol}_copy);\n'
-        dist_code += '\treturn dist;\n'
-        dist_code += '}\n\n'
-
-        # To-Do: Implement L1 distance
-        return l1_code + dist_code
-
-    def __soundness_code(self, maximize_dist):
+    def __soundness_code(self):
         code = 'harness void soundness() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
         code += self.__template.get_relations() + '\n\n'
@@ -49,14 +29,6 @@ class InputGenerator:
         int_arguments = self.__template.get_integer_arguments_call()
         int_copied_arguments = self.__template.get_int_copied_arguments_call()
 
-        if maximize_dist:
-            code += self.__template.get_copied_variables_with_hole() + '\n\n'
-            code += f'\tminimize(64 - distance({int_arguments},{int_copied_arguments}));\n\n'
-
-            code += '\tboolean out_copy;\n'
-            code += '\tobtained_property(' + copied_arguments + ',out_copy);\n'
-            code += '\tassert out_copy;\n\n'
-
         code += '\tboolean out;\n'
         code += '\tobtained_property(' + arguments + ',out);\n'
         code += '\tassert !out;\n'
@@ -65,7 +37,7 @@ class InputGenerator:
 
         return code
 
-    def __precision_code(self, minimize_dist):
+    def __precision_code(self):
         code = 'harness void precision() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
 
@@ -73,15 +45,6 @@ class InputGenerator:
         int_arguments = self.__template.get_integer_arguments_call()
         copied_arguments = self.__template.get_copied_arguments_call()
         int_copied_arguments = self.__template.get_int_copied_arguments_call()
-
-        if minimize_dist:
-            code += self.__template.get_copied_variables_with_hole() + '\n\n'
-            code += self.__template.get_copied_relations() + '\n\n'
-            code += f'\tminimize(distance({int_arguments},{int_copied_arguments}));\n\n'
-
-            code += '\tboolean out_copy;\n'
-            code += '\tobtained_property(' + copied_arguments + ',out_copy);\n'
-            code += '\tassert out_copy;\n\n'
 
         code += '\tboolean out_1;\n'
         code += '\tobtained_property(' + arguments + ',out_1);\n'
@@ -98,8 +61,8 @@ class InputGenerator:
 
         return code
 
-    def __change_behavior_code(self):
-        code = 'harness void change_behavior() {\n'
+    def __improves_predicate_code(self):
+        code = 'harness void improves_predicate() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
         
         arguments = self.__template.get_arguments_call()
@@ -142,7 +105,7 @@ class InputGenerator:
             code += f'\treturn {property_gen};\n'
         code += '}\n\n'
 
-        code += f'void property({arg_defn},ref boolean out) {{\n'
+        code += f'void property({arg_defn}, ref boolean out) {{\n'
         code += f'\tout = property_gen({arg_call});\n'
         code += '}\n\n'
 
@@ -190,27 +153,49 @@ class InputGenerator:
 
         return code
 
-    def __examples(self, pos_examples, neg_examples, check_maxsat = False):
+    def __pos_examples(self, pos_examples):
         code = ''
 
         for i, pos_example in enumerate(pos_examples):
             code += '\n'
             code += 'harness void positive_example_{} ()'.format(i)
-            code += ' {\n' + pos_example + '\n}\n\n'
-
-        for i, neg_example in enumerate(neg_examples):
-            code += '\n'
-            if check_maxsat:
-                code += 'void negative_example_{} ()'.format(i)
-            else:   
-                code += 'harness void negative_example_{} ()'.format(i)
-            code += ' {\n' + neg_example + '\n}\n\n'      
+            code += ' {\n' + pos_example + '\n}\n\n'   
 
         return code       
 
-    def __maxsat(self, num_neg_examples):
+    def __neg_examples_synth(self, neg_must_examples, neg_may_examples):
+        code = ''
+
+        for i, neg_example in enumerate(neg_may_examples):
+            code += '\n'
+            code += 'harness void negative_example_{} ()'.format(i)
+            code += ' {\n' + neg_example + '\n}\n\n'   
+
+        for i, neg_example in enumerate(neg_must_examples):
+            code += '\n'
+            code += 'harness void negative_example_{} ()'.format(i)
+            code += ' {\n' + neg_example + '\n}\n\n' 
+
+        return code
+
+    def __neg_examples_maxsat(self, neg_must_examples, neg_may_examples):
+        code = ''
+
+        for i, neg_example in enumerate(neg_may_examples):
+            code += '\n'
+            code += 'void negative_example_{} ()'.format(i)
+            code += ' {\n' + neg_example + '\n}\n\n'   
+
+        for i, neg_example in enumerate(neg_must_examples):
+            code += '\n'
+            code += 'void negative_example_{} ()'.format(i)
+            code += ' {\n' + neg_example + '\n}\n\n' 
+
+        return code
+
+    def __maxsat(self, num_may_neg_examples):
         code = 'harness void maxsat() {\n'
-        code += f'\tint cnt = {num_neg_examples};\n'
+        code += f'\tint cnt = {num_may_neg_examples};\n'
 
         for i in range(num_neg_examples):
             code += f'\tif (??) {{ cnt -= 1; negative_example_{i}(); }}\n'
@@ -383,27 +368,6 @@ class InputGenerator:
 
         return code
 
-    def __struct_generator(self, st):
-        st_name = st[0]
-        elements = st[1]
-        var_name = 'tmp'
-
-        code = f'generator {st_name} {st_name}_gen() {{\n'
-        code += '\tint t = ??;\n'
-
-        code += f'\tif (t == 0) {{ return null; }}\n'
-        code += '\tif (t == 1) {\n'
-        code += f'\t\t{st_name} {var_name} = new {st_name}();\n'
-
-        for n, (typ, sym) in enumerate(elements):
-            code += f'\t\t{var_name}.{sym} = {typ}_gen();\n'
-
-        code += f'\t\treturn {var_name};\n'
-        code += '\t}\n'
-        code += '}\n'
-
-        return code
-
     def __generators(self):
         rules = self.__template.get_generator_rules()
 
@@ -448,76 +412,69 @@ class InputGenerator:
     def __example_generators(self):
         rules = self.__template.get_example_rules()
         structs = self.__template.get_structs()
-
         code = '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
-        # code += '\n'.join([self.__struct_generator(st) for st in structs]) + '\n'
 
         return code
 
     def __lam_functions(self, lam_functions):
         return "\n\n".join(lam_functions.values()) + "\n\n"
 
-    def generate_synthesis_input(self, phi, pos_examples, neg_examples, lam_functions):
+    def generate_synthesis_input(self, pos, neg_must, neg_may, lam_functions):
         code = self.__template.get_implementation()
         code += self.__lam_functions(lam_functions)
-        code += self.__examples(pos_examples, neg_examples)
+        code += self.__pos_examples(pos)
+        code += self.__neg_examples_synth(neg_must, neg_may)
         code += self.__property_code()
 
         return code
 
-    def generate_soundness_input(self, phi, pos_examples, neg_examples, lam_functions):
-        maximize_dist = len(pos_examples) != 0 and self.__use_minimization
-        
+    def generate_soundness_input(self, phi, lam_functions):
         code = self.__template.get_implementation()
         code += self.__lam_functions(lam_functions)
         code += self.__obtained_property_code(phi)
         code += self.__example_generators()
-        if maximize_dist:
-            code += self.__distance()
-        code += self.__soundness_code(maximize_dist)
+        code += self.__soundness_code()
 
         return code
 
-    def generate_precision_input(self, phi, phi_list, pos_examples, neg_examples, lam_functions):
-        minimize_dist = len(pos_examples) != 0 and self.__use_minimization
-
+    def generate_precision_input(self, phi, phi_list, pos, neg_must, neg_may, lam_functions):
         code = self.__template.get_implementation()
         code += self.__lam_functions(lam_functions)
-        code += self.__examples(pos_examples, neg_examples)
+        code += self.__pos_examples(pos)
+        code += self.__neg_examples_synth(neg_must, neg_may)
         code += self.__property_code()
         code += self.__obtained_property_code(phi)
         code += self.__property_conj_code(phi_list)
         code += self.__example_generators()
-        if minimize_dist:
-            code += self.__distance()
-        code += self.__precision_code(minimize_dist)
+        code += self.__precision_code()
 
         return code
 
-    def generate_maxsat_input(self, pos_examples, neg_examples, lam_functions):
+    def generate_maxsat_input(self, pos, neg_must, neg_may, lam_functions):
         code = self.__template.get_implementation()
         code += self.__lam_functions(lam_functions)
-        code += self.__examples(pos_examples, neg_examples, True)
+        code += self.__pos_examples(pos)
+        code += self.__neg_examples_maxsat(neg_must, neg_may)
         code += self.__example_generators()
         code += self.__property_code(maxsat=True)
         code += self.__maxsat(len(neg_examples))
 
         return code
 
-    def generate_change_behavior_input(self, phi, phi_list, lam_functions):
+    def generate_improves_predicate_input(self, phi, phi_list, lam_functions):
         code = self.__template.get_implementation()
         code += self.__lam_functions(lam_functions)
         code += self.__property_conj_code(phi_list)
         code += self.__obtained_property_code(phi)
         code += self.__example_generators()
-        code += self.__change_behavior_code()
+        code += self.__improves_predicate_code()
 
         return code
 
-    def generate_model_check_input(self, phi_list, neg_example, lam_functions):
+    def generate_model_check_input(self, phi, neg_example, lam_functions):
         code = self.__template.get_implementation()
         code += self.__lam_functions(lam_functions)
-        code += self.__property_conj_code(phi_list)
+        code += self.__obtained_property_code(phi)
         code += self.__example_generators()
         code += self.__model_check(neg_example)
 
