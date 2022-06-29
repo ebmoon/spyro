@@ -193,11 +193,11 @@ class InputGenerator:
 
         return code
 
-    def __maxsat(self, num_may_neg_examples):
+    def __maxsat(self, num_neg_may):
         code = 'harness void maxsat() {\n'
-        code += f'\tint cnt = {num_may_neg_examples};\n'
+        code += f'\tint cnt = {num_neg_may};\n'
 
-        for i in range(num_neg_examples):
+        for i in range(num_neg_may):
             code += f'\tif (??) {{ cnt -= 1; negative_example_{i}(); }}\n'
 
         code += '\tminimize(cnt);\n'
@@ -457,7 +457,7 @@ class InputGenerator:
         code += self.__neg_examples_maxsat(neg_must, neg_may)
         code += self.__example_generators()
         code += self.__property_code(maxsat=True)
-        code += self.__maxsat(len(neg_examples))
+        code += self.__maxsat(len(neg_may))
 
         return code
 

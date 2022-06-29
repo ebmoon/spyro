@@ -248,25 +248,25 @@ class PropertySynthesizer:
             self.__time_last_query = elapsed_time
             return (None, None, None)
 
-    def __check_improve_predicate(self, phi_list, phi, lam_functions):
+    def __check_improves_predicate(self, phi_list, phi, lam_functions):
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} : Check termination')
 
         path = self.__get_new_tempfile_path()
-        code = self.__input_generator.generate_improve_predicate_input(phi, phi_list, lam_functions)        
+        code = self.__input_generator.generate_improves_predicate_input(phi, phi_list, lam_functions)        
         
         write_tempfile(path, code)
-        output = self.__synthesize(path)
+        output = self.__try_synthesis(path)
 
         return output != None
 
-    def __model_check(self, phi, neg_example):
+    def __model_check(self, phi, neg_example, lam_functions):
         if self.__verbose:
             print(f'Iteratoin {self.__outer_iterator} : Model check')
 
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
-            .generate_model_check_input(phi, neg_example, self.__lam_functions)
+            .generate_model_check_input(phi, neg_example, lam_functions)
 
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
@@ -282,9 +282,9 @@ class PropertySynthesizer:
 
         while True:
             if not have_candidate:
-                phi, lam = self.__synthesize(pos, neg_must, neg_may)
+                phi, lam = self.__synthesize(pos, neg_must, neg_may, lam_functions)
                 if phi == None:
-                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may)
+                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions)
                     neg_delta += delta
                     phi_e = phi
                     have_candidate = True
@@ -293,46 +293,47 @@ class PropertySynthesizer:
                     phi_e = phi
                     lam_functions = union_dict(lam_functions, lam)
             
-            e_pos, lam_functions, timeout = self.__check_soundness(phi_e)
-            if e_pos !- None:
+            e_pos, lam, timeout = self.__check_soundness(phi_e, lam_functions)
+            if e_pos != None:
                 pos.append(e_pos)
                 have_candidate = False
                 lam_functions = union_dict(lam_functions, lam)
             elif timeout:
                 return (phi_last_sound, pos, neg_may, neg_delta, lam_functions)
             else:
-                phi_last_sound = phi
-                e_neg, phi, lam = self.__check_precision(phi_e, phi_list, pos, neg_must, neg_may)
+                phi_last_sound = phi_e
+                e_neg, phi, lam = self.__check_precision(phi_e, phi_list, pos, neg_must, neg_may, lam_functions)
                 if e_neg != None:
                     phi_e = phi
                     neg_may.append(e_neg)
                     lam_functions = lam
                 else:
-                    neg_delta = [e for e in neg_delta if self.__model_check(e)]
+                    neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
                     return (phi_e, pos, neg_may, neg_delta, lam_functions)
 
     def __synthesizeAllProperties(self):
         phi_list = []
         pos = []
         neg_may = []
-        lam_functions = []
+        lam_functions = {}
         predicateImproves = True
 
         while predicateImproves:
             # Find a property improves conjunction as much as possible
-            phi, pos, neg_must, neg_delta, lam = \
-                self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may. lam_functions)
+            phi, pos, neg_must, neg_may, lam = \
+                self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may, lam_functions)
             lam_functions = lam
 
             # Strengthen the found property to be most precise L-property
-            phi, pos, _, neg_may, lam = \
+            phi, pos, neg_used, neg_delta, lam = \
                 self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions)
             lam_functions = union_dict(lam_functions, lam)
 
-            self.__statistics.append(self.__statisticsCurrentProperty())
+            stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
+            self.__statistics.append(stat)
 
             # Terminate the synthesis if there is no more properties to improve predicate
-            predicateImproves = self.__check_improve_predicate():
+            predicateImproves = self.__check_improves_predicate(phi_list, phi, lam_functions)
             if predicateImproves:
                 phi_list.append(phi)
 
@@ -343,12 +344,14 @@ class PropertySynthesizer:
                 self.__outer_iterator += 1
                 self.__inner_iterator = 0
 
-    def __statisticsCurrentProperty(self):
+    def __statisticsCurrentProperty(self, pos, neg_must, neg_may, neg_used, neg_delta):
         statistics = {}
 
-        statistics["num_pos_examples"] = len(self.__pos_examples)
-        statistics["num_used_neg_examples"] = len(self.__neg_examples)
-        statistics["num_discarded_neg_examples"] = len(self.__discarded_examples)
+        statistics["num_pos"] = len(pos)
+        statistics["num_neg_must"] = len(neg_must)
+        statistics["num_neg_may"] = len(neg_may)
+        statistics["num_neg_used"] = len(neg_used)
+        statistics["num_neg_delta"] = len(neg_delta)
 
         avg_time_synthesis = self.__time_synthesis / self.__num_synthesis \
             if self.__num_synthesis > 0 else 0
@@ -451,9 +454,11 @@ class PropertySynthesizer:
         min_times_soundness = []
         min_times_precision = []
 
-        num_pos_examples = []
-        num_used_neg_examples = []
-        num_discarded_neg_examples = []
+        num_pos = []
+        num_neg_must = []
+        num_neg_may = []
+        num_neg_used = []
+        num_neg_delta = []
 
         last_calls = []
 
@@ -479,9 +484,11 @@ class PropertySynthesizer:
             min_times_soundness.append(conj_statistics["min_time_soundness"])
             min_times_precision.append(conj_statistics["min_time_precision"])
 
-            num_pos_examples.append(conj_statistics["num_pos_examples"])
-            num_used_neg_examples.append(conj_statistics["num_used_neg_examples"])
-            num_discarded_neg_examples.append(conj_statistics["num_discarded_neg_examples"])
+            num_pos.append(conj_statistics["num_pos"])
+            num_neg_must.append(conj_statistics["num_neg_must"])
+            num_neg_may.append(conj_statistics["num_neg_may"])
+            num_neg_used.append(conj_statistics["num_neg_used"])
+            num_neg_delta.append(conj_statistics["num_neg_delta"])
 
             last_calls.append(conj_statistics["last_call"])
 
@@ -507,21 +514,31 @@ class PropertySynthesizer:
         statistics.append(f'{max_time:.2f}')
         statistics.append(f'{min_time:.2f}')
 
-        _, avg_pos_examples, max_pos_examples, min_pos_examples = self.__statisticsFromList(num_pos_examples)
-        _, avg_used_neg_examples, max_used_neg_examples, min_used_neg_examples = self.__statisticsFromList(num_used_neg_examples)
-        _, avg_discarded_neg_examples, max_discarded_neg_examples, min_discarded_neg_examples = self.__statisticsFromList(num_discarded_neg_examples)
+        _, avg_pos, max_pos, min_pos = self.__statisticsFromList(num_pos)
+        _, avg_neg_must, max_neg_must, min_neg_must = self.__statisticsFromList(num_neg_must)
+        _, avg_neg_may, max_neg_may, min_neg_may = self.__statisticsFromList(num_neg_may)
+        _, avg_neg_used, max_neg_used, min_neg_used = self.__statisticsFromList(num_neg_used)
+        _, avg_neg_delta, max_neg_delta, min_neg_delta = self.__statisticsFromList(num_neg_delta)
 
-        statistics.append(f'{avg_pos_examples:.2f}')
-        statistics.append(f'{min_pos_examples}')
-        statistics.append(f'{max_pos_examples}')
+        statistics.append(f'{avg_pos:.2f}')
+        statistics.append(f'{min_pos}')
+        statistics.append(f'{max_pos}')
 
-        statistics.append(f'{avg_used_neg_examples:.2f}')
-        statistics.append(f'{min_used_neg_examples}')
-        statistics.append(f'{max_used_neg_examples}')
+        statistics.append(f'{avg_neg_must:.2f}')
+        statistics.append(f'{min_neg_must}')
+        statistics.append(f'{max_neg_must}')
 
-        statistics.append(f'{avg_discarded_neg_examples:.2f}')
-        statistics.append(f'{min_discarded_neg_examples}')
-        statistics.append(f'{max_discarded_neg_examples}')
+        statistics.append(f'{avg_neg_may:.2f}')
+        statistics.append(f'{min_neg_may}')
+        statistics.append(f'{max_neg_may}')
+
+        statistics.append(f'{avg_neg_used:.2f}')
+        statistics.append(f'{min_neg_used}')
+        statistics.append(f'{max_neg_used}')
+
+        statistics.append(f'{avg_neg_delta:.2f}')
+        statistics.append(f'{min_neg_delta}')
+        statistics.append(f'{max_neg_delta}')
 
         total_time_synthesis, avg_time_synthesis_per_clause, total_max_time_synthesis, total_min_time_synthesis = self.__statisticsFromList(times_synthesis)
         avg_time_synthesis = total_time_synthesis / total_num_synth if total_num_synth > 0 else 0
