@@ -45,7 +45,8 @@ class PropertySynthesizer:
         self.__template = infile.read()
 
         # Sketch Input File Generator
-        self.__input_generator = InputGenerator(self.__template, minimize_terms)
+        self.__minimize_terms = minimize_terms
+        self.__input_generator = InputGenerator(self.__template)
         self.__input_generator.set_num_atom(num_atom_max)
         
         # Synthesized property
@@ -291,12 +292,14 @@ class PropertySynthesizer:
                 if phi == None:
                     neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions)
                     neg_delta += delta
-                    phi_e = phi
-                    have_candidate = True
-                    lam_functions = union_dict(lam_functions, lam)
-                else:
-                    phi_e = phi
-                    lam_functions = union_dict(lam_functions, lam)
+                
+                    # Max-Synth can't minimize the term size, so call the Synth again
+                    if self.__input_generator.minimize_terms_enabled:
+                        phi, lam = self.__synthesize(pos, neg_must, neg_may, lam_functions)
+
+                phi_e = phi
+                have_candidate = True
+                lam_functions = union_dict(lam_functions, lam)
             
             e_pos, lam, timeout = self.__check_soundness(phi_e, lam_functions)
             if e_pos != None:
@@ -324,6 +327,7 @@ class PropertySynthesizer:
 
         while True:
             # Find a property improves conjunction as much as possible
+            self.__input_generator.disable_minimize_terms()
             phi, pos, neg_must, neg_may, lam = \
                 self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may, lam_functions)
             lam_functions = lam
@@ -336,6 +340,12 @@ class PropertySynthesizer:
                     break
 
             # Strengthen the found property to be most precise L-property
+            if self.__minimize_terms: 
+                self.__input_generator.enable_minimize_terms()
+                
+                phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
+                lam_functions = union_dict(lam_functions, lam)
+            
             phi, pos, neg_used, neg_delta, lam = \
                 self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions)
             lam_functions = union_dict(lam_functions, lam)

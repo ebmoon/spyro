@@ -6,12 +6,21 @@ from util import *
 class InputGenerator:
     # To-Do: Generate codes from variables and relations
 
-    def __init__(self, code, minimize_terms):
+    def __init__(self, code):
         # Input code
         self.__template = TemplateParser(code)
         self.__fresh_num = 0
         self.__num_atom = 1
-        self.__minimize_terms = minimize_terms
+        self.__minimize_terms = False
+
+    def enable_minimize_terms(self):
+        self.__minimize_terms = True
+    
+    def disable_minimize_terms(self):
+        self.__minimize_terms = False
+
+    def minimize_terms_enabled(self):
+        return self.__minimize_terms
 
     def set_num_atom(self, num_atom):
         self.__num_atom = num_atom
