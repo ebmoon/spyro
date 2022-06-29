@@ -258,7 +258,12 @@ class PropertySynthesizer:
         write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
-        return output != None
+        if output != None:
+            output_parser = OutputParser(output)
+            e_neg = output_parser.parse_improves_predicate()
+            return e_neg
+        else:
+            return None
 
     def __model_check(self, phi, neg_example, lam_functions):
         if self.__verbose:
@@ -316,33 +321,36 @@ class PropertySynthesizer:
         pos = []
         neg_may = []
         lam_functions = {}
-        predicateImproves = True
 
-        while predicateImproves:
+        while True:
             # Find a property improves conjunction as much as possible
             phi, pos, neg_must, neg_may, lam = \
                 self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may, lam_functions)
             lam_functions = lam
 
+            if len(neg_must) == 0:
+                e_neg = self.__check_improves_predicate(phi_list, phi, lam_functions)
+                if e_neg != None:
+                    neg_must = [e_neg]
+                else:
+                    break
+
             # Strengthen the found property to be most precise L-property
             phi, pos, neg_used, neg_delta, lam = \
                 self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions)
             lam_functions = union_dict(lam_functions, lam)
+            
+            phi_list.append(phi)
 
             stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
             self.__statistics.append(stat)
 
-            # Terminate the synthesis if there is no more properties to improve predicate
-            predicateImproves = self.__check_improves_predicate(phi_list, phi, lam_functions)
-            if predicateImproves:
-                phi_list.append(phi)
+            if self.__verbose:
+                print("Obtained a best L-property")
+                print(phi + '\n')
 
-                if self.__verbose:
-                    print("Obtained a best L-property")
-                    print(phi + '\n')
-
-                self.__outer_iterator += 1
-                self.__inner_iterator = 0
+            self.__outer_iterator += 1
+            self.__inner_iterator = 0
 
     def __statisticsCurrentProperty(self, pos, neg_must, neg_may, neg_used, neg_delta):
         statistics = {}

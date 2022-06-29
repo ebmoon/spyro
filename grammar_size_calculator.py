@@ -68,6 +68,7 @@ def main():
     outfile = args.outfile
 
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
+    # files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./difficult_examples") for f in fn if ('.prop' in f)]
 
     for path in files:
         with open(path, 'r') as infile:

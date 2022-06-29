@@ -166,30 +166,36 @@ class InputGenerator:
     def __neg_examples_synth(self, neg_must_examples, neg_may_examples):
         code = ''
 
-        for i, neg_example in enumerate(neg_may_examples):
+        i = 0
+        for neg_example in neg_may_examples:
             code += '\n'
             code += 'harness void negative_example_{} ()'.format(i)
-            code += ' {\n' + neg_example + '\n}\n\n'   
+            code += ' {\n' + neg_example + '\n}\n\n'
+            i += 1
 
-        for i, neg_example in enumerate(neg_must_examples):
+        for neg_example in neg_must_examples:
             code += '\n'
             code += 'harness void negative_example_{} ()'.format(i)
             code += ' {\n' + neg_example + '\n}\n\n' 
+            i += 1
 
         return code
 
     def __neg_examples_maxsat(self, neg_must_examples, neg_may_examples):
         code = ''
 
-        for i, neg_example in enumerate(neg_may_examples):
+        i = 0
+        for neg_example in neg_may_examples:
             code += '\n'
             code += 'void negative_example_{} ()'.format(i)
             code += ' {\n' + neg_example + '\n}\n\n'   
+            i += 1
 
-        for i, neg_example in enumerate(neg_must_examples):
+        for neg_example in neg_must_examples:
             code += '\n'
             code += 'void negative_example_{} ()'.format(i)
             code += ' {\n' + neg_example + '\n}\n\n' 
+            i += 1
 
         return code
 
