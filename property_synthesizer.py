@@ -149,7 +149,7 @@ class PropertySynthesizer:
         else:
             return (None, None)
 
-    def __max_synthesize(self, pos, neg_must, neg_may, lam_functions):
+    def __max_synthesize(self, pos, neg_must, neg_may, lam_functions, phi_init):
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Run MaxSat')
 
@@ -180,7 +180,7 @@ class PropertySynthesizer:
             return (neg_may, delta, phi, lam)
         else:
             neg_may, delta = [], neg_may
-            phi = self.__phi_truth
+            phi = phi_init
             lam = lam_functions
             return (neg_may, delta, phi, lam)
 
@@ -279,10 +279,10 @@ class PropertySynthesizer:
 
         return output != None
 
-    def __synthesizeProperty(self, phi_list, phi_init, pos, neg_must, neg_may, lam_functions):
+    def __synthesizeProperty(self, phi_list, phi_init, pos, neg_must, neg_may, lam_functions, most_precise):
         # Assume that current phi is sound
         phi_e = phi_init
-        phi_last_sound = phi_e
+        phi_last_sound = self.__phi_truth
         have_candidate = True
         neg_delta = []
 
@@ -290,7 +290,7 @@ class PropertySynthesizer:
             if not have_candidate:
                 phi, lam = self.__synthesize(pos, neg_must, neg_may, lam_functions)
                 if phi == None:
-                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions)
+                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions, phi_init)
                     neg_delta += delta
                 
                     # Max-Synth can't minimize the term size, so call the Synth again
@@ -307,8 +307,16 @@ class PropertySynthesizer:
                 have_candidate = False
                 lam_functions = union_dict(lam_functions, lam)
             elif timeout:
-                return (phi_last_sound, pos, neg_may, neg_delta, lam_functions)
+                neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
+                return (phi_last_sound, pos, neg_must + neg_may, neg_delta, lam_functions)
+            elif not most_precise and len(neg_may) > 0:
+                neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
+                return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
             else:
+                phi_init = phi_e
+                neg_must += neg_may
+                neg_may = []
+
                 phi_last_sound = phi_e
                 e_neg, phi, lam = self.__check_precision(phi_e, phi_list, pos, neg_must, neg_may, lam_functions)
                 if e_neg != None:
@@ -317,7 +325,24 @@ class PropertySynthesizer:
                     lam_functions = lam
                 else:
                     neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
-                    return (phi_e, pos, neg_may, neg_delta, lam_functions)
+                    return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
+
+    def __remove_redundant(self, phi_list):
+        for i in range(len(phi_list)):
+            phi = phi_list[i]
+            others = phi_list[:i] + phi_list[i:]
+
+            e_neg = self.__check_improves_predicate(others, phi)
+            if e_neg == None:
+                return (True, others)
+        
+        return (False, phi_list)
+
+    def __minimize_phi_list(self, phi_list):
+        has_redundant = True
+        while has_redundant:
+            has_redundant, phi_list = self.__remove_redundant(phi_list)
+        return phi_list
 
     def __synthesizeAllProperties(self):
         phi_list = []
@@ -328,16 +353,31 @@ class PropertySynthesizer:
         while True:
             # Find a property improves conjunction as much as possible
             self.__input_generator.disable_minimize_terms()
+            
+            phi_init, lam = self.__synthesize(pos, [], neg_may, lam_functions)\
+                if len(pos) + len(neg_may) > 0 else (self.__phi_truth, {})
+            if phi_init == None:
+                neg_may, _, phi_init, lam = self.__max_synthesize(pos, [], neg_may, lam_functions, self.__phi_truth)
+            lam_functions = union_dict(lam_functions, lam)
+
+            most_precise = self.__minimize_terms
             phi, pos, neg_must, neg_may, lam = \
-                self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may, lam_functions)
+                self.__synthesizeProperty(phi_list, phi_init, pos, [], neg_may, lam_functions, most_precise)
             lam_functions = lam
+
+            if phi == self.__phi_truth:
+                stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
+                self.__statistics.append(stat)
+                return
 
             if len(neg_must) == 0:
                 e_neg = self.__check_improves_predicate(phi_list, phi, lam_functions)
                 if e_neg != None:
                     neg_must = [e_neg]
                 else:
-                    break
+                    stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
+                    self.__statistics.append(stat)
+                    return
 
             # Strengthen the found property to be most precise L-property
             if self.__minimize_terms: 
@@ -347,7 +387,7 @@ class PropertySynthesizer:
                 lam_functions = union_dict(lam_functions, lam)
             
             phi, pos, neg_used, neg_delta, lam = \
-                self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions)
+                self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
             lam_functions = union_dict(lam_functions, lam)
             
             phi_list.append(phi)

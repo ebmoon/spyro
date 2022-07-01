@@ -202,7 +202,7 @@ class InputGenerator:
 
         for neg_example in neg_must_examples:
             code += '\n'
-            code += 'void negative_example_{} ()'.format(i)
+            code += 'harness void negative_example_{} ()'.format(i)
             code += ' {\n' + neg_example + '\n}\n\n' 
             i += 1
 
@@ -224,7 +224,7 @@ class InputGenerator:
         code = 'harness void model_check() {\n'
 
         neg_example = '\n'.join(neg_example.splitlines()[:-1])
-        code += neg_example.replace('property', 'property_conj')
+        code += neg_example.replace('property', 'obtained_property')
         code += '\tassert out;\n'
 
         code += '\tboolean trivial_target = ??;\n'

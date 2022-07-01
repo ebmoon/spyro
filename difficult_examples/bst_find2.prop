@@ -1,23 +1,30 @@
 //@Description Binary tree
 
 var {
-    tree_node empty_out;
+    tree_node bst;
+    int target;
+    boolean find_out;
 }
 
 relation {
-    bst_empty(empty_out);
+    bst_find(bst, target, find_out);
 }
 
 generator {
     boolean AP -> compare(S, S + ??(1))
-                | is_empty(T) | !is_empty(T);
+                | find_out | !find_out
+                | is_empty(T) | !is_empty(T)
+                | forall((x) -> compare(x, I), T)
+                | exists((x) -> compare(x, I), T);
+    int I -> target;
     int S -> tree_size(T) | 0;
-    tree_node T -> empty_out;
+    tree_node T -> bst;
 }
 
 example {
     int -> ??(2) | -1 * ??(2) ;
-    tree_node(4) -> bst_empty() | bst_insert(tree_node, int);
+    boolean -> ??;
+    tree_node(4) -> bst_empty() | bst_insert(tree_node, int) | bst_delete(tree_node, int);
 }
 
 struct tree_node {
@@ -52,13 +59,45 @@ void bst_insert(tree_node t, int val, ref tree_node ret) {
     }
 }
 
-void bst_minValue(tree_node t, ref int ret) {
-    assert (t != null);
-
-    if (t.left == null) {
-        ret = t.val;
+void bst_delete(tree_node t, int target, ref tree_node ret) {
+    if (t == null) {
+        ret = null;
+    } else if (target < t.val) {
+        ret = new tree_node();
+        ret.val = t.val;
+        bst_delete(t.left, target, ret.left);
+        ret.right = t.right;
+    } else if (target > t.val) {
+        ret = new tree_node();
+        ret.val = t.val;
+        ret.left = t.left;
+        bst_delete(t.right, target, ret.right);
     } else {
-        bst_minValue(t.left, ret);
+        if (t.left == null) {
+            ret = t.right;
+        } else {
+            tree_node right = new tree_node();
+            right.val = target;
+            right.left = t.left.right;
+            right.right = t.right;
+
+            ret = new tree_node();
+            ret.val = t.left.val;
+            ret.left = t.left.left;
+            bst_delete(right, t.val, ret.right);
+        }
+    }
+}
+
+void bst_find(tree_node t, int target, ref boolean ret) {
+    if (t == null){
+        ret = false;
+    } else if (target == t.val) {
+        ret = true;
+    } else if (target < t.val) {
+        bst_find(t.left, target, ret);
+    } else {
+        bst_find(t.right, target, ret);
     }
 }
 

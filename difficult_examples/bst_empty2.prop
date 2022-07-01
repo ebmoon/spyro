@@ -17,7 +17,7 @@ generator {
 
 example {
     int -> ??(2) | -1 * ??(2) ;
-    tree_node(4) -> bst_empty() | bst_insert(tree_node, int);
+    tree_node(4) -> bst_empty() | bst_insert(tree_node, int) | bst_delete(tree_node, int);
 }
 
 struct tree_node {
@@ -52,13 +52,33 @@ void bst_insert(tree_node t, int val, ref tree_node ret) {
     }
 }
 
-void bst_minValue(tree_node t, ref int ret) {
-    assert (t != null);
-
-    if (t.left == null) {
-        ret = t.val;
+void bst_delete(tree_node t, int target, ref tree_node ret) {
+    if (t == null) {
+        ret = null;
+    } else if (target < t.val) {
+        ret = new tree_node();
+        ret.val = t.val;
+        bst_delete(t.left, target, ret.left);
+        ret.right = t.right;
+    } else if (target > t.val) {
+        ret = new tree_node();
+        ret.val = t.val;
+        ret.left = t.left;
+        bst_delete(t.right, target, ret.right);
     } else {
-        bst_minValue(t.left, ret);
+        if (t.left == null) {
+            ret = t.right;
+        } else {
+            tree_node right = new tree_node();
+            right.val = target;
+            right.left = t.left.right;
+            right.right = t.right;
+
+            ret = new tree_node();
+            ret.val = t.left.val;
+            ret.left = t.left.left;
+            bst_delete(right, t.val, ret.right);
+        }
     }
 }
 

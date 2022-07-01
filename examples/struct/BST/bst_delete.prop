@@ -22,7 +22,7 @@ generator {
 
 example {
     int -> ??(2) | -1 * ??(2) ;
-    tree_node(4) -> bst_empty() | bst_insert(tree_node, int) | bst_delete(tree_node, int);
+    tree_node(4) -> bst_empty() | bst_insert(tree_node, int);
 }
 
 struct tree_node {
@@ -57,16 +57,6 @@ void bst_insert(tree_node t, int val, ref tree_node ret) {
     }
 }
 
-void bst_minValue(tree_node t, ref int ret) {
-    assert (t != null);
-
-    if (t.left == null) {
-        ret = t.val;
-    } else {
-        bst_minValue(t.left, ret);
-    }
-}
-
 void bst_delete(tree_node t, int target, ref tree_node ret) {
     if (t == null) {
         ret = null;
@@ -81,17 +71,18 @@ void bst_delete(tree_node t, int target, ref tree_node ret) {
         ret.left = t.left;
         bst_delete(t.right, target, ret.right);
     } else {
-        if ((t.left == null) && (t.right == null)) {
-            ret = null;
-        } else if (t.left == null) {
+        if (t.left == null) {
             ret = t.right;
-        } else if (t.right == null) {
-            ret = t.left;
         } else {
+            tree_node right = new tree_node();
+            right.val = target;
+            right.left = t.left.right;
+            right.right = t.right;
+
             ret = new tree_node();
-            bst_minValue(t.right, ret.val);
-            ret.left = t.left;
-            bst_delete(t.right, ret.val, ret.right);
+            ret.val = t.left.val;
+            ret.left = t.left.left;
+            bst_delete(right, t.val, ret.right);
         }
     }
 }
