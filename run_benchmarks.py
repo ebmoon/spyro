@@ -20,7 +20,7 @@ def main():
 
     for path in files:
         with open(path, 'r') as infile:
-            inline_bnd = 10 if "list" in path else 5
+            inline_bnd = 10 if ("list" in path) or ("stack" in path) else 5
             num_atom_max = 4 if "array_search_3" in path else 3
             PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms).run_benchmark()
 

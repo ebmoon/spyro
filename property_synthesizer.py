@@ -8,6 +8,7 @@ from input_generator import InputGenerator
 from output_parser import OutputParser
 
 SKETCH_BINARY_PATH = "sketch-frontend/sketch"
+LOG_FILE_PATH = "log/"
 TEMP_FILE_PATH = "tmp/"
 TEMP_NAME_DEFAULT = "tmp"
 
@@ -32,6 +33,17 @@ def write_tempfile(path, code):
     with open(path, 'w') as f:
         f.write(code)
 
+def neg_to_pos(neg_example):
+    lines = neg_example.splitlines()
+    lines[-1] = '\tassert out;'
+    return '\n'.join(lines)
+
+def open_logfile(filename):
+    if not os.path.isdir(LOG_FILE_PATH):
+        os.mkdir(LOG_FILE_PATH)
+    
+    return open(LOG_FILE_PATH + filename, 'w')
+
 class PropertySynthesizer:
     def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms) :       
         # Input/Output file stream
@@ -43,6 +55,7 @@ class PropertySynthesizer:
         
         # Template for Sketch synthesis
         self.__template = infile.read()
+        self.__logfile = open_logfile(self.__tempfile_name)
 
         # Sketch Input File Generator
         self.__minimize_terms = minimize_terms
@@ -141,6 +154,12 @@ class PropertySynthesizer:
         if elapsed_time < self.__min_time_synthesis:
             self.__min_time_synthesis = elapsed_time
 
+        log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
+        log += ['Y', f'{elapsed_time}']
+        log += [f'{len(pos)}', f'{len(neg_must)}', f'{len(neg_may)}']
+
+        self.__logfile.write(','.join(log) + "\n")
+
         if output != None:
             output_parser = OutputParser(output)
             phi = output_parser.parse_property()
@@ -171,6 +190,12 @@ class PropertySynthesizer:
             self.__max_time_maxsat = elapsed_time
         if elapsed_time < self.__min_time_maxsat:
             self.__min_time_maxsat = elapsed_time
+
+        log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
+        log += ['M', f'{elapsed_time}']
+        log += [f'{len(pos)}', f'{len(neg_must)}', f'{len(neg_may)}']
+
+        self.__logfile.write(','.join(log) + "\n")
 
         if output != None:
             output_parser = OutputParser(output)
@@ -207,6 +232,12 @@ class PropertySynthesizer:
         if elapsed_time < self.__min_time_soundness:
             self.__min_time_soundness = elapsed_time
 
+        log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
+        log += ['S', f'{elapsed_time}']
+        log += ['-', '-', '-']
+
+        self.__logfile.write(','.join(log) + "\n")
+
         if output != None:
             output_parser = OutputParser(output)
             e_pos = output_parser.parse_positive_example()
@@ -238,6 +269,12 @@ class PropertySynthesizer:
             self.__max_time_precision = elapsed_time
         if elapsed_time < self.__min_time_precision:
             self.__min_time_precision = elapsed_time
+
+        log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
+        log += ['P', f'{elapsed_time}']
+        log += [f'{len(pos)}', f'{len(neg_must)}', f'{len(neg_may)}']
+
+        self.__logfile.write(','.join(log) + "\n")
 
         if output != None:
             output_parser = OutputParser(output)
@@ -285,11 +322,18 @@ class PropertySynthesizer:
         phi_last_sound = self.__phi_truth
         have_candidate = True
         neg_delta = []
+        pos_fake = []
 
         while True:
             if not have_candidate:
-                phi, lam = self.__synthesize(pos, neg_must, neg_may, lam_functions)
-                if phi == None:
+                phi, lam = self.__synthesize(pos + pos_fake, neg_must, neg_may, lam_functions)
+                if phi == None and len(neg_may) == 1:
+                    phi = phi_init
+                    neg_delta += neg_may
+                    neg_may = []
+                    lam = {}
+
+                elif phi == None:
                     neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions, phi_init)
                     neg_delta += delta
                 
@@ -298,8 +342,8 @@ class PropertySynthesizer:
                         phi, lam = self.__synthesize(pos, neg_must, neg_may, lam_functions)
 
                 phi_e = phi
-                have_candidate = True
                 lam_functions = union_dict(lam_functions, lam)
+                have_candidate = True
             
             e_pos, lam, timeout = self.__check_soundness(phi_e, lam_functions)
             if e_pos != None:
@@ -314,10 +358,10 @@ class PropertySynthesizer:
                 return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
             else:
                 phi_init = phi_e
+                phi_last_sound = phi_e
                 neg_must += neg_may
                 neg_may = []
 
-                phi_last_sound = phi_e
                 e_neg, phi, lam = self.__check_precision(phi_e, phi_list, pos, neg_must, neg_may, lam_functions)
                 if e_neg != None:
                     phi_e = phi
@@ -325,7 +369,7 @@ class PropertySynthesizer:
                     lam_functions = lam
                 else:
                     neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
-                    return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
+                    return (phi_e, pos, neg_must, neg_delta, lam_functions)
 
     def __remove_redundant(self, phi_list):
         for i in range(len(phi_list)):
@@ -385,7 +429,16 @@ class PropertySynthesizer:
                 
                 phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
                 lam_functions = union_dict(lam_functions, lam)
-            
+
+                e_pos, lam, timeout = self.__check_soundness(phi, lam_functions)  
+                while e_pos != None:
+                    pos.append(e_pos)
+                    lam_functions = union_dict(lam_functions, lam)
+                    phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
+                    lam_functions = union_dict(lam_functions, lam)
+                    
+                    e_pos, lam, timeout = self.__check_soundness(phi, lam_functions)
+
             phi, pos, neg_used, neg_delta, lam = \
                 self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
             lam_functions = union_dict(lam_functions, lam)
@@ -394,6 +447,7 @@ class PropertySynthesizer:
 
             stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
             self.__statistics.append(stat)
+            self.__resetStatistics()
 
             if self.__verbose:
                 print("Obtained a best L-property")
@@ -697,10 +751,40 @@ class PropertySynthesizer:
         statistics.append(f'{max_last:.2f}')
         statistics.append(f'{min_last:.2f}')
 
+        last = self.__statistics[-1]
+
+        statistics.append(f'{last["num_synthesis"]}')
+        statistics.append(f'{last["time_synthesis"]:.2f}')
+        statistics.append(f'{last["avg_time_synthesis"]:.2f}')
+        statistics.append(f'{last["max_time_synthesis"]:.2f}')
+        statistics.append(f'{last["min_time_synthesis"]:.2f}')
+
+        statistics.append(f'{last["num_maxsat"]}')
+        statistics.append(f'{last["time_maxsat"]:.2f}')
+        statistics.append(f'{last["avg_time_maxsat"]:.2f}') 
+        statistics.append(f'{last["max_time_maxsat"]:.2f}')
+        statistics.append(f'{last["min_time_maxsat"]:.2f}')
+
+        statistics.append(f'{last["num_soundness"]}')
+        statistics.append(f'{last["time_soundness"]:.2f}')
+        statistics.append(f'{last["avg_time_soundness"]:.2f}') 
+        statistics.append(f'{last["max_time_soundness"]:.2f}') 
+        statistics.append(f'{last["min_time_soundness"]:.2f}')
+
+        statistics.append(f'{last["num_precision"]}')
+        statistics.append(f'{last["time_precision"]:.2f}')
+        statistics.append(f'{last["avg_time_precision"]:.2f}')
+        statistics.append(f'{last["max_time_precision"]:.2f}')
+        statistics.append(f'{last["min_time_precision"]:.2f}')
+
+        statistics.append(f'{last["time_conjunct"]:.2f}')
+        statistics.append(f'{last["last_call"]:.2f}')
+
         return statistics
 
     def run(self):
         self.__synthesizeAllProperties()
+        self.__logfile.close()
 
     def run_benchmark(self):
         self.__synthesizeAllProperties()
@@ -708,3 +792,4 @@ class PropertySynthesizer:
         statistics = ','.join(statistics)
 
         self.__write_output(f'{self.__infile.name},{statistics}\n')
+        self.__logfile.close()

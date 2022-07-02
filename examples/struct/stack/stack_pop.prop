@@ -23,65 +23,88 @@ example {
     stack -> empty() | push(stack, int);
 }
 
-struct node {
-	node next;
-	int val;	
+struct list {
+    int hd;
+	list tl;
+}
+
+void nil(ref list ret) {
+    ret = null;
+}
+
+void cons(int hd, list tl, ref list ret) {
+    ret = new list();
+    ret.hd = hd;
+    ret.tl = tl;
+}
+
+void head(list l, ref int ret) {
+    assert (l != null);
+
+    ret = l.hd;
+}
+
+void tail(list l, ref list ret) {
+    assert (l != null);
+
+    ret = l.tl;
+}
+
+void is_empty_list(list l, ref boolean ret) {
+    ret = (l == null);
+}
+
+void equal_list(list l1, list l2, ref boolean ret) {
+    if (l1 == null || l2 == null) {
+        ret = l1 == l2;
+    } else {
+        equal_list(l1.tl, l2.tl, ret);
+        ret = l1.hd == l2.hd && ret;
+    }
 }
 
 struct stack {
-	node top;
+	list l;
 }
 
 void empty(ref stack ret) {
     ret = new stack();
-    ret.top = null;
+    nil(ret.l);
 }
 
 void push(stack s, int val, ref stack ret) {
     assert s != null;
 
-    node n = new node();
-    n.val = val;
-    n.next = s.top;
-
-    ret = new stack();   
-    ret.top = n;
+    ret = new stack();
+    cons(val, s.l, ret.l);
 }
 
 void pop(stack s, ref stack ret_stack, ref int ret_val) {
     assert s != null;
-    assert s.top != null;
+    assert s.l != null;
     
     ret_stack = new stack();
-    ret_stack.top = s.top.next;
-    ret_val = s.top.val;
+    tail(s.l, ret_stack.l);
+    head(s.l, ret_val);
 }
 
 void is_empty(stack s, ref boolean ret) {
-    ret = (s.top == null);
-}
-
-boolean node_equal(node n1, node n2) {
-    if (n1 == null || n2 == null) {
-        return n1 == n2;
-    } else {
-        return n1.val == n2.val && node_equal(n1.next, n2.next);
-    }
+    is_empty_list(s.l, ret);
 }
 
 void stack_equal(stack s1, stack s2, ref boolean ret) {
     if (s1 == null || s2 == null) {
         ret = s1 == s2;
     } else {
-        ret = node_equal(s1.top, s2.top);
+        equal_list(s1.l, s2.l, ret);
     }
 }
 
-void node_len(node n, ref int ret) {
-    if (n == null) {
+void list_len(list l, ref int ret) {
+    if (l == null) {
         ret = 0;
     } else {
-        node_len(n.next, ret);
+        list_len(l.tl, ret);
         ret = ret + 1;
     }
 }
@@ -90,6 +113,6 @@ void stack_len(stack s, ref int ret) {
     if (s == null) {
         ret = 0;
     } else {
-        node_len(s.top, ret);
+        list_len(s.l, ret);
     }
 }
