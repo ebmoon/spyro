@@ -23,8 +23,7 @@ def main():
     num_atom_max = args.num_atom_max
     minimize_terms = args.minimize_terms
 
-    # PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms).run()
-    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms).run_benchmark()
+    PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms).run()
 
     infile.close()
     outfile.close()
