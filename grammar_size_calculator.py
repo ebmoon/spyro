@@ -76,7 +76,12 @@ def main():
             generator = TemplateParser(template).get_generator_rules()
             memo, size = compute_size(generator)
             basename = os.path.basename(path)
-            outfile.write(f'{basename}: {memo} -> {size ** 3} for each clause\n')
+
+            num_disjunct = 3
+            num_disjunct = 4 if ("max4" in basename) or ("array_search_3" in basename) else num_disjunct
+            num_disjunct = 5 if ("max5" in basename) else num_disjunct
+
+            outfile.write(f'{basename}: {memo} -> {size ** num_disjunct} for each clause\n')
 
     infile.close()
     outfile.close()

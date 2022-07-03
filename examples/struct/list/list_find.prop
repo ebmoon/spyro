@@ -7,7 +7,7 @@ var {
 }
 
 relation {
-    elemIndex(l, val, idx_out);
+    find(l, val, idx_out);
 }
 
 generator {
@@ -52,13 +52,13 @@ void tail(list l, ref list ret) {
     ret = l.tl;
 }
 
-void elemIndex(list l, int val, ref int ret) {
+void find(list l, int val, ref int ret) {
     if (l == null) {
         ret = -1;
     } else if (val == l.hd) {
         ret = 0;
     } else {
-        elemIndex(l.tl, val, ret);
+        find(l.tl, val, ret);
         if (ret >= 0) { ret = ret + 1; }
     }
 }

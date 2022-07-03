@@ -45,7 +45,9 @@ def open_logfile(filename):
     return open(LOG_FILE_PATH + filename, 'w')
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, inline_bnd, inline_bnd_sound, num_atom_max, minimize_terms) :       
+    def __init__(self, infile, outfile, verbose, \
+        inline_bnd, inline_bnd_sound, \
+        num_atom_max, minimize_terms, keep_neg_may) :       
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
@@ -67,7 +69,7 @@ class PropertySynthesizer:
 
         # Options
         self.__verbose = verbose
-        self.__move_neg_may = True
+        self.__move_neg_may = not keep_neg_may
         self.__timeout = 300
 
         # Iterators for descriptive message
@@ -320,7 +322,7 @@ class PropertySynthesizer:
     def __synthesizeProperty(self, phi_list, phi_init, pos, neg_must, neg_may, lam_functions, most_precise):
         # Assume that current phi is sound
         phi_e = phi_init
-        phi_last_sound = self.__phi_truth
+        phi_last_sound = None
         neg_delta = []
 
         while True:
@@ -334,15 +336,15 @@ class PropertySynthesizer:
                 
                 # If neg_may is a singleton set, it doesn't need to call MaxSynth
                 # Revert to the last remembered sound property 
-                if phi == None and len(neg_may) == 1:
-                    phi = phi_init
+                if phi == None and len(neg_may) == 1 and phi_last_sound != None:
+                    phi = phi_last_sound
                     neg_delta += neg_may
                     neg_may = []
                     lam = {}
 
                 # MaxSynth 
                 elif phi == None:
-                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions, phi_init)
+                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions, phi_last_sound)
                     neg_delta += delta
                 
                     # MaxSynth can't minimize the term size, so call the Synth again
@@ -364,11 +366,11 @@ class PropertySynthesizer:
             
             # Check precision after pass soundness check
             else:
-                phi_init = phi_e    # Remember the last sound property
+                phi_last_sound = phi_e    # Remember the last sound property
 
                 # If phi_e is phi_truth, which is initial candidate of the first call,
                 # then phi_e doesn't rejects examples in neg_may. 
-                if self.__move_neg_may and phi_e != self.__phi_truth:
+                if self.__move_neg_may:
                     neg_must += neg_may
                     neg_may = []
 
@@ -379,7 +381,7 @@ class PropertySynthesizer:
                     lam_functions = lam
                 else:               # Sound and Precise
                     neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
-                    return (phi_e, pos, neg_must, neg_delta, lam_functions)
+                    return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
 
     def __remove_redundant(self, phi_list):
         for i in range(len(phi_list)):
@@ -408,9 +410,14 @@ class PropertySynthesizer:
             # Find a property improves conjunction as much as possible
             self.__input_generator.disable_minimize_terms()
             
-            most_precise = self.__minimize_terms
+            if len(neg_may) > 0:
+                neg_may, _, phi_init, lam = self.__max_synthesize(pos, [], neg_may, lam_functions, self.__phi_truth)
+                lam_functions = union_dict(lam_functions, lam)
+            else:
+                phi_init = self.__phi_truth
+
             phi, pos, neg_must, neg_may, lam = \
-                self.__synthesizeProperty(phi_list, self.__phi_truth, pos, [], neg_may, lam_functions, most_precise)
+                self.__synthesizeProperty(phi_list, phi_init, pos, [], neg_may, lam_functions, False)
             lam_functions = lam
 
             # Check if most precise candidates improves property. 
@@ -424,28 +431,23 @@ class PropertySynthesizer:
                     self.__statistics.append(stat)
                     return
 
-            if self.__minimize_terms: 
-                self.__input_generator.enable_minimize_terms()
-                
-                # Synthesize a new sound candidate, which is minimized
-                # We can always synthesize a sound property since we know phi_e
-                # Add more positive examples until the synthesized property is sound
-                phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
-                lam_functions = union_dict(lam_functions, lam)
-                e_pos, lam, timeout = self.__check_soundness(phi, lam_functions)  
-                while e_pos != None:
-                    pos.append(e_pos)
-                    lam_functions = union_dict(lam_functions, lam)
-                    
-                    phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
-                    lam_functions = union_dict(lam_functions, lam)
-                    e_pos, lam, timeout = self.__check_soundness(phi, lam_functions)
-
             # Strengthen the found property to be most precise L-property
             phi, pos, neg_used, neg_delta, lam = \
                 self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
             lam_functions = union_dict(lam_functions, lam)
             
+            if self.__minimize_terms: 
+                self.__input_generator.enable_minimize_terms()
+                
+                # Synthesize a new candidate, which is minimized
+                # We can always synthesize a property here
+                phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
+                lam_functions = union_dict(lam_functions, lam)
+
+                phi, pos, neg_used, neg_delta, lam = \
+                    self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
+                lam_functions = union_dict(lam_functions, lam)
+
             phi_list.append(phi)
 
             stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
