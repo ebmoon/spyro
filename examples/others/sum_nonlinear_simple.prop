@@ -11,7 +11,7 @@ relation {
 
 generator {
     boolean B -> compare(I, I) ;
-    int I -> x | o | 0 ;
+    int I -> x | o | -x | -o | 0 | 1;
 }
 
 example {

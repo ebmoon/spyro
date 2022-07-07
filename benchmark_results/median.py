@@ -2,7 +2,7 @@ import os
 import statistics
 import numpy as np
 
-files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./") for f in fn if ('opt' in f)]
+files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./") for f in fn if ('opt' in f) and ('median' not in f)]
 
 
 benchmarks = {}
@@ -23,17 +23,22 @@ for path in files:
             benchmarks[name] = [stat]
 
 
-medians = []
+medians = {}
 for name, stat in benchmarks.items():
-    data = [name]
+    data = []
     stat = np.array(stat).T.tolist()
 
     for column in stat:
         if len(column) == 3:
             data.append(statistics.median(column))
 
-    medians.append(data)
+    if len(data) == 0:
+        continue
+
+    medians[name] = data
 
 with open('median_opt.csv', 'w') as f:
-    for data in medians:
-        f.write(','.join(data) + '\n')
+    for name in benchmarks.keys():
+        for stat in benchmarks[name]:
+            if stat[2] == medians[name][2]:
+                f.write(','.join([name] + stat) + '\n')

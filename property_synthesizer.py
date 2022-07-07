@@ -355,10 +355,13 @@ class PropertySynthesizer:
                 lam_functions = union_dict(lam_functions, lam)
             
             # Return the last sound property found
-            elif timeout:
+            elif timeout and phi_last_sound != None:
                 neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
-                return (phi_init, pos, neg_must + neg_may, neg_delta, lam_functions)
-            
+                return (phi_last_sound, pos, neg_must + neg_may, neg_delta, lam_functions)
+
+            elif timeout:
+                return (self.__phi_truth, pos, [], [], lam_functions)
+
             # Early termination after finding a sound property with negative example
             elif not most_precise and len(neg_may) > 0:
                 neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
@@ -409,15 +412,16 @@ class PropertySynthesizer:
         while True:
             # Find a property improves conjunction as much as possible
             self.__input_generator.disable_minimize_terms()
-            
+
             if len(neg_may) > 0:
                 neg_may, _, phi_init, lam = self.__max_synthesize(pos, [], neg_may, lam_functions, self.__phi_truth)
                 lam_functions = union_dict(lam_functions, lam)
             else:
                 phi_init = self.__phi_truth
 
+            most_precise = self.__minimize_terms
             phi, pos, neg_must, neg_may, lam = \
-                self.__synthesizeProperty(phi_list, phi_init, pos, [], neg_may, lam_functions, False)
+                self.__synthesizeProperty(phi_list, phi_init, pos, [], neg_may, lam_functions, most_precise)
             lam_functions = lam
 
             # Check if most precise candidates improves property. 
@@ -427,15 +431,10 @@ class PropertySynthesizer:
                 if e_neg != None:
                     neg_must = [e_neg]
                 else:
-                    stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
+                    stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, [], [])
                     self.__statistics.append(stat)
                     return
 
-            # Strengthen the found property to be most precise L-property
-            phi, pos, neg_used, neg_delta, lam = \
-                self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
-            lam_functions = union_dict(lam_functions, lam)
-            
             if self.__minimize_terms: 
                 self.__input_generator.enable_minimize_terms()
                 
@@ -444,15 +443,16 @@ class PropertySynthesizer:
                 phi, lam = self.__synthesize(pos, neg_must, [], lam_functions)
                 lam_functions = union_dict(lam_functions, lam)
 
-                phi, pos, neg_used, neg_delta, lam = \
-                    self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
-                lam_functions = union_dict(lam_functions, lam)
-
-            phi_list.append(phi)
+            # Strengthen the found property to be most precise L-property
+            phi, pos, neg_used, neg_delta, lam = \
+                self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
+            lam_functions = union_dict(lam_functions, lam)
 
             stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
             self.__statistics.append(stat)
             self.__resetStatistics()
+
+            phi_list.append(phi)
 
             if self.__verbose:
                 print("Obtained a best L-property")
@@ -535,10 +535,10 @@ class PropertySynthesizer:
         self.__min_time_maxsat = self.__timeout
         self.__min_time_synthesis = self.__timeout
 
-        self.__max_time_synthesis_query = 0
-        self.__max_time_maxsat_query = 0
-        self.__max_time_soundness_query = 0
-        self.__max_time_precision_query = 0
+        self.__max_time_synthesis = 0
+        self.__max_time_maxsat = 0
+        self.__max_time_soundness = 0
+        self.__max_time_precision = 0
 
         self.__time_last_query = 0
 

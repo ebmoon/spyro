@@ -10,8 +10,8 @@ relation {
 }
 
 generator {
-    boolean AP -> C * x + C * o + C < 0 | C * x + C * o + C == 0 ;
-    int C -> ??(2) | -??(2);
+    boolean AP -> compare(I, I) ;
+    int I -> x | -x | o | -o | 0 | 1 ;
 }
 
 example {
