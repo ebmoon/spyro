@@ -70,6 +70,8 @@ def main():
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
     # files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./difficult_examples") for f in fn if ('.prop' in f)]
 
+    sizes = []
+
     for path in files:
         with open(path, 'r') as infile:
             template = infile.read()
@@ -81,7 +83,12 @@ def main():
             num_disjunct = 4 if ("max4" in basename) or ("array_search_3" in basename) else num_disjunct
             num_disjunct = 5 if ("max5" in basename) else num_disjunct
 
-            outfile.write(f'{basename}: {memo} -> {size ** num_disjunct} for each clause\n')
+            # outfile.write(f'{basename}: {memo} -> {size ** num_disjunct} for each clause\n')
+            outfile.write(f'{path}, {size ** num_disjunct}\n')
+
+            sizes = [size ** num_disjunct]
+
+    print(sum(sizes), sum(sizes) / len(sizes))
 
     infile.close()
     outfile.close()

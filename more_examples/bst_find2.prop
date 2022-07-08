@@ -13,6 +13,7 @@ relation {
 generator {
     boolean AP -> compare(S, S + ??(1))
                 | find_out | !find_out
+                | tree_equal(T, T) | !tree_equal(T, T)
                 | is_empty(T) | !is_empty(T)
                 | forall((x) -> compare(x, I), T)
                 | exists((x) -> compare(x, I), T);
@@ -128,6 +129,18 @@ void forall(fun f, tree_node t, ref boolean ret) {
         forall(f, t.right, right_ret);
 
         ret = left_ret && right_ret && f(t.val);
+    }
+}
+
+void tree_equal(tree_node t1, tree_node t2, ref boolean ret) {
+    if (t1 == null || t2 == null) {
+        ret = t1 == t2;
+    } else {
+        boolean left_equal;
+        boolean right_equal;
+        tree_equal(t1.left, t2.left, left_equal);
+        tree_equal(t1.right, t2.right, right_equal);
+        ret = t1.val == t2.val && left_equal && right_equal;
     }
 }
 

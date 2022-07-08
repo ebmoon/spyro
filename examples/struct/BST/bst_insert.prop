@@ -12,6 +12,7 @@ relation {
 
 generator {
     boolean AP -> compare(S, S + ??(1))
+                | tree_equal(T, T) | !tree_equal(T, T)
                 | is_empty(T) | !is_empty(T)
                 | forall((x) -> compare(x, I), T)
                 | exists((x) -> compare(x, I), T);
@@ -80,6 +81,18 @@ void tree_size(tree_node t, ref int ret) {
         tree_size(t.left, size_left);
         tree_size(t.right, size_right);
         ret = size_left + size_right + 1;
+    }
+}
+
+void tree_equal(tree_node t1, tree_node t2, ref boolean ret) {
+    if (t1 == null || t2 == null) {
+        ret = t1 == t2;
+    } else {
+        boolean left_equal;
+        boolean right_equal;
+        tree_equal(t1.left, t2.left, left_equal);
+        tree_equal(t1.right, t2.right, right_equal);
+        ret = t1.val == t2.val && left_equal && right_equal;
     }
 }
 

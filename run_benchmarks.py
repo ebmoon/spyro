@@ -22,11 +22,11 @@ def main():
 
     for path in files:
         with open(path, 'r') as infile:
-            if not (('max4' in path) or ('max5' in path) or ('branch.prop' in path)):
-               continue
+            #if not (('max4' in path) or ('max5' in path) or ('branch.prop' in path)):
+            #   continue
 
-            #if not ('other' in path):
-            #    continue
+            if not ('others' in path):
+                continue
 
             inline_bnd = 10 if ("list" in path) or ("stack" in path) else 5
             
