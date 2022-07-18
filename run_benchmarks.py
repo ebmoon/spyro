@@ -34,7 +34,9 @@ def main():
             num_atom_max = 4 if ("array_search_3" in path) or ("max4" in path) else num_atom_max
             num_atom_max = 5 if ("max5" in path) else num_atom_max
 
-            PropertySynthesizer(infile, outfile, v, inline_bnd, inline_bnd_sound, \
+            PropertySynthesizer(
+                infile, outfile, v, False,
+                inline_bnd, inline_bnd_sound,
                 num_atom_max, minimize_terms, keep_neg_may).run()
 
     outfile.close()
