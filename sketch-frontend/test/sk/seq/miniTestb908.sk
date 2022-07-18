@@ -1,3 +1,0 @@
-include "miniTestb908_p1.skh";
-include "miniTestb908_p2.skh";
-harness void main() { f1(); f2(); }

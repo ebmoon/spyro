@@ -1,9 +1,0 @@
-// Using ternary expression in lambda
-
-harness void main() {
-	int t = 3;
-	
-	fun f = () -> ?? ? t + t : t - 2;
-	
-	assert f() == 1;
-}

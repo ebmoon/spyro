@@ -1,3 +1,0 @@
-//Same struct names
-struct Tree{}
-struct Tree extends Tree{} // TypeError

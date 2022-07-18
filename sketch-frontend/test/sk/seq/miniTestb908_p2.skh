@@ -1,3 +1,0 @@
-package p2;
-void func() { ; }
-void f2 () { func(); }

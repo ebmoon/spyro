@@ -1,7 +1,0 @@
-struct scalar { bit supp; int val; }
-
-
-
-harness void test2(int n, int i, int j) {
-  assert func(|scalar|(supp=0,val=0)); //TypeError
-}

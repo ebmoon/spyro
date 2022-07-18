@@ -1,9 +1,0 @@
-//does not work
-harness void main(){
-  assert({1,2}!={2,3});
-}
-
-//does work
-//harness void main(){
-//  assert(!({1,2}=={2,3}));
-//}

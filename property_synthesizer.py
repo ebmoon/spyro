@@ -2,62 +2,38 @@ import subprocess
 import os
 import random
 import time
+import configparser
 
 from util import union_dict
 from input_generator import InputGenerator
 from output_parser import OutputParser
 
-SKETCH_BINARY_PATH = "sketch-frontend/sketch"
-LOG_FILE_PATH = "log/"
-TEMP_FILE_PATH = "tmp/"
-TEMP_NAME_DEFAULT = "tmp"
+CONFIG_FILE = "config.ini"
 
-def extract_filename_from_path(path):
-    basename = os.path.basename(path)
-    filename, extension = os.path.splitext(basename)
+config = configparser.ConfigParser()
+config.read(CONFIG_FILE)
 
-    return filename
-
-def get_tempfile_name(infile, outfile):
-    infile_path = infile.name
-    
-    if infile_path != '<stdin>':
-        return extract_filename_from_path(infile_path)
-    
-    return TEMP_NAME_DEFAULT
-
-def write_tempfile(path, code):
-    if not os.path.isdir(TEMP_FILE_PATH):
-        os.mkdir(TEMP_FILE_PATH)
-
-    with open(path, 'w') as f:
-        f.write(code)
-
-def neg_to_pos(neg_example):
-    lines = neg_example.splitlines()
-    lines[-1] = '\tassert out;'
-    return '\n'.join(lines)
-
-def open_logfile(filename):
-    if not os.path.isdir(LOG_FILE_PATH):
-        os.mkdir(LOG_FILE_PATH)
-    
-    return open(LOG_FILE_PATH + filename, 'w')
+SKETCH_BINARY_PATH = config["DEFAULT"]["SKETCH_BINARY_PATH"]
+LOG_FILE_DIR = config["DEFAULT"]["LOG_FILE_DIR"]
+TEMP_FILE_DIR = config["DEFAULT"]["TEMP_FILE_DIR"]
+TEMP_NAME_DEFAULT = config["DEFAULT"]["TEMP_NAME_DEFAULT"]
 
 class PropertySynthesizer:
-    def __init__(self, infile, outfile, verbose, \
-        inline_bnd, inline_bnd_sound, \
-        num_atom_max, minimize_terms, keep_neg_may) :       
+    def __init__(
+        self, infile, outfile, verbose,
+        inline_bnd, inline_bnd_sound,
+        num_atom_max, minimize_terms, keep_neg_may) :
+
         # Input/Output file stream
         self.__infile = infile
         self.__outfile = outfile
-        
+
         # Temporary filename for iteration
-        self.__tempfile_name = get_tempfile_name(infile, outfile)
+        self.__tempfile_name = self.__get_tempfile_name(infile, outfile)
         
         # Template for Sketch synthesis
         self.__template = infile.read()
-        self.__logfile = open_logfile(self.__tempfile_name)
+        self.__logfile = self.__open_logfile(self.__tempfile_name)
 
         # Sketch Input File Generator
         self.__minimize_terms = minimize_terms
@@ -107,11 +83,38 @@ class PropertySynthesizer:
         self.__inline_bnd = inline_bnd
         self.__inline_bnd_sound = inline_bnd_sound
 
+    def __extract_filename_from_path(self, path):
+        basename = os.path.basename(path)
+        filename, extension = os.path.splitext(basename)
+
+        return filename
+
+    def __get_tempfile_name(self, infile, outfile):
+        infile_path = infile.name
+        
+        if infile_path != '<stdin>':
+            return self.__extract_filename_from_path(infile_path)
+        
+        return TEMP_NAME_DEFAULT
+
+    def __write_tempfile(self, path, code):
+        if not os.path.isdir(TEMP_FILE_DIR):
+            os.mkdir(TEMP_FILE_DIR)
+
+        with open(path, 'w') as f:
+            f.write(code)
+
+    def __open_logfile(self, filename):
+        if not os.path.isdir(LOG_FILE_DIR):
+            os.mkdir(LOG_FILE_DIR)
+        
+        return open(LOG_FILE_DIR + filename, 'w')
+
     def __write_output(self, output):
         self.__outfile.write(output)
 
     def __get_new_tempfile_path(self):
-        path = TEMP_FILE_PATH
+        path = TEMP_FILE_DIR
         path += self.__tempfile_name
         if self.__verbose:
             path += f'_{self.__outer_iterator}_{self.__inner_iterator}'
@@ -143,7 +146,7 @@ class PropertySynthesizer:
 
         start_time = time.time()
 
-        write_tempfile(path, code)
+        self.__write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
         end_time = time.time()
@@ -180,7 +183,7 @@ class PropertySynthesizer:
         
         start_time = time.time()
 
-        write_tempfile(path, code)
+        self.__write_tempfile(path, code)
         output = self.__try_synthesis(path)
         
         end_time = time.time()
@@ -221,7 +224,7 @@ class PropertySynthesizer:
         
         start_time = time.time()
 
-        write_tempfile(path, code)
+        self.__write_tempfile(path, code)
         output = self.__try_synthesis(path, check_sound=True)
 
         end_time = time.time()
@@ -259,7 +262,7 @@ class PropertySynthesizer:
         
         start_time = time.time()
 
-        write_tempfile(path, code)
+        self.__write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
         end_time = time.time()
@@ -296,7 +299,7 @@ class PropertySynthesizer:
         path = self.__get_new_tempfile_path()
         code = self.__input_generator.generate_improves_predicate_input(phi, phi_list, lam_functions)        
         
-        write_tempfile(path, code)
+        self.__write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
         if output != None:
@@ -314,7 +317,7 @@ class PropertySynthesizer:
         code = self.__input_generator \
             .generate_model_check_input(phi, neg_example, lam_functions)
 
-        write_tempfile(path, code)
+        self.__write_tempfile(path, code)
         output = self.__try_synthesis(path)
 
         return output != None
