@@ -47,6 +47,8 @@ class PropertySynthesizer:
         self.__verbose = verbose
         self.__move_neg_may = not keep_neg_may
         self.__timeout = 300
+        self.__inline_bnd = inline_bnd
+        self.__inline_bnd_sound = inline_bnd_sound
 
         # Iterators for descriptive message
         self.__inner_iterator = 0
@@ -79,9 +81,6 @@ class PropertySynthesizer:
         self.__num_pos_examples = []
         self.__num_used_neg_examples = []
         self.__num_discarded_neg_examples = []
-
-        self.__inline_bnd = inline_bnd
-        self.__inline_bnd_sound = inline_bnd_sound
 
     def __extract_filename_from_path(self, path):
         basename = os.path.basename(path)
@@ -126,33 +125,34 @@ class PropertySynthesizer:
 
     def __try_synthesis(self, path, check_sound=False):
         inline_bnd = self.__inline_bnd if not check_sound else self.__inline_bnd_sound
+        start_time = time.time()
         try:
-            return subprocess.check_output( \
-                [SKETCH_BINARY_PATH, path, \
-                    '--bnd-inline-amnt', str(inline_bnd)], \
+            output = subprocess.check_output(
+                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(inline_bnd)],
                 stderr=subprocess.PIPE, timeout=self.__timeout)
+            end_time = time.time()
+            return output, end_time - start_time
         except subprocess.CalledProcessError as e:
-            return None
+            return None, 0.0
         except subprocess.TimeoutExpired as e:
-            print("Timeout")
-            return None
+            if self.__verbose:
+                print("Timeout")
+            end_time = time.time()
+            return None, end_time - start_time
 
     def __synthesize(self, pos, neg_must, neg_may, lam_functions):
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Try synthesis')
 
+        # Write temp file
         path = self.__get_new_tempfile_path()
         code = self.__input_generator.generate_synthesis_input(pos, neg_must, neg_may, lam_functions)     
-
-        start_time = time.time()
-
         self.__write_tempfile(path, code)
-        output = self.__try_synthesis(path)
 
-        end_time = time.time()
-
-        elapsed_time = end_time - start_time
+        # Run Sketch with temp file
+        output, elapsed_time = self.__try_synthesis(path)
         
+        # Update statistics
         self.__num_synthesis += 1
         self.__time_synthesis += elapsed_time
         if elapsed_time > self.__max_time_synthesis:
@@ -160,12 +160,14 @@ class PropertySynthesizer:
         if elapsed_time < self.__min_time_synthesis:
             self.__min_time_synthesis = elapsed_time
 
+        # Write trace log
         log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
         log += ['Y', f'{elapsed_time}']
         log += [f'{len(pos)}', f'{len(neg_must)}', f'{len(neg_may)}']
 
         self.__logfile.write(','.join(log) + "\n")
 
+        # Return the result
         if output != None:
             output_parser = OutputParser(output)
             phi = output_parser.parse_property()
@@ -178,18 +180,15 @@ class PropertySynthesizer:
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Run MaxSat')
 
+        # Write temp file
         path = self.__get_new_tempfile_path()
         code = self.__input_generator.generate_maxsat_input(pos, neg_must, neg_may, lam_functions)    
-        
-        start_time = time.time()
-
         self.__write_tempfile(path, code)
-        output = self.__try_synthesis(path)
-        
-        end_time = time.time()
 
-        elapsed_time = end_time - start_time
+        # Run Sketch with temp file
+        output, elapsed_time = self.__try_synthesis(path)
 
+        # Update statistics
         self.__num_maxsat += 1
         self.__time_maxsat += elapsed_time
         if elapsed_time > self.__max_time_maxsat:
@@ -197,12 +196,14 @@ class PropertySynthesizer:
         if elapsed_time < self.__min_time_maxsat:
             self.__min_time_maxsat = elapsed_time
 
+        # Write trace log
         log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
         log += ['M', f'{elapsed_time}']
         log += [f'{len(pos)}', f'{len(neg_must)}', f'{len(neg_may)}']
 
         self.__logfile.write(','.join(log) + "\n")
 
+        # Return the result
         if output != None:
             output_parser = OutputParser(output)
             neg_may, delta = output_parser.parse_maxsat(neg_may) 
@@ -219,18 +220,15 @@ class PropertySynthesizer:
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Check soundness')
 
+        # Write temp file
         path = self.__get_new_tempfile_path()
         code = self.__input_generator.generate_soundness_input(phi, lam_functions)       
-        
-        start_time = time.time()
-
         self.__write_tempfile(path, code)
-        output = self.__try_synthesis(path, check_sound=True)
 
-        end_time = time.time()
+        # Run Sketch with temp file
+        output, elapsed_time = self.__try_synthesis(path)
 
-        elapsed_time = end_time - start_time
-
+        # Update statistics
         self.__num_soundness += 1
         self.__time_soundness += elapsed_time
         if elapsed_time > self.__max_time_soundness:
@@ -238,12 +236,14 @@ class PropertySynthesizer:
         if elapsed_time < self.__min_time_soundness:
             self.__min_time_soundness = elapsed_time
 
+        # Write trace log
         log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
         log += ['S', f'{elapsed_time}']
         log += ['-', '-', '-']
 
         self.__logfile.write(','.join(log) + "\n")
 
+        # Return the result
         if output != None:
             output_parser = OutputParser(output)
             e_pos = output_parser.parse_positive_example()
@@ -256,19 +256,16 @@ class PropertySynthesizer:
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} - {self.__inner_iterator}: Check precision')
 
+        # Write temp file
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
             .generate_precision_input(phi, phi_list, pos, neg_must, neg_may, lam_functions)      
-        
-        start_time = time.time()
-
         self.__write_tempfile(path, code)
-        output = self.__try_synthesis(path)
 
-        end_time = time.time()
+        # Run Sketch with temp file
+        output, elapsed_time = self.__try_synthesis(path)
 
-        elapsed_time = end_time - start_time
-
+        # Update statistics
         self.__num_precision += 1
         self.__time_precision += elapsed_time
         if elapsed_time > self.__max_time_precision:
@@ -276,12 +273,14 @@ class PropertySynthesizer:
         if elapsed_time < self.__min_time_precision:
             self.__min_time_precision = elapsed_time
 
+        # Write trace log file
         log = [f'{self.__outer_iterator}', f'{self.__inner_iterator}']
         log += ['P', f'{elapsed_time}']
         log += [f'{len(pos)}', f'{len(neg_must)}', f'{len(neg_may)}']
 
         self.__logfile.write(','.join(log) + "\n")
 
+        # Return the result
         if output != None:
             output_parser = OutputParser(output)
             e_neg = output_parser.parse_negative_example_precision() 
@@ -296,12 +295,15 @@ class PropertySynthesizer:
         if self.__verbose:
             print(f'Iteration {self.__outer_iterator} : Check termination')
 
+        # Write temp file
         path = self.__get_new_tempfile_path()
-        code = self.__input_generator.generate_improves_predicate_input(phi, phi_list, lam_functions)        
-        
+        code = self.__input_generator.generate_improves_predicate_input(phi, phi_list, lam_functions)           
         self.__write_tempfile(path, code)
-        output = self.__try_synthesis(path)
 
+        # Run Sketch with temp file
+        output, _ = self.__try_synthesis(path)
+
+        # Return the result
         if output != None:
             output_parser = OutputParser(output)
             e_neg = output_parser.parse_improves_predicate()
@@ -313,13 +315,16 @@ class PropertySynthesizer:
         if self.__verbose:
             print(f'Iteratoin {self.__outer_iterator} : Model check')
 
+        # Write temp file
         path = self.__get_new_tempfile_path()
         code = self.__input_generator \
             .generate_model_check_input(phi, neg_example, lam_functions)
-
         self.__write_tempfile(path, code)
-        output = self.__try_synthesis(path)
 
+        # Run Sketch with temp file
+        output, _ = self.__try_synthesis(path)
+
+        # Return the result
         return output != None
 
     def __synthesizeProperty(self, phi_list, phi_init, pos, neg_must, neg_may, lam_functions, most_precise):

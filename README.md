@@ -1,6 +1,4 @@
-# spyro README
-
-------
+# README
 
 spyro synthesizes provably sound, most-precise specifications from give function definitions.
 
