@@ -21,8 +21,8 @@ TEMP_NAME_DEFAULT = config["DEFAULT"]["TEMP_NAME_DEFAULT"]
 class PropertySynthesizer:
     def __init__(
         self, infile, outfile, verbose, write_log,
-        timeout, inline_bnd, inline_bnd_sound,
-        num_atom_max, minimize_terms, keep_neg_may):
+        timeout, inline_bnd,
+        num_atom_max, disable_min, keep_neg_may):
 
         # Input/Output file stream
         self.__infile = infile
@@ -35,7 +35,7 @@ class PropertySynthesizer:
         self.__template = infile.read()
 
         # Sketch Input File Generator
-        self.__minimize_terms = minimize_terms
+        self.__minimize_terms = not disable_min
         self.__input_generator = InputGenerator(self.__template)
         self.__input_generator.set_num_atom(num_atom_max)
 
@@ -48,7 +48,6 @@ class PropertySynthesizer:
         self.__move_neg_may = not keep_neg_may
         self.__timeout = timeout
         self.__inline_bnd = inline_bnd
-        self.__inline_bnd_sound = inline_bnd_sound
 
         # Iterators for descriptive message
         self.__inner_iterator = 0
@@ -114,9 +113,7 @@ class PropertySynthesizer:
 
         return path        
 
-    def __try_synthesis(self, code, check_sound=False):
-        inline_bnd = self.__inline_bnd if not check_sound else self.__inline_bnd_sound
-        
+    def __try_synthesis(self, code):
         start_time = time.time()
         
         # Write temp file
@@ -126,7 +123,7 @@ class PropertySynthesizer:
         try:
             # Run Sketch with temp file
             output = subprocess.check_output(
-                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(inline_bnd)],
+                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(self.__inline_bnd)],
                 stderr=subprocess.PIPE, timeout=self.__timeout)
             
             end_time = time.time()
@@ -217,7 +214,7 @@ class PropertySynthesizer:
 
         # Run Sketch with temp file
         code = self.__input_generator.generate_soundness_input(phi, lam_functions)       
-        output, elapsed_time = self.__try_synthesis(code, check_sound=True)
+        output, elapsed_time = self.__try_synthesis(code)
 
         # Update statistics
         self.__num_soundness += 1

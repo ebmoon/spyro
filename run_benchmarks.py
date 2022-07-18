@@ -8,14 +8,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', default=False)
-    parser.add_argument('--minimize-terms', dest='minimize_terms', action='store_true', default=False)
+    parser.add_argument('--disable-min', dest='disable-min', action='store_true', default=False)
     parser.add_argument('--keep-neg-may', dest='keep_neg_may', action='store_true', default=False)
 
     args = parser.parse_args(sys.argv[1:])
     outfile = args.outfile
     v = args.verbose
-    inline_bnd_sound = 10
-    minimize_terms = args.minimize_terms
+    disable_min = args.disable_min
     keep_neg_may = args.keep_neg_may
 
     files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
@@ -28,7 +27,7 @@ def main():
             if not ('others' in path):
                 continue
 
-            inline_bnd = 10 if ("list" in path) or ("stack" in path) else 5
+            inline_bnd = 10 if ("list" in path) or ("stack" in path) or ("normal" in path) else 5
             
             num_atom_max = 3
             num_atom_max = 4 if ("array_search_3" in path) or ("max4" in path) else num_atom_max
@@ -36,8 +35,8 @@ def main():
 
             PropertySynthesizer(
                 infile, outfile, v, False,
-                300, inline_bnd, inline_bnd_sound,
-                num_atom_max, minimize_terms, keep_neg_may).run()
+                300, inline_bnd,
+                num_atom_max, disable_min, keep_neg_may).run()
 
     outfile.close()
 
