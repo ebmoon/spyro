@@ -4,8 +4,6 @@ from template_parser import TemplateParser
 from util import *
 
 class InputGenerator:
-    # To-Do: Generate codes from variables and relations
-
     def __init__(self, code):
         # Input code
         self.__template = TemplateParser(code)

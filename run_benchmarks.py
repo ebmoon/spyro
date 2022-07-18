@@ -36,7 +36,7 @@ def main():
 
             PropertySynthesizer(
                 infile, outfile, v, False,
-                inline_bnd, inline_bnd_sound,
+                300, inline_bnd, inline_bnd_sound,
                 num_atom_max, minimize_terms, keep_neg_may).run()
 
     outfile.close()

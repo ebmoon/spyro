@@ -21,7 +21,7 @@ TEMP_NAME_DEFAULT = config["DEFAULT"]["TEMP_NAME_DEFAULT"]
 class PropertySynthesizer:
     def __init__(
         self, infile, outfile, verbose, write_log,
-        inline_bnd, inline_bnd_sound,
+        timeout, inline_bnd, inline_bnd_sound,
         num_atom_max, minimize_terms, keep_neg_may):
 
         # Input/Output file stream
@@ -46,7 +46,7 @@ class PropertySynthesizer:
         self.__verbose = verbose
         self.__write_log = write_log
         self.__move_neg_may = not keep_neg_may
-        self.__timeout = 300
+        self.__timeout = timeout
         self.__inline_bnd = inline_bnd
         self.__inline_bnd_sound = inline_bnd_sound
 
