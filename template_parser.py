@@ -91,20 +91,11 @@ class TemplateParser():
     def get_integer_arguments_defn(self):
         return ','.join([typ + ' ' + symbol for typ, symbol in self.__int_decls])
 
-    def get_copied_arguments_defn(self):
-        return ','.join([typ + ' ' + symbol + '_copy' for typ, symbol in self.__int_decls])
-
     def get_arguments_call(self):
         return ','.join([symbol for _, symbol in self.__var_decls])
 
     def get_integer_arguments_call(self):
         return ','.join([symbol for _, symbol in self.__int_decls])
-
-    def get_copied_arguments_call(self):
-        return ','.join([symbol + "_copy" for _, symbol in self.__var_decls])
-
-    def get_int_copied_arguments_call(self):
-        return ','.join([symbol + "_copy" for _, symbol in self.__int_decls])
 
     def get_variables_with_hole(self):
         bnds = self.get_bounds()
@@ -126,17 +117,6 @@ class TemplateParser():
 
     def get_relations(self):
         return '\n'.join(['\t' + rel + ';' for rel in self.__relations])
-
-    def get_copied_relations(self):
-        def copied_relation(rel):
-            start = rel.find('(')
-            end = rel.find(')', start)
-            arguments = rel[start+1:end].split(",")
-
-            copied_args = ",".join([arg.strip() + "_copy" for arg in arguments])
-            return rel[:start+1] + copied_args + rel[end:]
-
-        return '\n'.join(['\t' + copied_relation(rel) + ';' for rel in self.__relations])
 
     def get_structs(self):
         return self.__structs

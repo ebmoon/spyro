@@ -34,9 +34,7 @@ class InputGenerator:
         code += self.__template.get_relations() + '\n\n'
 
         arguments = self.__template.get_arguments_call()
-        copied_arguments = self.__template.get_copied_arguments_call()
         int_arguments = self.__template.get_integer_arguments_call()
-        int_copied_arguments = self.__template.get_int_copied_arguments_call()
 
         code += '\tboolean out;\n'
         code += '\tobtained_property(' + arguments + ',out);\n'
@@ -52,8 +50,6 @@ class InputGenerator:
 
         arguments = self.__template.get_arguments_call()
         int_arguments = self.__template.get_integer_arguments_call()
-        copied_arguments = self.__template.get_copied_arguments_call()
-        int_copied_arguments = self.__template.get_int_copied_arguments_call()
 
         code += '\tboolean out_1;\n'
         code += '\tobtained_property(' + arguments + ',out_1);\n'
