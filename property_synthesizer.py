@@ -21,7 +21,7 @@ TEMP_NAME_DEFAULT = config["DEFAULT"]["TEMP_NAME_DEFAULT"]
 class PropertySynthesizer:
     def __init__(
         self, infile, outfile, verbose, write_log,
-        timeout, inline_bnd,
+        timeout, inline_bnd, slv_seed,
         num_atom_max, disable_min, keep_neg_may):
 
         # Input/Output file stream
@@ -46,8 +46,12 @@ class PropertySynthesizer:
         self.__verbose = verbose
         self.__write_log = write_log
         self.__move_neg_may = not keep_neg_may
+        self.__update_psi = False
+        self.__use_delta = False
+        self.__discard_all = True
         self.__timeout = timeout
         self.__inline_bnd = inline_bnd
+        self.__slv_seed = slv_seed
 
         # Iterators for descriptive message
         self.__inner_iterator = 0
@@ -123,8 +127,11 @@ class PropertySynthesizer:
         try:
             # Run Sketch with temp file
             output = subprocess.check_output(
-                [SKETCH_BINARY_PATH, path, '--bnd-inline-amnt', str(self.__inline_bnd)],
-                stderr=subprocess.PIPE, timeout=self.__timeout)
+                [SKETCH_BINARY_PATH, path, 
+                    '--bnd-inline-amnt', str(self.__inline_bnd),
+                    '--slv-seed', str(self.__slv_seed),
+                    '--slv-timeout', f'{self.__timeout / 60.0:2f}'],
+                stderr=subprocess.PIPE)
             
             end_time = time.time()
             
@@ -203,6 +210,9 @@ class PropertySynthesizer:
             lam = output_parser.get_lam_functions()
             return (neg_may, delta, phi, lam)
         else:
+            if phi_init == None:
+                raise Exception("MaxSynth Failed")
+
             neg_may, delta = [], neg_may
             phi = phi_init
             lam = lam_functions
@@ -301,11 +311,18 @@ class PropertySynthesizer:
         # Return the result
         return output != None
 
-    def __synthesizeProperty(self, phi_list, phi_init, pos, neg_must, neg_may, lam_functions, most_precise):
+    def __filter_neg_delta(self, phi, neg_delta, lam_functions):
+        return [e for e in neg_delta if self.__model_check(phi, e, lam_functions)]
+
+    def __synthesizeProperty(
+            self, phi_list, phi_init, 
+            pos, neg_must, neg_may, lam_functions, 
+            most_precise, update_psi):
         # Assume that current phi is sound
         phi_e = phi_init
         phi_last_sound = None
         neg_delta = []
+        phi_sound = []
 
         while True:
             e_pos, lam, timeout = self.__check_soundness(phi_e, lam_functions)
@@ -318,7 +335,7 @@ class PropertySynthesizer:
                 
                 # If neg_may is a singleton set, it doesn't need to call MaxSynth
                 # Revert to the last remembered sound property 
-                if phi == None and len(neg_may) == 1 and phi_last_sound != None:
+                if phi == None and ((len(neg_may) == 1 and phi_last_sound != None) or self.__discard_all):
                     phi = phi_last_sound
                     neg_delta += neg_may
                     neg_may = []
@@ -326,7 +343,8 @@ class PropertySynthesizer:
 
                 # MaxSynth 
                 elif phi == None:
-                    neg_may, delta, phi, lam = self.__max_synthesize(pos, neg_must, neg_may, lam_functions, phi_last_sound)
+                    neg_may, delta, phi, lam = self.__max_synthesize(
+                        pos, neg_must, neg_may, lam_functions, phi_last_sound)
                     neg_delta += delta
                 
                     # MaxSynth can't minimize the term size, so call the Synth again
@@ -338,7 +356,7 @@ class PropertySynthesizer:
             
             # Return the last sound property found
             elif timeout and phi_last_sound != None:
-                neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
+                neg_delta = self.__filter_neg_delta(phi_last_sound, neg_delta, lam_functions)
                 return (phi_last_sound, pos, neg_must + neg_may, neg_delta, lam_functions)
 
             elif timeout:
@@ -346,12 +364,15 @@ class PropertySynthesizer:
 
             # Early termination after finding a sound property with negative example
             elif not most_precise and len(neg_may) > 0:
-                neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
+                neg_delta = self.__filter_neg_delta(phi_e, neg_delta, lam_functions)
                 return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
             
             # Check precision after pass soundness check
             else:
                 phi_last_sound = phi_e    # Remember the last sound property
+
+                if update_psi and len(neg_may) > 0:
+                    phi_list = phi_list + [phi_e]
 
                 # If phi_e is phi_truth, which is initial candidate of the first call,
                 # then phi_e doesn't rejects examples in neg_may. 
@@ -359,13 +380,14 @@ class PropertySynthesizer:
                     neg_must += neg_may
                     neg_may = []
 
-                e_neg, phi, lam = self.__check_precision(phi_e, phi_list, pos, neg_must, neg_may, lam_functions)
+                e_neg, phi, lam = self.__check_precision(
+                    phi_e, phi_list, pos, neg_must, neg_may, lam_functions)
                 if e_neg != None:   # Not precise
                     phi_e = phi
                     neg_may.append(e_neg)
                     lam_functions = lam
                 else:               # Sound and Precise
-                    neg_delta = [e for e in neg_delta if self.__model_check(phi_e, e, lam_functions)]
+                    neg_delta = self.__filter_neg_delta(phi_e, neg_delta, lam_functions)
                     return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)
 
     def __remove_redundant(self, phi_list):
@@ -394,16 +416,22 @@ class PropertySynthesizer:
         while True:
             # Find a property improves conjunction as much as possible
             self.__input_generator.disable_minimize_terms()
+            
+            if not self.__use_delta:
+                neg_may = []
 
             if len(neg_may) > 0:
-                neg_may, _, phi_init, lam = self.__max_synthesize(pos, [], neg_may, lam_functions, self.__phi_truth)
+                neg_may, _, phi_init, lam = self.__max_synthesize(
+                    pos, [], neg_may, lam_functions, self.__phi_truth)
                 lam_functions = union_dict(lam_functions, lam)
             else:
                 phi_init = self.__phi_truth
 
             most_precise = self.__minimize_terms
             phi, pos, neg_must, neg_may, lam = \
-                self.__synthesizeProperty(phi_list, phi_init, pos, [], neg_may, lam_functions, most_precise)
+                self.__synthesizeProperty(
+                    phi_list, phi_init, pos, [], neg_may, lam_functions, 
+                    most_precise, self.__update_psi)
             lam_functions = lam
 
             # Check if most precise candidates improves property. 
@@ -427,7 +455,7 @@ class PropertySynthesizer:
 
             # Strengthen the found property to be most precise L-property
             phi, pos, neg_used, neg_delta, lam = \
-                self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True)
+                self.__synthesizeProperty([], phi, pos, neg_must, [], lam_functions, True, False)
             lam_functions = union_dict(lam_functions, lam)
 
             stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, neg_used, neg_delta)
@@ -618,7 +646,8 @@ class PropertySynthesizer:
         statistics.append(f'{avg_neg_delta:.2f}')
         statistics.append(f'{max_neg_delta}')
 
-        total_time_synthesis, avg_time_synthesis_per_clause, total_max_time_synthesis = self.__statisticsFromList(times_synthesis)
+        total_time_synthesis, avg_time_synthesis_per_clause, total_max_time_synthesis = \
+            self.__statisticsFromList(times_synthesis)
         avg_time_synthesis = total_time_synthesis / total_num_synth if total_num_synth > 0 else 0
         _, avg_max_synthesis, max_max_synthesis = self.__statisticsFromList(max_times_synthesis)
 
@@ -634,7 +663,8 @@ class PropertySynthesizer:
         statistics.append(f'{avg_max_synthesis:.2f}')
         statistics.append(f'{max_max_synthesis:.2f}')
 
-        total_time_maxsat, avg_time_maxsat_per_clause, total_max_time_maxsat = self.__statisticsFromList(times_maxsat)
+        total_time_maxsat, avg_time_maxsat_per_clause, total_max_time_maxsat = \
+            self.__statisticsFromList(times_maxsat)
         avg_time_maxsat = total_time_maxsat / total_num_maxsat if total_num_maxsat > 0 else 0
         _, avg_max_maxsat, max_max_maxsat = self.__statisticsFromList(max_times_maxsat)
 
@@ -650,7 +680,8 @@ class PropertySynthesizer:
         statistics.append(f'{avg_max_maxsat:.2f}')
         statistics.append(f'{max_max_maxsat:.2f}')
 
-        total_time_soundness, avg_time_soundness_per_clause, total_max_time_soundness = self.__statisticsFromList(times_soundness)
+        total_time_soundness, avg_time_soundness_per_clause, total_max_time_soundness = \
+            self.__statisticsFromList(times_soundness)
         avg_time_soundness = total_time_soundness / total_num_soundness if total_num_soundness > 0 else 0
         _, avg_max_soundness, max_max_soundness = self.__statisticsFromList(max_times_soundness)
 
@@ -666,7 +697,8 @@ class PropertySynthesizer:
         statistics.append(f'{avg_max_soundness:.2f}')
         statistics.append(f'{max_max_soundness:.2f}')
 
-        total_time_precision, avg_time_precision_per_clause, total_max_time_precision = self.__statisticsFromList(times_precision)
+        total_time_precision, avg_time_precision_per_clause, total_max_time_precision = \
+            self.__statisticsFromList(times_precision)
         avg_time_precision = total_time_precision / total_num_precision if total_num_precision > 0 else 0
         _, avg_max_precision, max_max_precision = self.__statisticsFromList(max_times_precision)
 

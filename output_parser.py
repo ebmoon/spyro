@@ -77,7 +77,7 @@ class OutputParser:
 
         negative_example_code = '\n'.join(precision_code_lines[:-6])
         negative_example_code += '\n\tboolean out;'
-        negative_example_code += '\n' + property_call
+        negative_example_code += '\n' + property_call.replace("obtained_property", "property")
         negative_example_code += '\n\tassert !out;'
 
         negative_example_code = negative_example_code.replace("//{}", "")

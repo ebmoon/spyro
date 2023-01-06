@@ -15,6 +15,7 @@ def main():
     parser.add_argument('--num-atom-max', dest='num_atom_max', type=int, nargs='?', default=3)
     parser.add_argument('--disable-min', dest='disable_min', action='store_true', default=False)
     parser.add_argument('--keep-neg-may', dest='keep_neg_may', action='store_true', default=False)
+    parser.add_argument('--slv-seed', dest='slv_seed', type=int, nargs='?', default=0)
 
     args = parser.parse_args(sys.argv[1:])
     infile = args.infile
@@ -26,10 +27,11 @@ def main():
     num_atom_max = args.num_atom_max
     disable_min = args.disable_min
     keep_neg_may = args.keep_neg_may
+    slv_seed = args.slv_seed
 
     PropertySynthesizer(
         infile, outfile, v, write_log,
-        timeout, inline_bnd,
+        timeout, inline_bnd, slv_seed,
         num_atom_max, disable_min, keep_neg_may).run()
 
     infile.close()
