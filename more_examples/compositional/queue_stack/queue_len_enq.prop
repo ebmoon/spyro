@@ -1,0 +1,266 @@
+//@Description Queue module, should run with size 1
+
+var {
+    queue q;
+    int v;
+    queue enq_out;
+
+    int len_out;
+    boolean err;
+}
+
+relation {
+    enqueue(q, v, enq_out);
+    len_queue(enq_out, len_out);
+}
+
+generator {
+    boolean AP -> !GUARD || RHS;
+    boolean GUARD -> true | is_empty_queue(q) | !is_empty_queue(q);
+    boolean RHS -> len_out == S | (len_out == SERR) && !err;
+    int S -> ?? | len_queue(Q) + ?? | len_queue(Q) - ??;
+    int SERR -> ?? | len_queue(QERR) + ?? | len_queue(QERR) - ??;
+    queue Q -> q;
+    queue QERR -> dequeue(q, err);
+}
+
+example {
+    int -> ??(3) | -1 * ??(3) ;
+    boolean -> true | false;
+    queue(3) -> empty_queue() | enqueue(queue, int) | dequeue(queue, boolean) ;
+}
+
+adt Stack {
+    Empty { }
+	Push { Stack s; int x; }
+    Pop { Stack s; }
+}
+
+void rewrite_isEmpty(Stack st, ref boolean ret) {
+    switch(st) {
+        case Empty: { ret = true; }
+        case Push: { ret = false; }
+        case Pop: { assert false; }
+    }
+}
+
+void rewrite_Len(Stack st, ref int ret) {
+    switch(st) {
+        case Empty: { ret = 0; }
+        case Push: { rewrite_Len(st.s, ret); ret = ret + 1; }
+        case Pop: { assert false; }
+    }
+}
+
+void rewrite_Equal(Stack st1, Stack st2, ref boolean ret) {
+    switch(st1) {
+        case Empty: { rewrite_isEmpty(st2, ret); }
+        case Push: { 
+            boolean b;
+            rewrite_isEmpty(st2, b);
+            if (b) {
+                ret = false;
+            } else {
+                int x;
+                rewrite_Top(st2, x);
+                if (st1.x == x) {
+                    Stack s;
+                    rewrite_Pop(st2, s);
+                    rewrite_Equal(st1.s, s, ret);
+                } else {
+                    ret = false;
+                }
+            }
+        }
+        case Pop: { assert false; }
+    }
+}
+
+void rewrite_Top(Stack st, ref int ret) {
+    switch(st) {
+        case Empty: { assert false; }
+        case Push: { ret = st.x; }
+        case Pop: { assert false; }
+    }
+}
+
+void rewrite_Pop(Stack st, ref Stack ret) {
+    switch(st) {
+        case Empty: { ret = new Pop(s=st); }
+        case Push: { ret = st.s; }
+        case Pop: { ret = new Pop(s=st); }
+    }
+}
+
+void empty(ref Stack ret) {
+    ret = new Empty();
+}
+
+void push(Stack st, int x, ref Stack ret) {
+    ret = new Push(s=st, x=x);
+}
+
+void top(Stack st, ref int ret) {
+    rewrite_Top(st, ret);
+}
+
+void pop(Stack st, ref Stack ret) {
+    rewrite_Pop(st, ret);
+}
+
+void is_empty_stack(Stack st, ref boolean ret) {
+    rewrite_isEmpty(st, ret);
+}
+
+void equal_stack(Stack st1, Stack st2, ref boolean ret) { 
+    rewrite_Equal(st1, st2, ret);
+}
+
+void len_stack(Stack st, ref int ret) {
+    rewrite_Len(st, ret);
+}
+
+struct queue {
+	Stack pushStack;
+    Stack popStack;
+}
+
+void empty_queue(ref queue ret) {
+    ret = new queue();
+    empty(ret.pushStack);
+    empty(ret.popStack);
+}
+
+void is_empty_queue(queue q, ref boolean ret) {
+    is_empty_stack(q.popStack, ret);
+}
+
+void enqueue(queue q, int val, ref queue ret) {
+    if (q == null) {
+        ret = null;
+    } else {
+        ret = new queue();
+        boolean b;
+        is_empty_stack(q.popStack, b);
+        if (b) {
+            ret.pushStack = q.pushStack;
+            push(q.popStack, val, ret.popStack);
+        } else {
+            push(q.pushStack, val, ret.pushStack);
+            ret.popStack = q.popStack;
+        }
+    }
+}
+
+void front(queue q, ref boolean error, ref int v_out) {
+    if (q == null) {
+        error = true;
+        v_out = 0;
+        return;
+    } 
+
+    boolean b;
+    is_empty_stack(q.popStack, b);
+    if (b) {
+        v_out = 0;
+        error = true;
+    } else {
+        top(q.popStack, v_out);
+        error = false;
+    }
+}
+
+void reverse(Stack st, ref Stack ret) {
+    boolean b;
+    Stack st_iter = st;
+
+    empty(ret);
+    is_empty_stack(st_iter, b);
+    while(!b) {
+        int x;
+        top(st_iter, x);
+
+        Stack st_tmp;
+        pop(st_iter, st_tmp);
+        st_iter = st_tmp;
+        
+        Stack ret_tmp;
+        push(ret, x, ret_tmp);
+        ret = ret_tmp;
+
+        is_empty_stack(st_iter, b);
+    }
+}
+
+void dequeue(queue q, ref boolean error, ref queue q_out) {
+    if (q == null) {
+        error = true;
+        q_out = null;
+        return;
+    } 
+
+    boolean b;
+    is_empty_stack(q.popStack, b);
+    if (b) {
+        error = true;
+        empty_queue(q_out);       
+    }
+    else {
+        error = false;
+        q_out = new queue();
+        
+        Stack st;
+
+        pop(q.popStack, st);
+        is_empty_stack(st, b);
+        if (b) {
+            empty(q_out.pushStack);
+            reverse(q.pushStack, q_out.popStack);
+        } else {
+            q_out.pushStack = q.pushStack;
+            q_out.popStack = st;
+        }
+    }
+}
+
+void equal_queue(queue q1, queue q2, ref boolean ret) {
+    queue q1d;
+    queue q2d;
+
+    int x1;
+    int x2;
+
+    boolean b1;
+    boolean b2;
+
+    if (q1 == null || q2 == null) {
+        ret = false;
+    } else {
+        is_empty_queue(q1, b1);
+        is_empty_queue(q2, b2);
+
+        if (b1) {
+            ret = b2;
+        } else if (b2) {
+            ret = false;
+        } else {
+            front(q1, b1, x1);
+            front(q2, b2, x2);
+
+            if (x1 == x2) {
+                dequeue(q1, b1, q1d);
+                dequeue(q2, b2, q2d);
+                equal_queue(q1d, q2d, ret);                
+            } else {
+                ret = false;
+            }
+        }
+    }
+}
+
+void len_queue(queue q, ref int ret) {
+    int tmp;
+    len_stack(q.pushStack, tmp);
+    len_stack(q.popStack, ret);
+    ret = ret + tmp;
+}

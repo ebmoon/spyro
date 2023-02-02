@@ -1,0 +1,272 @@
+//@Description Queue module, should run with size 1
+
+var {
+    queue q;
+    int v;
+    queue enq_out;
+
+    boolean deq_err;
+    queue deq_out;
+
+    boolean err;
+}
+
+relation {
+    enqueue(q, v, enq_out);
+    dequeue(enq_out, deq_err, deq_out);
+}
+
+generator {
+    boolean AP -> !GUARD || RHS;
+    boolean GUARD -> true | is_empty_queue(q) | !is_empty_queue(q);
+    boolean RHS -> ERR | equal_queue(deq_out, Q);
+    boolean ERR -> deq_err | err; 
+    int I -> v;
+    queue QV -> q | enq_out | deq_out;
+    queue Q1 -> dequeue(q, err) | empty_queue();
+    queue Q2 -> enqueue(enq_out, I) | enqueue(Q1, I) | dequeue(Q1, err);
+    queue Q -> QV | Q1 | Q2;
+}
+
+example {
+    int -> ??(3) | -1 * ??(3) ;
+    boolean -> true | false;
+    queue(3) -> empty_queue() | enqueue(queue, int) | dequeue(queue, boolean) ;
+}
+
+adt List {
+    Nil { }
+	Cons { int hd; List tl; }
+    Tail { List l; }
+    Append { List l1; List l2; }
+    Snoc { List l; int x; }
+    Reverse { List l; }
+}
+
+void rewrite_isEmpty(List l, ref boolean ret) {
+    switch(l) {
+        case Nil: { ret = true; }
+        case Cons: { ret = false; }
+        case Tail: { assert false; }
+        case Append: { assert false; }
+        case Snoc: { assert false; }
+        case Reverse: { assert false; }
+    }
+}
+
+void rewrite_Equal(List l1, List l2, ref boolean ret) {
+    switch(l1) {
+        case Nil: { rewrite_isEmpty(l2, ret); }
+        case Cons: { 
+            boolean b;
+            rewrite_isEmpty(l2, b);
+            if (b) {
+                ret = false;
+            } else {
+                int x;
+                rewrite_Head(l2, x);
+                if (l1.hd == x) {
+                    List ll;
+                    rewrite_Tail(l2, ll);
+                    rewrite_Equal(l1.tl, ll, ret);
+                } else {
+                    ret = false;
+                }
+            }
+        }
+        case Tail: { assert false; }
+        case Append: { assert false; }
+        case Snoc: { assert false; }
+        case Reverse: { assert false; }
+    }
+}
+
+void rewrite_Head(List l, ref int ret) {
+    switch(l) {
+        case Nil: { assert false; }
+        case Cons: { ret = l.hd; }
+        case Tail: { assert false; }
+        case Append: { assert false; }
+        case Snoc: { assert false; }
+        case Reverse: { assert false; }
+    }
+}
+
+void rewrite_Tail(List l, ref List ret) {
+    switch(l) {
+        case Nil: { ret = new Tail(l=l); }
+        case Cons: { ret = l.tl; }
+        case Tail: { ret = new Tail(l=l); }
+        case Append: { ret = new Tail(l=l); }
+        case Snoc: { ret = new Tail(l=l); }
+        case Reverse: { ret = new Tail(l=l); }
+    }
+}
+
+void rewrite_Snoc(List l, int x, ref List ret) {
+    switch(l) {
+        case Nil: { ret = new Cons(hd=x, tl=new Nil()); }
+        case Cons: { 
+            List ll;
+            rewrite_Snoc(l.tl, x, ll);
+            ret = new Cons(hd=l.hd, tl=ll); 
+        }
+        case Tail: { ret = new Snoc(l=l); }
+        case Append: { ret = new Snoc(l=l); }
+        case Snoc: { ret = new Snoc(l=l); }
+        case Reverse: { ret = new Snoc(l=l); }
+    }
+}
+
+void rewrite_Reverse(List l, ref List ret) {
+    switch(l) {
+        case Nil: { ret = l; }
+        case Cons: { rewrite_Snoc(l.tl, l.hd, ret); }
+        case Tail: { ret = new Reverse(l=l); }
+        case Append: { ret = new Reverse(l=l); }
+        case Snoc: { ret = new Reverse(l=l); }
+        case Reverse: { ret = new Reverse(l=l); }
+    }
+}
+
+void rewrite_Append(List l1, List l2, ref List ret) {
+    switch(l1) {
+        case Nil: { ret = l2; }
+        case Cons: { 
+            List ll;
+            rewrite_Append(l1.tl, l2, ll);
+            ret = new Cons(hd=l1.hd, tl=ll);
+        }
+        case Tail: { assert false; }
+        case Append: { assert false; }
+        case Snoc: { assert false; }
+        case Reverse: { assert false; }
+    }
+}
+
+
+void nil(ref List ret) {
+    ret = new Nil();
+}
+
+void cons(int hd, List tl, ref List ret) {
+    ret = new Cons(hd = hd, tl = tl);
+}
+
+void head(List l, ref int ret) {
+    rewrite_Head(l, ret);
+}
+
+void tail(List l, ref List ret) {
+    rewrite_Tail(l, ret);
+}
+
+void snoc(List l, int x, ref List ret) {
+    rewrite_Snoc(l, x, ret);
+}
+
+void reverse(List l, ref List ret) {
+    rewrite_Reverse(l, ret);
+}
+
+void is_empty_list(List l, ref boolean ret) {
+    rewrite_isEmpty(l, ret);
+}
+
+void equal_list(List l1, List l2, ref boolean ret) { 
+    rewrite_Equal(l1, l2, ret);
+}
+
+void append(List l1, List l2, ref List ret) {
+    rewrite_Append(l1, l2, ret);
+}
+
+struct queue {
+	List in_list;
+    List out_list;
+}
+
+void empty_queue(ref queue ret) {
+    ret = new queue();
+    nil(ret.in_list);
+    nil(ret.out_list);
+}
+
+void is_empty_queue(queue q, ref boolean ret) {
+    is_empty_list(q.out_list, ret);
+}
+
+void enqueue(queue q, int val, ref queue ret) {
+    if (q == null) {
+        ret = null;
+    } else {
+        ret = new queue();
+        boolean b;
+        is_empty_list(q.out_list, b);
+        if (b) {
+            ret.in_list = q.in_list;
+            cons(val, q.out_list, ret.out_list);
+        } else {
+            cons(val, q.in_list, ret.in_list);
+            ret.out_list = q.out_list;
+        }
+    }
+}
+
+void front(queue q, ref boolean error, ref int v_out) {
+    boolean b;
+    is_empty_list(q.out_list, b);
+    if (b || q == null) {
+        v_out = 0;
+        error = true;
+    } else {
+        head(q.out_list, v_out);
+        error = false;
+    }
+}
+
+void dequeue(queue q, ref boolean error, ref queue q_out) {
+    boolean b;
+    is_empty_list(q.out_list, b);
+    if (b || q == null) {
+        error = true;
+        q_out = null;
+    } else {
+        error = false;
+        q_out = new queue();
+        
+        List l;
+
+        tail(q.out_list, l);
+        is_empty_list(l, b);
+        if (b) {
+            nil(q_out.in_list);
+            reverse(q.in_list, q_out.out_list);
+        } else {
+            q_out.in_list = q.in_list;
+            q_out.out_list = l;
+        }
+    }
+}
+
+void queue2list(queue q, ref List ret) {
+    assume (q != null);
+
+    List rev_in_list;
+    reverse(q.in_list, rev_in_list);
+    append(q.out_list, rev_in_list, ret);
+}
+
+void equal_queue(queue q1, queue q2, ref boolean ret) {
+    List q1_list;
+    List q2_list;
+
+    if (q1 == null || q2 == null) {
+        ret = false;
+    } else {
+        queue2list(q1, q1_list);
+        queue2list(q2, q2_list);
+
+        equal_list(q1_list, q2_list, ret);
+    }
+}

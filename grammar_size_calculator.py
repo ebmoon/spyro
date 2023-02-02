@@ -67,8 +67,8 @@ def main():
     args = parser.parse_args(sys.argv[1:])
     outfile = args.outfile
 
-    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
-    # files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./difficult_examples") for f in fn if ('.prop' in f)]
+    # files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
+    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./more_examples/module") for f in fn if ('.prop' in f)]
 
     sizes = []
 
