@@ -7,25 +7,19 @@ var {
 
     boolean pop_err;
     stack pop_out;
-
-    boolean err;
 }
 
 relation {
     push(s, v, push_out);
-    pop(push_out, pop_err, pop_out);
+    pop(push_out, pop_out);
 }
 
 generator {
     boolean AP -> !GUARD || RHS;
     boolean GUARD -> true | is_empty(s) | !is_empty(s);
-    boolean RHS -> ERR | stack_equal(pop_out, ST);
-    boolean ERR -> pop_err | err;
+    boolean RHS -> stack_equal(pop_out, ST);
     int I -> v;
-    stack STV -> s | push_out | pop_out;
-    stack ST1 -> pop(s, err) | empty();
-    stack ST2 -> push(push_out, I) | push(ST1, I) | pop(ST1, err);
-    stack ST -> STV | ST1 | ST2;
+    stack ST -> s | pop(s) | empty() | push(ST, I);
 }
 
 example {
@@ -40,7 +34,6 @@ adt List {
     Tail { List l; }
     Append { List l1; List l2; }
     Snoc { List l; int x; }
-    Reverse { List l; }
 }
 
 void rewrite_isEmpty(List l, ref boolean ret) {
@@ -50,7 +43,6 @@ void rewrite_isEmpty(List l, ref boolean ret) {
         case Tail: { assert false; }
         case Append: { assert false; }
         case Snoc: { assert false; }
-        case Reverse: { assert false; }
     }
 }
 
@@ -64,7 +56,6 @@ void rewrite_Len(List l, ref int ret) {
         case Tail: { assert false; }
         case Append: { assert false; }
         case Snoc: { assert false; }
-        case Reverse: { assert false; }
     }
 }
 
@@ -91,7 +82,6 @@ void rewrite_Equal(List l1, List l2, ref boolean ret) {
         case Tail: { assert false; }
         case Append: { assert false; }
         case Snoc: { assert false; }
-        case Reverse: { assert false; }
     }
 }
 
@@ -102,7 +92,6 @@ void rewrite_Head(List l, ref int ret) {
         case Tail: { assert false; }
         case Append: { assert false; }
         case Snoc: { assert false; }
-        case Reverse: { assert false; }
     }
 }
 
@@ -113,7 +102,6 @@ void rewrite_Tail(List l, ref List ret) {
         case Tail: { ret = new Tail(l=l); }
         case Append: { ret = new Tail(l=l); }
         case Snoc: { ret = new Tail(l=l); }
-        case Reverse: { ret = new Tail(l=l); }
     }
 }
 
@@ -128,36 +116,8 @@ void rewrite_Snoc(List l, int x, ref List ret) {
         case Tail: { ret = new Snoc(l=l); }
         case Append: { ret = new Snoc(l=l); }
         case Snoc: { ret = new Snoc(l=l); }
-        case Reverse: { ret = new Snoc(l=l); }
     }
 }
-
-void rewrite_Reverse(List l, ref List ret) {
-    switch(l) {
-        case Nil: { ret = l; }
-        case Cons: { rewrite_Snoc(l.tl, l.hd, ret); }
-        case Tail: { ret = new Reverse(l=l); }
-        case Append: { ret = new Reverse(l=l); }
-        case Snoc: { ret = new Reverse(l=l); }
-        case Reverse: { ret = new Reverse(l=l); }
-    }
-}
-
-void rewrite_Append(List l1, List l2, ref List ret) {
-    switch(l1) {
-        case Nil: { ret = l2; }
-        case Cons: { 
-            List ll;
-            rewrite_Append(l1.tl, l2, ll);
-            ret = new Cons(hd=l1.hd, tl=ll);
-        }
-        case Tail: { assert false; }
-        case Append: { assert false; }
-        case Snoc: { assert false; }
-        case Reverse: { assert false; }
-    }
-}
-
 
 void nil(ref List ret) {
     ret = new Nil();
@@ -179,20 +139,12 @@ void snoc(List l, int x, ref List ret) {
     rewrite_Snoc(l, x, ret);
 }
 
-void reverse(List l, ref List ret) {
-    rewrite_Reverse(l, ret);
-}
-
 void is_empty_list(List l, ref boolean ret) {
     rewrite_isEmpty(l, ret);
 }
 
 void equal_list(List l1, List l2, ref boolean ret) { 
     rewrite_Equal(l1, l2, ret);
-}
-
-void append(List l1, List l2, ref List ret) {
-    rewrite_Append(l1, l2, ret);
 }
 
 void list_len(List l, ref int ret) {
@@ -209,31 +161,19 @@ void empty(ref stack ret) {
 }
 
 void push(stack s, int val, ref stack ret) {
-    if (s == null) {
-        ret = null;
-    } else {
-        ret = new stack();
-        cons(val, s.l, ret.l);
-    }
+    ret = new stack();
+    cons(val, s.l, ret.l);
 }
 
-void pop(stack s, ref boolean err, ref stack ret_stack) {
-    if (s == null || s.l == null) {
-        err = true;
-        ret_stack = null;
-    } else {
-        err = false;
-        ret_stack = new stack();
-        tail(s.l, ret_stack.l);
-    }
+void pop(stack s, ref stack ret_stack) {
+    ret_stack = new stack();
+    tail(s.l, ret_stack.l);
 }
 
-void top(stack s, ref boolean err, ref int ret_val) {
+void top(stack s, ref int ret_val) {
     if (s == null || s.l == null) {
-        err = true;
         ret_val = 0;
     } else {
-        err = false;
         head(s.l, ret_val);
     }
 }
