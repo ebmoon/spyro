@@ -20,23 +20,26 @@ TEMP_NAME_DEFAULT = config["DEFAULT"]["TEMP_NAME_DEFAULT"]
 
 class PropertySynthesizer:
     def __init__(
-        self, infile, outfile, verbose, write_log,
+        self, infiles,
+        outfile, verbose, write_log,
         timeout, inline_bnd, slv_seed,
         num_atom_max, disable_min, keep_neg_may):
 
         # Input/Output file stream
-        self.__infile = infile
+        self.__infiles = infiles
         self.__outfile = outfile
 
         # Temporary filename for iteration
-        self.__tempfile_name = self.__get_tempfile_name(infile, outfile)
+        self.__tempfile_name = self.__get_tempfile_name(infiles[0], outfile)
         
         # Template for Sketch synthesis
-        self.__template = infile.read()
+        self.__code = ''
+        for f in infiles:
+            self.__code += f.read() + '\n'
 
         # Sketch Input File Generator
         self.__minimize_terms = not disable_min
-        self.__input_generator = InputGenerator(self.__template)
+        self.__input_generator = InputGenerator(self.__code)
         self.__input_generator.set_num_atom(num_atom_max)
 
         # Synthesized property
@@ -755,7 +758,8 @@ class PropertySynthesizer:
         statistics = self.__statisticsList()
         statistics = ','.join(statistics)
 
-        self.__write_output(f'{self.__infile.name},{statistics}\n')
+        infile_names = '-'.join([f.name for f in self.__infiles])
+        self.__write_output(f'{infile_names},{statistics}\n')
 
         if self.__write_log:
             self.__logfile.close()

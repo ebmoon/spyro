@@ -1,12 +1,12 @@
 import os
 import functools
-from template_parser import TemplateParser
+from spyro_parser import SpyroParser
 from util import *
 
 class InputGenerator:
     def __init__(self, code):
         # Input code
-        self.__template = TemplateParser(code)
+        self.__template = SpyroParser(code)
         self.__fresh_num = 0
         self.__num_atom = 1
         self.__minimize_terms = False
@@ -420,7 +420,6 @@ class InputGenerator:
 
     def __example_generators(self):
         rules = self.__template.get_example_rules()
-        structs = self.__template.get_structs()
         code = '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
 
         return code

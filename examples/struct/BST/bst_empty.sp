@@ -1,24 +1,19 @@
 //@Description Binary tree
 
 var {
-    tree_node bst;
-    int target;
-    tree_node bst_out;
+    tree_node empty_out;
 }
 
 relation {
-    bst_delete(bst, target, bst_out);
+    bst_empty(empty_out);
 }
 
 generator {
     boolean AP -> compare(S, S + ??(1))
                 | tree_equal(T, T) | !tree_equal(T, T)
-                | is_empty(T) | !is_empty(T)
-                | forall((x) -> compare(x, I), T)
-                | exists((x) -> compare(x, I), T);
-    int I -> target;
+                | is_empty(T) | !is_empty(T);
     int S -> tree_size(T) | 0;
-    tree_node T -> bst | bst_out;
+    tree_node T -> empty_out;
 }
 
 example {

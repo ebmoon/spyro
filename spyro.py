@@ -6,7 +6,7 @@ from property_synthesizer import PropertySynthesizer
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('infiles', nargs='+', type=argparse.FileType('r'))
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--write-log', dest='write_log', action='store_true', default=False)
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', default=False)
@@ -18,7 +18,7 @@ def main():
     parser.add_argument('--slv-seed', dest='slv_seed', type=int, nargs='?', default=0)
 
     args = parser.parse_args(sys.argv[1:])
-    infile = args.infile
+    infiles = args.infiles
     outfile = args.outfile
     v = args.verbose
     write_log = args.write_log
@@ -30,11 +30,12 @@ def main():
     slv_seed = args.slv_seed
 
     PropertySynthesizer(
-        infile, outfile, v, write_log,
+        infiles, outfile, v, write_log,
         timeout, inline_bnd, slv_seed,
         num_atom_max, disable_min, keep_neg_may).run()
 
-    infile.close()
+    for f in infiles:
+        f.close()
     outfile.close()
 
 if __name__=="__main__":
