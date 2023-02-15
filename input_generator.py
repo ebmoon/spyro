@@ -94,6 +94,7 @@ class InputGenerator:
         code = self.__generators() + '\n\n' + self.__compare() + '\n\n'
         code += f'generator boolean property_gen({arg_defn}) {{\n'
 
+        code += '\tif (??) { return false; }\n'
         if self.__minimize_terms and not maxsat:
             code += f'\tint t = ??;\n'
             for i in range(self.__num_atom):

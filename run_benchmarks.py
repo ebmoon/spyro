@@ -19,7 +19,7 @@ def main():
     keep_neg_may = args.keep_neg_may
     slv_seed = args.slv_seed
 
-    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
+    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.sp' in f)]
 
     for path in files:
         with open(path, 'r') as infile:
@@ -31,8 +31,11 @@ def main():
             num_atom_max = 3
             num_atom_max = 4 if ("array_search_3" in path) or ("max4" in path) else num_atom_max
 
+            # To-Do: Update to include multiple files
+            infiles = [infile]
+
             PropertySynthesizer(
-                infile, outfile, v, False,
+                infiles, outfile, v, False,
                 300, inline_bnd, slv_seed,
                 num_atom_max, disable_min, keep_neg_may).run()
 
