@@ -33,7 +33,7 @@ This will synthesize minimized properties from input file, and print the result 
 
 ### Flags
 
-* `infile`: Input file. Default is `stdin`
+* `infiles`: Input files. Use concatenation of all files as the input code.
 * `outfile`: Output file. Default is `stdout`
 * `-v, --verbose`: Print descriptive messages, and leave all the temporary files.
 * `--write-log`: Write trace log if enabled. 
