@@ -14,9 +14,9 @@ relation {
 }
 
 generator {
-    boolean AP -> !GUARD || RHS;
+    boolean AP -> !GUARD || EQ;
     boolean GUARD -> true | is_empty_queue(q) | !is_empty_queue(q);
-    boolean RHS -> equal_queue(deq_out, Q);
+    boolean EQ -> equal_queue(deq_out, Q);
     queue Q -> empty_queue() | q | dequeue(q) | enqueue(Q, v);
 }
 

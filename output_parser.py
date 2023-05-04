@@ -34,18 +34,23 @@ class OutputParser:
 
     def parse_positive_example(self):       
         soundness_code_lines = self.__get_function_code_lines('soundness')
-        soundness_code_lines = [line for line in soundness_code_lines if 'distance' not in line]
         soundness_code_lines = [line for line in soundness_code_lines if 'copy' not in line]
         soundness_code_lines = [line for line in soundness_code_lines if 'minimize' not in line]
         soundness_code_lines = ['\t' + line.strip() for line in soundness_code_lines]
 
         property_call = soundness_code_lines[-2].replace('obtained_property', 'property')
-        property_call = replace_last_argument(property_call, 'out')
 
         positive_example_code = '\n'.join(soundness_code_lines[:-3])
-        positive_example_code += '\n\tboolean out;'
-        positive_example_code += '\n' + property_call
-        positive_example_code += '\n\tassert out;' 
+
+        if property_call.find('(') >= 0:
+            property_call = replace_last_argument(property_call, 'out')
+
+            positive_example_code += '\n\tboolean out;'
+            positive_example_code += '\n' + property_call
+            positive_example_code += '\n\tassert out;' 
+        else:
+            positive_example_code += '\n' + property_call
+            positive_example_code += '\n\tassert out;'            
 
         positive_example_code = positive_example_code.replace("//{}", "")
 
@@ -53,17 +58,21 @@ class OutputParser:
 
     def parse_negative_example_precision(self):
         precision_code_lines = self.__get_function_code_lines('precision')
-        precision_code_lines = [line for line in precision_code_lines if 'distance' not in line]
         precision_code_lines = [line for line in precision_code_lines if 'copy' not in line]
         precision_code_lines = [line for line in precision_code_lines if 'minimize' not in line]
         precision_code_lines = ['\t' + line.strip() for line in precision_code_lines]
 
-        property_call = replace_last_argument(precision_code_lines[-2], 'out')
-
         negative_example_code = '\n'.join(precision_code_lines[:-9])
-        negative_example_code += '\n\tboolean out;'
-        negative_example_code += '\n' + property_call
-        negative_example_code += '\n\tassert !out;'
+
+        if precision_code_lines[-2].find("(") >= 0:
+            property_call = replace_last_argument(precision_code_lines[-2], 'out')
+
+            negative_example_code += '\n\tboolean out;'
+            negative_example_code += '\n' + property_call
+            negative_example_code += '\n\tassert !out;'
+        else:
+            negative_example_code += '\n' + precision_code_lines[-2].replace('out_3', 'out')
+            negative_example_code += '\n\tassert !out;'
 
         negative_example_code = negative_example_code.replace("//{}", "")
 

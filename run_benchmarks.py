@@ -19,25 +19,37 @@ def main():
     keep_neg_may = args.keep_neg_may
     slv_seed = args.slv_seed
 
-    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.sp' in f)]
+    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./more_examples/bvineq/4bit") for f in fn if ('.sp' in f)]
 
-    for path in files:
-        with open(path, 'r') as infile:
-            if not ('list' in path):
-               continue
+    seeds = [32, 64, 128]
 
-            inline_bnd = 10 if ("list" in path) or ("stack" in path) or ("normal" in path) else 5
-            
-            num_atom_max = 3
-            num_atom_max = 4 if ("array_search_3" in path) or ("max4" in path) else num_atom_max
+    for slv_seed in seeds:
+        of = open(f"../benchmark_results/bv_{slv_seed}.csv", "w")
 
-            # To-Do: Update to include multiple files
-            infiles = [infile]
+        for path in files:
+            with open(path, 'r') as infile:
+                inline_bnd = 5
+                
+                # lf = open("./more_examples/jlibsketch/ArraySet/set.sp", "r")
 
-            PropertySynthesizer(
-                infiles, outfile, v, False,
-                300, inline_bnd, slv_seed,
-                num_atom_max, disable_min, keep_neg_may).run()
+                # num_atom_max = 3
+                # num_atom_max = 4 if ("array_search_3" in path) or ("max4" in path) else num_atom_max
+
+                num_atom_max = 1
+
+                # To-Do: Update to include multiple files
+                infiles = [infile]
+
+                print(infiles)
+
+                PropertySynthesizer(
+                    infiles, of, v, False,
+                    300, inline_bnd, slv_seed,
+                    num_atom_max, disable_min, keep_neg_may).run()
+
+                # lf.close()
+        
+        of.close()
 
     outfile.close()
 

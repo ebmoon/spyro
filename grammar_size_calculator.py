@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 
-from template_parser import TemplateParser
+from spyro_parser import SpyroParser
 
 def compute_expr_size(cxt, memo, expr):
     if expr[0] == 'BINOP':
@@ -68,20 +68,21 @@ def main():
     outfile = args.outfile
 
     # files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./examples") for f in fn if ('.prop' in f)]
-    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./more_examples/module") for f in fn if ('.prop' in f)]
+    files = [os.path.join(dp, f) for dp, dn, fn in os.walk("./more_examples/distance") for f in fn if ('distance_' in f)]
 
     sizes = []
 
     for path in files:
         with open(path, 'r') as infile:
             template = infile.read()
-            generator = TemplateParser(template).get_generator_rules()
+            generator = SpyroParser(template).get_generator_rules()
             memo, size = compute_size(generator)
             basename = os.path.basename(path)
 
-            num_disjunct = 3
-            num_disjunct = 4 if ("max4" in basename) or ("array_search_3" in basename) else num_disjunct
-            num_disjunct = 5 if ("max5" in basename) else num_disjunct
+            # num_disjunct = 3
+            # num_disjunct = 4 if ("max4" in basename) or ("array_search_3" in basename) else num_disjunct
+            # num_disjunct = 5 if ("max5" in basename) else num_disjunct
+            num_disjunct = 1
 
             # outfile.write(f'{basename}: {memo} -> {size ** num_disjunct} for each clause\n')
             outfile.write(f'{path}, {size ** num_disjunct}\n')
