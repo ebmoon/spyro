@@ -36,15 +36,15 @@ struct HashTable {
     ArrayList buckets;
 }
 
-void newHashTable(int initialCapacity, ref HashTable ret) {
+void newHashTable(ref HashTable ret) {
     ret = new HashTable();
 
     ret.size = 0;
-    ret.initialCapacity = initialCapacity;
-    ret.currentCapacity = initialCapacity;
+    ret.initialCapacity = 3;
+    ret.currentCapacity = 3;
     list_empty(ret.buckets);
 
-    for (int i = 0; i < initialCapacity; i++) {
+    for (int i = 0; i < 3; i++) {
         ArrayList buckets_tmp;
         list_add(ret.buckets, null, buckets_tmp);
         ret.buckets = buckets_tmp;

@@ -16,9 +16,9 @@ relation {
 generator {
     boolean AP -> !GUARD || !GUARD || RHS;
     boolean GUARD -> true | compare(S, S);
-    boolean RHS -> size_out == S;
-    int S -> size(L) + C | C;
-    int C -> ??(2) - 1;
+    boolean RHS -> size_out == S + C;
+    int S -> size(L) | 0;
+    int C -> -1 | 0 | 1;
     ArrayList L -> newArrayList() | a;
 }
 

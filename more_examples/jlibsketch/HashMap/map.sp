@@ -148,3 +148,62 @@ void put(HashMap map, int key, int value, ref HashMap ret) {
         ret = new HashMap(size=map.size, elementData=elementData);
     }
 }
+
+void remove(HashMap map, int key, ref HashMap ret) {
+    int hash, hashMod;
+    boolean found;
+    hashCode(key, hash);
+
+    hashMod = hash % (map.size + MARGIN);
+    if (hashMod < 0) {
+        hashMod = hashMod + (map.size + MARGIN);
+    }
+
+    found = false;
+    while (map.elementData[hashMod] != null && !found) {
+        Node node = map.elementData[hashMod];
+        if (key == node.key) {
+            found = true;
+        } else {
+            hashMod = (hashMod + 1) % (map.size + MARGIN);
+        }
+    }
+
+    if (!found) {
+        ret = map;
+        return;
+    }
+
+    int i, h, hm;
+    Node n;
+    int k, v;
+
+    int newSize = map.size - 1;
+
+    Node[newSize + MARGIN] elementData;
+
+    for (i = 0; i < map.size + MARGIN; i++) {
+        if (map.elementData[i] != null && map.elementData[i].key != key) {
+            n = map.elementData[i];
+            hm = n.hash % (newSize + MARGIN);
+            if (hm < 0) {
+                hm = hm + (newSize + MARGIN);
+            }
+            while (elementData[hm] != null) {
+                hm = (hm + 1) % (newSize + MARGIN);
+            }
+            elementData[hm] = new Node(key=n.key, value=n.value, hash=n.hash);
+        }
+    }
+
+    ret = new HashMap(size = newSize, elementData = elementData);
+}
+
+void containsKey(HashMap map, int key, ref boolean ret) {
+    int value;
+    boolean err;
+    
+    get(map, key, err, value);
+    
+    ret = !err;
+}

@@ -2,19 +2,19 @@ var {
     HashTable new_out;
 
     Key key;
-    Value get_out;
+    boolean contains_out;
 }
 
 relation {
     newHashTable(new_out);
-    get(new_out, key, get_out);
+    containsKey(new_out, key, contains_out);
 }
 
 generator {
     boolean AP -> !GUARD || RHS;
     boolean GUARD -> true;
-    boolean RHS -> equalValue(get_out, V);
-    Value V -> null;
+    boolean RHS -> contains_out == BB;
+    boolean BB -> ??;
 }
 
 example {

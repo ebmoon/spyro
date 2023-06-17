@@ -18,7 +18,7 @@ generator {
     boolean AP -> !GUARD || RHS;
     boolean GUARD -> true | equalKey(K, K) | !equalKey(K, K);
     boolean RHS -> equalValue(get_out, V);
-    HashTable M -> map | newHashTable(S);
+    HashTable M -> map | newHashTable();
     int S -> ??(2);
     Key K -> key | key2;
     Value V -> null | get(M, K);
@@ -28,7 +28,7 @@ example {
     int -> ??(3) | -1 * ??(3) ;
     Key -> genKey(int);
     Value -> genValue(int);
-    HashTable -> newHashTable(int) | put(HashTable, Key, Value);
+    HashTable -> newHashTable() | put(HashTable, Key, Value);
     boolean -> true | false;
 }
 

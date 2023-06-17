@@ -14,7 +14,7 @@ relation {
 generator {
     boolean AP -> RHS;
     boolean RHS -> size_out == S;
-    int S -> ??(2) - 1;
+    int S -> -1 | 0 | 1;
 }
 
 example {

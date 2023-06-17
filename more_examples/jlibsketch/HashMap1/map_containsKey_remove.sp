@@ -1,20 +1,24 @@
 var {
-    HashTable new_out;
-
+    HashTable map;
     Key key;
-    Value get_out;
+    HashTable remove_out;
+
+    Key key2;
+    boolean contains_out;
 }
 
 relation {
-    newHashTable(new_out);
-    get(new_out, key, get_out);
+    remove(map, key, remove_out);
+    containsKey(remove_out, key2, contains_out);
 }
 
 generator {
     boolean AP -> !GUARD || RHS;
-    boolean GUARD -> true;
-    boolean RHS -> equalValue(get_out, V);
-    Value V -> null;
+    boolean GUARD -> true | equalKey(K, K) | !equalKey(K, K);
+    boolean RHS -> contains_out == BB;
+    HashTable M -> map | newHashTable();
+    Key K -> key | key2;
+    boolean BB -> ?? | containsKey(M, K);
 }
 
 example {
