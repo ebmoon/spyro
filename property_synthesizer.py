@@ -412,6 +412,7 @@ class PropertySynthesizer:
 
     def __synthesizeAllProperties(self):
         phi_list = []
+        fun_list = []
         pos = []
         neg_may = []
         lam_functions = {}
@@ -446,7 +447,7 @@ class PropertySynthesizer:
                 else:
                     stat = self.__statisticsCurrentProperty(pos, neg_must, neg_may, [], [])
                     self.__statistics.append(stat)
-                    return
+                    return phi_list, fun_list
 
             if self.__minimize_terms: 
                 self.__input_generator.enable_minimize_terms()
@@ -467,13 +468,20 @@ class PropertySynthesizer:
 
             phi_list.append(phi)
 
+            for function_name, code in lam_functions.items():
+                funs = []
+                if function_name in phi:
+                    funs.append((function_name, code))
+            
+            fun_list.append(funs)
+
             if self.__verbose:
                 print("Obtained a best L-property")
                 print(phi + '\n')
 
                 for function_name, code in lam_functions.items():
                     if function_name in phi:
-                        print(value + '\n')
+                        print(code + '\n')
 
             self.__outer_iterator += 1
             self.__inner_iterator = 0
@@ -616,137 +624,41 @@ class PropertySynthesizer:
         num_query += total_num_maxsat
         num_query += total_num_soundness
         num_query += total_num_precision
-
-        statistics.append(f'{num_conjunct}')
         
         total_time, avg_time, max_time = self.__statisticsFromList(times_conjunct)
         avg_time_per_query = total_time / num_query if num_query > 0 else 0
-
-        statistics.append(f'{num_query}')
-        statistics.append(f'{total_time:.2f}')
-        statistics.append(f'{avg_time_per_query:.2f}')
-        statistics.append(f'{avg_time:.2f}')
-        statistics.append(f'{max_time:.2f}')
-
-        _, avg_pos, max_pos = self.__statisticsFromList(num_pos)
-        _, avg_neg_must, max_neg_must = self.__statisticsFromList(num_neg_must)
-        _, avg_neg_may, max_neg_may = self.__statisticsFromList(num_neg_may)
-        _, avg_neg_used, max_neg_used = self.__statisticsFromList(num_neg_used)
-        _, avg_neg_delta, max_neg_delta = self.__statisticsFromList(num_neg_delta)
-
-        statistics.append(f'{avg_pos:.2f}')
-        statistics.append(f'{max_pos}')
-
-        statistics.append(f'{avg_neg_must:.2f}')
-        statistics.append(f'{max_neg_must}')
-
-        statistics.append(f'{avg_neg_may:.2f}')
-        statistics.append(f'{max_neg_may}')
-
-        statistics.append(f'{avg_neg_used:.2f}')
-        statistics.append(f'{max_neg_used}')
-
-        statistics.append(f'{avg_neg_delta:.2f}')
-        statistics.append(f'{max_neg_delta}')
 
         total_time_synthesis, avg_time_synthesis_per_clause, total_max_time_synthesis = \
             self.__statisticsFromList(times_synthesis)
         avg_time_synthesis = total_time_synthesis / total_num_synth if total_num_synth > 0 else 0
         _, avg_max_synthesis, max_max_synthesis = self.__statisticsFromList(max_times_synthesis)
 
-        statistics.append(f'{total_num_synth}')
-        statistics.append(f'{avg_num_synth:.2f}')
-        statistics.append(f'{max_num_synth}')
-
-        statistics.append(f'{total_time_synthesis:.2f}')
-        statistics.append(f'{avg_time_synthesis:.2f}')
-        statistics.append(f'{avg_time_synthesis_per_clause:.2f}')
-        statistics.append(f'{total_max_time_synthesis:.2f}')
-        
-        statistics.append(f'{avg_max_synthesis:.2f}')
-        statistics.append(f'{max_max_synthesis:.2f}')
-
         total_time_maxsat, avg_time_maxsat_per_clause, total_max_time_maxsat = \
             self.__statisticsFromList(times_maxsat)
-        avg_time_maxsat = total_time_maxsat / total_num_maxsat if total_num_maxsat > 0 else 0
-        _, avg_max_maxsat, max_max_maxsat = self.__statisticsFromList(max_times_maxsat)
 
-        statistics.append(f'{total_num_maxsat}')
-        statistics.append(f'{avg_num_maxsat:.2f}')
-        statistics.append(f'{max_num_maxsat}')
-
-        statistics.append(f'{total_time_maxsat:.2f}')
-        statistics.append(f'{avg_time_maxsat:.2f}')
-        statistics.append(f'{avg_time_maxsat_per_clause:.2f}')
-        statistics.append(f'{total_max_time_maxsat:.2f}')
-
-        statistics.append(f'{avg_max_maxsat:.2f}')
-        statistics.append(f'{max_max_maxsat:.2f}')
 
         total_time_soundness, avg_time_soundness_per_clause, total_max_time_soundness = \
             self.__statisticsFromList(times_soundness)
-        avg_time_soundness = total_time_soundness / total_num_soundness if total_num_soundness > 0 else 0
-        _, avg_max_soundness, max_max_soundness = self.__statisticsFromList(max_times_soundness)
+        
 
-        statistics.append(f'{total_num_soundness}')
-        statistics.append(f'{avg_num_soundness:.2f}')
-        statistics.append(f'{max_num_soundness}')
-
-        statistics.append(f'{total_time_soundness:.2f}')
-        statistics.append(f'{avg_time_soundness:.2f}')
-        statistics.append(f'{avg_time_soundness_per_clause:.2f}')
-        statistics.append(f'{total_max_time_soundness:.2f}')
-
-        statistics.append(f'{avg_max_soundness:.2f}')
-        statistics.append(f'{max_max_soundness:.2f}')
 
         total_time_precision, avg_time_precision_per_clause, total_max_time_precision = \
             self.__statisticsFromList(times_precision)
-        avg_time_precision = total_time_precision / total_num_precision if total_num_precision > 0 else 0
-        _, avg_max_precision, max_max_precision = self.__statisticsFromList(max_times_precision)
-
-        statistics.append(f'{total_num_precision}')
-        statistics.append(f'{avg_num_precision:.2f}')
-        statistics.append(f'{max_num_precision}')
-
-        statistics.append(f'{total_time_precision:.2f}')
-        statistics.append(f'{avg_time_precision:.2f}')
-        statistics.append(f'{avg_time_precision_per_clause:.2f}')
-        statistics.append(f'{total_max_time_precision:.2f}')
-
-        statistics.append(f'{avg_max_precision:.2f}')
-        statistics.append(f'{max_max_precision:.2f}')
 
         total_last, avg_last, max_last = self.__statisticsFromList(last_calls)
 
-        statistics.append(f'{total_last:.2f}')
-        statistics.append(f'{avg_last:.2f}')
-        statistics.append(f'{max_last:.2f}')
-
         last = self.__statistics[-1]
 
-        statistics.append(f'{last["num_synthesis"]}')
-        statistics.append(f'{last["time_synthesis"]:.2f}')
-        statistics.append(f'{last["avg_time_synthesis"]:.2f}')
-        statistics.append(f'{last["max_time_synthesis"]:.2f}')
-
-        statistics.append(f'{last["num_maxsat"]}')
-        statistics.append(f'{last["time_maxsat"]:.2f}')
-        statistics.append(f'{last["avg_time_maxsat"]:.2f}') 
-        statistics.append(f'{last["max_time_maxsat"]:.2f}')
-
-        statistics.append(f'{last["num_soundness"]}')
-        statistics.append(f'{last["time_soundness"]:.2f}')
-        statistics.append(f'{last["avg_time_soundness"]:.2f}') 
-        statistics.append(f'{last["max_time_soundness"]:.2f}') 
-
-        statistics.append(f'{last["num_precision"]}')
-        statistics.append(f'{last["time_precision"]:.2f}')
-        statistics.append(f'{last["avg_time_precision"]:.2f}')
-        statistics.append(f'{last["max_time_precision"]:.2f}')
-
-        statistics.append(f'{last["time_conjunct"]:.2f}')
-        statistics.append(f'{last["last_call"]:.2f}')
+        statistics.append(num_conjunct)
+        statistics.append(total_num_synth + total_num_maxsat)
+        statistics.append(total_time_synthesis + total_time_maxsat)
+        statistics.append(total_num_soundness)
+        statistics.append(total_time_soundness)
+        statistics.append(total_num_precision)
+        statistics.append(total_time_precision)
+        statistics.append(total_last)
+        statistics.append(last["time_conjunct"])
+        statistics.append(total_time)
 
         return statistics
 
@@ -754,12 +666,10 @@ class PropertySynthesizer:
         if self.__write_log:
             self.__logfile = self.__open_logfile(self.__tempfile_name)
 
-        self.__synthesizeAllProperties()
+        phi_list, fun_list = self.__synthesizeAllProperties()
         statistics = self.__statisticsList()
-        statistics = ','.join(statistics)
-
-        infile_names = '-'.join([f.name for f in self.__infiles])
-        self.__write_output(f'{infile_names},{statistics}\n')
 
         if self.__write_log:
             self.__logfile.close()
+
+        return phi_list, fun_list, statistics
