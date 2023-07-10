@@ -1,0 +1,76 @@
+Property 0
+
+int var_D1_0_s5 = 0;
+	edist_dp(l11, l21, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	edist_dp(l12, l22, var_D2_0_s7);
+	int var_D3_0_s9 = 0;
+	edist_dp(lout1, lout2, var_D3_0_s9);
+	bit var_408 = 0;
+	len(l11, var_408);
+	bit var_409 = 0;
+	len(l12, var_409);
+	bit var_410 = 0;
+	len(l21, var_410);
+	bit var_411 = 0;
+	len(l22, var_411);
+	out = ((var_D1_0_s5 > eps1) || (var_D2_0_s7 > eps2)) || (var_D3_0_s9 <= ((0 + eps1) + eps2));
+
+
+Property 1
+
+int var_D1_0_s21 = 0;
+	edist_dp(l11, l21, var_D1_0_s21);
+	int var_D2_0_s23 = 0;
+	edist_dp(l12, l22, var_D2_0_s23);
+	int var_D3_0_s25 = 0;
+	edist_dp(lout1, lout2, var_D3_0_s25);
+	bit var_468 = 0;
+	len(l11, var_468);
+	bit var_469 = 0;
+	len(l12, var_469);
+	bit var_470 = 0;
+	len(l21, var_470);
+	bit var_471 = 0;
+	len(l22, var_471);
+	out = ((var_D1_0_s21 > eps1) || (var_D2_0_s23 > eps2)) || (var_D3_0_s25 <= (((var_468 + var_469) + var_470) + var_471));
+
+
+Property 2
+
+int var_D1_0_s21 = 0;
+	edist_dp(l11, l21, var_D1_0_s21);
+	int var_D2_0_s23 = 0;
+	edist_dp(l12, l22, var_D2_0_s23);
+	int var_D3_0_s25 = 0;
+	edist_dp(lout1, lout2, var_D3_0_s25);
+	bit var_618 = 0;
+	len(l11, var_618);
+	bit var_619 = 0;
+	len(l12, var_619);
+	bit var_620 = 0;
+	len(l21, var_620);
+	bit var_621 = 0;
+	len(l22, var_621);
+	out = ((var_D1_0_s21 > eps1) || (var_D2_0_s23 > eps2)) || (var_D3_0_s25 <= ((var_618 + var_620) + eps2));
+
+
+Property 3
+
+int var_D1_0_s5 = 0;
+	edist_dp(l11, l21, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	edist_dp(l12, l22, var_D2_0_s7);
+	int var_D3_0_s9 = 0;
+	edist_dp(lout1, lout2, var_D3_0_s9);
+	bit var_808 = 0;
+	len(l11, var_808);
+	bit var_809 = 0;
+	len(l12, var_809);
+	bit var_810 = 0;
+	len(l21, var_810);
+	bit var_811 = 0;
+	len(l22, var_811);
+	out = ((var_D1_0_s5 > eps1) || (var_D2_0_s7 > eps2)) || (var_D3_0_s9 <= ((var_809 + var_811) + eps1));
+
+

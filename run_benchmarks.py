@@ -18,113 +18,163 @@ columns = [
     "time_total"
 ]
 
+def run_benchmark(files, outfile_name, seeds, nofreeze = False, write_result_files = False):
+    for seed in seeds:
+        outfile_basename = outfile_name if len(seeds) <= 1 else f"{outfile_name}_{seed}"
+        outfile = open(f"results/{outfile_basename}.csv", "w")
+        statistics_list = []
+
+        for (paths, num_atom_max, inline_bnd) in files:
+            path = paths[0]
+            filename = os.path.splitext(path)[0]
+
+            infiles = [open(f"benchmarks/{path}", 'r') for path in paths]
+
+            phi_list, fun_list, statistics = PropertySynthesizer(
+                infiles, outfile, False, False,
+                300, inline_bnd, seed,
+                num_atom_max, False, nofreeze).run()
+
+            print(f"Done: {filename}, seed = {seed}, nofreeze = {nofreeze}")
+
+            if write_result_files:
+                with open(f"results/{filename}_{seed}.txt", "w") as f:
+                    for n in range(len(phi_list)):
+                        phi = phi_list[n]
+                        funs = fun_list[n]
+
+                        f.write(f"Property {n}\n\n")
+                        f.write(str(phi) + "\n")
+                        for function_name, code in funs:
+                            f.write(function_name + "\n")
+                            f.write(code + "\n")
+                        f.write("\n\n")
+
+            statistics_str = [str(x) if isinstance(x, int) else f"{x:.2f}" for x in statistics]
+            statistics_list.append([filename] + statistics_str)
+
+            for infile in infiles:
+                infile.close()
+    
+        outfile.write(",".join(columns) + "\n")
+        for statistics in statistics_list:
+            outfile.write(",".join(statistics) + "\n")
+
 def benchmark_application1():
-    #path, num_atom_max, inline_bnd, slv_seed_default, slv_seed_nofreeze
+    #path, num_atom_max, inline_bnd
     files = [
-        (["appilcation1/sygus/max2.sp"], 3, 5, 128, 64),
-        (["appilcation1/sygus/max3.sp"], 3, 5, 128, 64),
-        (["appilcation1/sygus/max4.sp"], 4, 5, 32, 32),
-        (["appilcation1/sygus/diff.sp"], 3, 5, 128, 128),
-        (["appilcation1/sygus/diff2.sp"], 3, 5, 128, 64),
-        (["appilcation1/sygus/array_search_2.sp"], 3, 5, 32, 32),
-        (["appilcation1/sygus/array_search_3.sp"], 4, 5, 128, 64),
-        (["appilcation1/LIA/abs1.sp"], 3, 5, 128, 32),
-        (["application1/LIA/abs2.sp"], 3, 5, 64, 64),
-        (["application1/list/append.sp"], 3, 32, 128),
-        (["application1/list/delete.sp"], 3, 64, 64),
-        (["application1/list/deleteFirst.sp"], 3, 64, 64),
-        (["application1/list/drop.sp"], 3, 10, 128, 32),
-        (["application1/list/elem.sp"], 3, 10, 128, 128),
-        (["application1/list/elemIndex.sp"], 3, 10, 128, 128),
-        (["application1/list/ith.sp"], 3, 10, 32, 32),
-        (["application1/list/min.sp"], 3, 10, 64, 32),
-        (["application1/list/replicate.sp"], 3, 10, 64, 64),
-        (["application1/list/reverse.sp"], 3, 10, 32, 128),
-        (["application1/list/reverse2.sp"], 3, 10, 128, 32),
-        (["application1/list/snoc.sp"], 3, 10, 64, 32),
-        (["application1/list/stutter.sp"], 3, 10, 32, 32),
-        (["application1/list/take.sp"], 3, 10, 32, 128),
-        (["appilcation1/tree/empty.sp", "appilcation1/tree/tree.sp"], 3, 5, 128, 128),
-        (["appilcation1/tree/branch.sp", "appilcation1/tree/tree.sp"], 3, 5, 128, 64),
-        (["appilcation1/tree/elem.sp", "appilcation1/tree/tree.sp"], 3, 5, 32, 128),
-        (["appilcation1/tree/branch_left.sp", "appilcation1/tree/tree.sp"], 3, 5, 128, 64),
-        (["appilcation1/tree/branch_right.sp", "appilcation1/tree/tree.sp"], 3, 5, 64, 64),
-        (["appilcation1/tree/branch_rootval.sp", "appilcation1/tree/tree.sp"], 3, 5, 32, 32),
-        (["appilcation1/BST/empty.sp", "appilcation1/BST/bst.sp"], 3, 5, 64, 32),
-        (["application1/BST/insert.sp", "appilcation1/BST/bst.sp"], 3, 5, 128, 32),
-        (["application1/BST/delete.sp", "appilcation1/BST/bst.sp"], 3, 5, 128, 32),
-        (["application1/BST/find.sp", "appilcation1/BST/bst.sp"], 3, 5, 64, 32),
-        (["appilcation1/stack/empty.sp", "appilcation1/stack/list.sp", "application1/stack/stack.sp"], 3, 10, 128, 32),
-        (["appilcation1/stack/push.sp", "appilcation1/stack/list.sp", "application1/stack/stack.sp"], 3, 10, 128, 128),
-        (["appilcation1/stack/pop.sp", "appilcation1/stack/list.sp", "application1/stack/stack.sp"], 3, 10, 128, 32),
-        (["appilcation1/stack/push_pop.sp", "appilcation1/stack/list.sp", "application1/stack/stack.sp"], 3, 10, 64, 32),
-        (["application1/queue/empty.sp", "appilcation1/queue/list.sp", "application1/queue/queue.sp"], 3, 5, 128, 32),
-        (["application1/queue/enqueue.sp", "appilcation1/queue/list.sp", "application1/queue/queue.sp"], 3, 5, 64, 128),
-        (["application1/queue/dequeue.sp", "appilcation1/queue/list.sp", "application1/queue/queue.sp"], 3, 5, 32, 64),
-        (["appilcation1/arithmetic/linearSum1.sp"], 3, 5, 64, 64),
-        (["application1/arithmetic/linearSum2.sp"], 3, 5, 128, 128),
-        (["application1/arithmetic/nonLinearSum1.sp"], 3, 128, 32),
-        (["application1/arithmetic/nonLinearSum2.sp"], 3, 64, 64),
+        (["application1/sygus/max2.sp"], 3, 5),
+        (["application1/sygus/max3.sp"], 3, 5),
+        (["application1/sygus/max4.sp"], 4, 5),
+        (["application1/sygus/diff.sp"], 3, 5),
+        (["application1/sygus/diff2.sp"], 3, 5),
+        (["application1/sygus/array_search_2.sp"], 3, 5),
+        (["application1/sygus/array_search_3.sp"], 4, 5),
+        (["application1/LIA/abs1.sp"], 3, 5),
+        (["application1/LIA/abs2.sp"], 3, 5),
+        (["application1/list/append.sp"], 3, 10),
+        (["application1/list/delete.sp"], 3, 10),
+        (["application1/list/deleteFirst.sp"], 3, 10),
+        (["application1/list/drop.sp"], 3, 10),
+        (["application1/list/elem.sp"], 3, 10),
+        (["application1/list/elemIndex.sp"], 3, 10),
+        (["application1/list/ith.sp"], 3, 10),
+        (["application1/list/min.sp"], 3, 10),
+        (["application1/list/replicate.sp"], 3, 10),
+        (["application1/list/reverse.sp"], 3, 10),
+        (["application1/list/reverse2.sp"], 3, 10),
+        (["application1/list/snoc.sp"], 3, 10),
+        (["application1/list/stutter.sp"], 3, 10),
+        (["application1/list/take.sp"], 3, 10),
+        (["application1/tree/empty.sp", "application1/tree/tree.sp"], 3, 5),
+        (["application1/tree/branch.sp", "application1/tree/tree.sp"], 3, 5),
+        (["application1/tree/elem.sp", "application1/tree/tree.sp"], 3, 5),
+        (["application1/tree/branch_left.sp", "application1/tree/tree.sp"], 3, 5),
+        (["application1/tree/branch_right.sp", "application1/tree/tree.sp"], 3, 5),
+        (["application1/tree/branch_rootval.sp", "application1/tree/tree.sp"], 3, 5),
+        (["application1/BST/empty.sp"], 3, 5),
+        (["application1/BST/insert.sp"], 3, 5),
+        (["application1/BST/delete.sp"], 3, 5),
+        (["application1/BST/find.sp"], 3, 5),
+        (["application1/stack/empty.sp", "application1/stack/list.sp", "application1/stack/stack.sp"], 3, 10),
+        (["application1/stack/push.sp", "application1/stack/list.sp", "application1/stack/stack.sp"], 3, 10),
+        (["application1/stack/pop.sp", "application1/stack/list.sp", "application1/stack/stack.sp"], 3, 10),
+        (["application1/stack/push_pop.sp", "application1/stack/list.sp", "application1/stack/stack.sp"], 3, 10),
+        (["application1/queue/empty.sp", "application1/queue/list.sp", "application1/queue/queue.sp"], 3, 5),
+        (["application1/queue/enqueue.sp", "application1/queue/list.sp", "application1/queue/queue.sp"], 3, 5),
+        (["application1/queue/dequeue.sp", "application1/queue/list.sp", "application1/queue/queue.sp"], 3, 5),
+        (["application1/arithmetic/linearSum1.sp"], 3, 5),
+        (["application1/arithmetic/linearSum2.sp"], 3, 5),
+        (["application1/arithmetic/nonLinearSum1.sp"], 3, 5),
+        (["application1/arithmetic/nonLinearSum2.sp"], 3, 5)
     ]
 
-    outfile_default = open("results/application1_default_table.txt")
-    outfile_nofreeze = open("results/application1_nofreeze_table.txt")
-    statistics_default_list = []
-    statistics_nofreeze_list = []
-
-    for (paths, num_atom_max, inline_bnd, default_seed, nofreeze_seed) in files:
-        path = paths[0]
-        filename = os.path.basename(path)
-        filename = os.path.splitext(path)[0]
-
-        infiles = [open(path, 'r') for path in paths]
-
-        phi_list, fun_list, statistics = PropertySynthesizer(
-            infiles, outfile_default, False,
-            300, inline_bnd, default_seed,
-            num_atom_max, False, False).run()
-
-        with open(f"results/{path}.txt", "w") as f:
-            for n, phi in len(phi_list):
-                f.write(f"Property {n}\n\n")
-                f.write(str(phi) + "\n")
-                for function_name, code in fun_list:
-                    f.write(function_name + "\n")
-                    f.write(code + "\n")
-                f.write("\n\n")
-
-        statistics_str = [str(x) if isinstance(x, int) else f"{x:.2f}" for x in statistics]
-        statistics_default_list.append([filename] + statistics_str)
-
-        for infile in infiles:
-            infile.close()
-
-        infiles = [open(path, 'r') for path in paths]
-
-        phi_list, fun_list, statistics = PropertySynthesizer(
-            infiles, outfile_default, False,
-            300, inline_bnd, nofreeze_seed,
-            num_atom_max, False, True).run()
-
-        statistics_str = [str(x) if isinstance(x, int) else f"{x:.2f}" for x in statistics]
-        statistics_nofreeze_list.append([filename] + statistics_str)
-
-        for infile in infiles:
-            infile.close()
-
-        outfile_default.close()
-        outfile_nofreeze.close()
-
-        print(f"{path}: Done")
+    seeds = [32, 64, 128]
+    run_benchmark(files, "application1_default", seeds, False, True)
+    run_benchmark(files, "application1_nofreeze", seeds, True, False)
 
 def benchmark_application2():
-    pass
+    files = [
+        (["application2/ArrayList/get_add.sp", "application2/ArrayList/list.sp"], 1, 5),
+        (["application2/ArrayList/size_new.sp", "application2/ArrayList/list.sp"], 1, 5),
+        (["application2/ArrayList/size_add.sp", "application2/ArrayList/list.sp"], 1, 5),
+        (["application2/ArraySet/size_new.sp", "application2/ArraySet/set.sp"], 1, 5),
+        (["application2/ArraySet/size_add.sp", "application2/ArraySet/set.sp"], 1, 5),
+        (["application2/ArraySet/contains_new.sp", "application2/ArraySet/set.sp"], 1, 5),
+        (["application2/ArraySet/contains_add.sp", "application2/ArraySet/set.sp"], 1, 5),
+        (["application2/ArraySet/remove_new.sp", "application2/ArraySet/set.sp"], 1, 5),
+        (["application2/ArraySet/remove_add.sp", "application2/ArraySet/set.sp"], 1, 5),
+        (["application2/HashMap/get_new.sp", "application2/HashMap/map.sp"], 1, 5),
+        (["application2/HashMap/get_put.sp", "application2/HashMap/map.sp"], 1, 5),
+        (["application2/HashMap/put_put.sp", "application2/HashMap/map.sp"], 1, 5),
+    ]
+
+    seeds = [32, 64, 128]
+    run_benchmark(files, "application2_default", seeds, False, True)
+    run_benchmark(files, "application2_nofreeze", seeds, True, False)
 
 def benchmark_application3():
-    pass
+    files = [
+        (["application3/hamming/append.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/cons.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/cons_delete.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/deleteFirst.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/delete.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/reverse.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/snoc.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/stutter.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/hamming/tail.sp", "application3/hamming/list.sp"], 1, 7),
+        (["application3/edit/append.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/cons.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/cons_delete.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/deleteFirst.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/delete.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/reverse.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/snoc.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/stutter.sp", "application3/edit/list.sp"], 1, 7),
+        (["application3/edit/tail.sp", "application3/edit/list.sp"], 1, 7),
+    ]
+    
+    seeds = [32, 64, 128]
+    run_benchmark(files, "application3_default", seeds, False, True)
+    run_benchmark(files, "application3_nofreeze", seeds, True, False)
 
 def benchmark_application4():
-    pass
+    files = [
+        (["application4/conjunction.sp"], 1, 5),
+        (["application4/constNeq.sp"], 1, 5),
+        (["application4/cube.sp"], 1, 5),
+        (["application4/disjunction.sp"], 1, 5),
+        (["application4/fourPoints.sp"], 1, 5),
+        (["application4/half.sp"], 1, 5),
+        (["application4/singlePoint.sp"], 1, 5),
+        (["application4/square.sp"], 1, 5),
+        (["application4/squareIneq.sp"], 1, 5),
+    ]
+
+    seeds = [32, 64, 128]
+    run_benchmark(files, "application4_default", seeds, False, True)
+    run_benchmark(files, "application4_nofreeze", seeds, True, False)
 
 def main():
     parser = argparse.ArgumentParser()

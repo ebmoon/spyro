@@ -1,0 +1,14 @@
+Property 0
+
+bit var_29 = 0;
+	contains(arr, v2, var_29);
+	out = (!(v1 != v2)) || (contains_out == var_29);
+
+
+Property 1
+
+ArraySet@ANONYMOUS var_60 = null;
+	newArraySet(var_60);
+	out = (!(v2 == v1)) || (contains_out == 1);
+
+

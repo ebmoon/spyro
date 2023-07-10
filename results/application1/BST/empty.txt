@@ -1,0 +1,7 @@
+Property 0
+
+bit var_27 = 0;
+	is_empty(empty_out, var_27);
+	out = var_27;
+
+

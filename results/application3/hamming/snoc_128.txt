@@ -1,0 +1,60 @@
+Property 0
+
+int var_D1_0_s7 = 0;
+	hdist(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	hdist(lout1, lout2, var_D2_0_s9);
+	bit var_161 = 0;
+	len(l1, var_161);
+	bit var_157 = 0;
+	len(l1, var_157);
+	bit var_158 = 0;
+	len(l2, var_158);
+	out = ((var_157 != var_158) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= (var_161 + 1));
+
+
+Property 1
+
+int var_D1_0_s7 = 0;
+	hdist(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	hdist(lout1, lout2, var_D2_0_s9);
+	bit var_220 = 0;
+	len(l1, var_220);
+	bit var_216 = 0;
+	len(l1, var_216);
+	bit var_217 = 0;
+	len(l2, var_217);
+	out = ((var_216 != var_217) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= (eps + 1));
+
+
+Property 2
+
+int var_D1_0_s7 = 0;
+	hdist(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	hdist(lout1, lout2, var_D2_0_s9);
+	bit var_270 = 0;
+	len(l1, var_270);
+	bit var_266 = 0;
+	len(l1, var_266);
+	bit var_267 = 0;
+	len(l2, var_267);
+	out = (((!(x1 == x2)) || (var_266 != var_267)) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= var_270);
+
+
+Property 3
+
+int var_D1_0_s7 = 0;
+	hdist(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	hdist(lout1, lout2, var_D2_0_s9);
+	bit var_311 = 0;
+	len(l1, var_311);
+	bit var_307 = 0;
+	len(l1, var_307);
+	bit var_308 = 0;
+	len(l2, var_308);
+	out = (((!(x1 == x2)) || (var_307 != var_308)) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= eps);
+
+

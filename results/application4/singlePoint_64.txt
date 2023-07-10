@@ -1,0 +1,102 @@
+Property 0
+
+int var_CX_0_s5 = 0;
+	bvmul(2, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(7, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(4, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(14, y, var_CY_1_s11);
+	bit var_80 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 7, var_80);
+	bit var_81 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 6, var_81);
+	out = (!(b)) || (var_80 <= var_81);
+
+
+Property 1
+
+int var_CX_0_s5 = 0;
+	bvmul(6, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(6, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(15, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(8, y, var_CY_1_s11);
+	bit var_148 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 6, var_148);
+	bit var_149 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 2, var_149);
+	out = (!(b)) || (var_148 <= var_149);
+
+
+Property 2
+
+int var_CX_0_s5 = 0;
+	bvmul(8, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(10, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(7, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(10, y, var_CY_1_s11);
+	bit var_216 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 9, var_216);
+	bit var_217 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 9, var_217);
+	out = (!(b)) || (var_216 <= var_217);
+
+
+Property 3
+
+int var_CX_0_s5 = 0;
+	bvmul(2, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(2, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(11, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(3, y, var_CY_1_s11);
+	bit var_284 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 0, var_284);
+	bit var_285 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 15, var_285);
+	out = (!(b)) || (var_284 <= var_285);
+
+
+Property 4
+
+int var_CX_0_s11 = 0;
+	bvmul(13, x, var_CX_0_s11);
+	int var_CX_1_s13 = 0;
+	bvmul(10, x, var_CX_1_s13);
+	int var_CY_0_s15 = 0;
+	bvmul(11, y, var_CY_0_s15);
+	int var_CY_1_s17 = 0;
+	bvmul(12, y, var_CY_1_s17);
+	bit var_360 = 0;
+	bvadd3(var_CX_0_s11, var_CY_0_s15, 1, var_360);
+	bit var_361 = 0;
+	bvadd3(var_CX_1_s13, var_CY_1_s17, 4, var_361);
+	out = (!(b)) || (var_360 <= var_361);
+
+
+Property 5
+
+int var_CX_0_s11 = 0;
+	bvmul(2, x, var_CX_0_s11);
+	int var_CX_1_s13 = 0;
+	bvmul(12, x, var_CX_1_s13);
+	int var_CY_0_s15 = 0;
+	bvmul(1, y, var_CY_0_s15);
+	int var_CY_1_s17 = 0;
+	bvmul(6, y, var_CY_1_s17);
+	bit var_432 = 0;
+	bvadd3(var_CX_0_s11, var_CY_0_s15, 10, var_432);
+	bit var_433 = 0;
+	bvadd3(var_CX_1_s13, var_CY_1_s17, 0, var_433);
+	out = (!(b)) || (var_432 <= var_433);
+
+

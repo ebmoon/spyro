@@ -1,0 +1,20 @@
+Property 0
+
+bit var_55 = 0;
+	size(a, var_55);
+	ArrayList@ANONYMOUS var_56 = null;
+	newArrayList(var_56);
+	int var_57 = 0;
+	get(a, idx, var_57);
+	out = (!(var_55 != idx)) || (get_out == var_57);
+
+
+Property 1
+
+ArrayList@ANONYMOUS var_90 = null;
+	newArrayList(var_90);
+	bit var_89 = 0;
+	size(a, var_89);
+	out = (!(idx == var_89)) || (get_out == e);
+
+

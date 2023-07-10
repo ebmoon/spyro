@@ -1,0 +1,22 @@
+Property 0
+
+bit var_51 = 0;
+	containsKey(map, key2, var_51);
+	out = ((!(!(var_51))) || (!(key2 != key))) || err;
+
+
+Property 1
+
+out = (!(key2 == key)) || ((get_out == value) && (!(err)));
+
+
+Property 2
+
+bit var_174 = 0;
+	containsKey(map, key2, var_174);
+	bit err_sub_0 = err_sub;
+	int var_177 = 0;
+	get(map, key2, err_sub_0, var_177);
+	out = ((!(var_174)) || (!(key2 != key))) || ((get_out == var_177) && (!(err)));
+
+

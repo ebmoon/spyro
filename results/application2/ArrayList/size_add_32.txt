@@ -1,0 +1,11 @@
+Property 0
+
+bit var_24 = 0;
+	size(a, var_24);
+	bit var_24_0 = 0;
+	size(a, var_24_0);
+	bit var_24_1 = 0;
+	size(a, var_24_1);
+	out = (!(var_24 != (var_24_0 + 1))) || (size_out == (var_24_1 + 1));
+
+

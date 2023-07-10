@@ -1,0 +1,91 @@
+Property 0
+
+int var_D1_0_s7 = 0;
+	edist_dp(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s9);
+	bit var_170 = 0;
+	len(l1, var_170);
+	bit var_171 = 0;
+	len(l2, var_171);
+	out = ((!(x1 == x2)) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= (eps + 1));
+
+
+Property 1
+
+int var_D1_0_s21 = 0;
+	edist_dp(l1, l2, var_D1_0_s21);
+	int var_D2_0_s23 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s23);
+	bit var_228 = 0;
+	len(l1, var_228);
+	bit var_229 = 0;
+	len(l2, var_229);
+	out = (var_D1_0_s21 > eps) || (var_D2_0_s23 <= (eps + 2));
+
+
+Property 2
+
+int var_D1_0_s7 = 0;
+	edist_dp(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s9);
+	bit var_288 = 0;
+	len(l1, var_288);
+	bit var_289 = 0;
+	len(l2, var_289);
+	out = (var_D1_0_s7 > eps) || (var_D2_0_s9 <= (var_288 + var_289));
+
+
+Property 3
+
+int var_D1_0_s7 = 0;
+	edist_dp(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s9);
+	bit var_356 = 0;
+	len(l1, var_356);
+	bit var_357 = 0;
+	len(l2, var_357);
+	out = ((!(x1 == x2)) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= (((-1 * var_356) + var_357) + (2 * eps)));
+
+
+Property 4
+
+int var_D1_0_s21 = 0;
+	edist_dp(l1, l2, var_D1_0_s21);
+	int var_D2_0_s23 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s23);
+	bit var_406 = 0;
+	len(l1, var_406);
+	bit var_407 = 0;
+	len(l2, var_407);
+	out = (var_D1_0_s21 > eps) || (var_D2_0_s23 <= (var_407 + eps));
+
+
+Property 5
+
+int var_D1_0_s7 = 0;
+	edist_dp(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s9);
+	bit var_436 = 0;
+	len(l1, var_436);
+	bit var_437 = 0;
+	len(l2, var_437);
+	out = ((!(x1 == x2)) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= ((var_436 + (-1 * var_437)) + (2 * eps)));
+
+
+Property 6
+
+int var_D1_0_s21 = 0;
+	edist_dp(l1, l2, var_D1_0_s21);
+	int var_D2_0_s23 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s23);
+	bit var_486 = 0;
+	len(l1, var_486);
+	bit var_487 = 0;
+	len(l2, var_487);
+	out = (var_D1_0_s21 > eps) || (var_D2_0_s23 <= (var_486 + eps));
+
+

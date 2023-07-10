@@ -1,0 +1,20 @@
+Property 0
+
+ArraySet@ANONYMOUS var_53 = null;
+	remove(arr, v2, var_53);
+	ArraySet@ANONYMOUS var_52 = null;
+	add(var_53, v1, var_52);
+	bit var_RHS_0_s11 = 0;
+	equal(remove_out, var_52, var_RHS_0_s11);
+	out = (!(v1 != v2)) || var_RHS_0_s11;
+
+
+Property 1
+
+ArraySet@ANONYMOUS var_87 = null;
+	remove(arr, v2, var_87);
+	bit var_RHS_0_s11 = 0;
+	equal(remove_out, var_87, var_RHS_0_s11);
+	out = (!(v1 == v2)) || var_RHS_0_s11;
+
+

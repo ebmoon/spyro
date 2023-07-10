@@ -1,0 +1,10 @@
+benchmark_name,num_conjunct,num_synth_call,time_synth_call,num_soundness_call,time_soundness_call,num_precision_call,time_precision_call,time_last_call,time_last_iter,time_total
+application4/conjunction,2,49,155.45,73,18.83,26,129.36,98.92,231.51,303.64
+application4/constNeq,1,48,53.87,72,17.71,25,56.29,39.63,84.39,127.86
+application4/cube,5,21,10.78,71,16.99,55,132.02,85.49,70.18,159.79
+application4/disjunction,1,48,121.79,62,15.49,15,73.98,58.71,74.93,211.25
+application4/fourPoints,3,5,1.54,80,19.31,78,44.47,12.80,0.72,65.31
+application4/half,3,19,10.54,56,13.66,40,256.75,229.34,219.60,280.95
+application4/singlePoint,4,9,13.78,75,18.57,70,191.60,53.64,5.29,223.96
+application4/square,4,20,8.22,74,18.05,58,172.34,96.24,82.91,198.61
+application4/squareIneq,4,47,94.39,76,19.19,33,107.48,67.52,54.09,221.07

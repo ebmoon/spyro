@@ -1,0 +1,12 @@
+application2/ArrayList/get_add, 1155
+application2/ArrayList/size_new, 2
+application2/ArrayList/size_add, 1302
+application2/ArraySet/size_new, 2
+application2/ArraySet/size_add, 1314
+application2/ArraySet/contains_new, 2147483648
+application2/ArraySet/contains_add, 19327352868
+application2/ArraySet/remove_new, 4
+application2/ArraySet/remove_add, 180
+application2/HashMap/get_new, 1
+application2/HashMap/get_put, 1859
+application2/HashMap/put_put, 102

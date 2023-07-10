@@ -1,0 +1,15 @@
+Property 0
+
+ArrayList@ANONYMOUS var_27 = null;
+	newArrayList(var_27);
+	bit var_26 = 0;
+	size(var_27, var_26);
+	ArrayList@ANONYMOUS var_27_0 = null;
+	newArrayList(var_27_0);
+	bit var_26_0 = 0;
+	size(var_27_0, var_26_0);
+	bit var_26_1 = 0;
+	size(a, var_26_1);
+	out = (!(var_26 >= var_26_0)) || (size_out == (var_26_1 + 1));
+
+

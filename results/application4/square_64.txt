@@ -1,0 +1,68 @@
+Property 0
+
+int var_CX_0_s5 = 0;
+	bvmul(8, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(6, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(8, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(11, y, var_CY_1_s11);
+	bit var_112 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 7, var_112);
+	bit var_113 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 7, var_113);
+	out = var_112 <= var_113;
+
+
+Property 1
+
+int var_CX_0_s5 = 0;
+	bvmul(0, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(0, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(4, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(9, y, var_CY_1_s11);
+	bit var_164 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 3, var_164);
+	bit var_165 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 6, var_165);
+	out = var_164 <= var_165;
+
+
+Property 2
+
+int var_CX_0_s9 = 0;
+	bvmul(4, x, var_CX_0_s9);
+	int var_CX_1_s11 = 0;
+	bvmul(4, x, var_CX_1_s11);
+	int var_CY_0_s13 = 0;
+	bvmul(9, y, var_CY_0_s13);
+	int var_CY_1_s15 = 0;
+	bvmul(11, y, var_CY_1_s15);
+	bit var_224 = 0;
+	bvadd3(var_CX_0_s9, var_CY_0_s13, 5, var_224);
+	bit var_225 = 0;
+	bvadd3(var_CX_1_s11, var_CY_1_s15, 8, var_225);
+	out = var_224 <= var_225;
+
+
+Property 3
+
+int var_CX_0_s9 = 0;
+	bvmul(12, x, var_CX_0_s9);
+	int var_CX_1_s11 = 0;
+	bvmul(4, x, var_CX_1_s11);
+	int var_CY_0_s13 = 0;
+	bvmul(14, y, var_CY_0_s13);
+	int var_CY_1_s15 = 0;
+	bvmul(12, y, var_CY_1_s15);
+	bit var_292 = 0;
+	bvadd3(var_CX_0_s9, var_CY_0_s13, 1, var_292);
+	bit var_293 = 0;
+	bvadd3(var_CX_1_s11, var_CY_1_s15, 12, var_293);
+	out = var_292 <= var_293;
+
+

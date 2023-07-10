@@ -1,0 +1,99 @@
+Property 0
+
+int var_86 = 0;
+	tree_size(bst_out, var_86);
+	bit var_85 = 0;
+	exists_lam_s2212(bst_out, var_85, val);
+	out = var_85;
+
+
+Property 1
+
+int var_179 = 0;
+	tree_size(bst, var_179);
+	bit var_173 = 0;
+	tree_equal(bst, bst_out, var_173);
+	int var_179_0 = 0;
+	tree_size(bst_out, var_179_0);
+	int var_179_1 = 0;
+	tree_size(bst, var_179_1);
+	out = var_173 || (var_179_0 == (var_179_1 + 1));
+
+
+Property 2
+
+int var_261 = 0;
+	tree_size(bst_out, var_261);
+	int var_261_0 = 0;
+	tree_size(bst, var_261_0);
+	bit var_255 = 0;
+	tree_equal(bst, bst_out, var_255);
+	int var_261_1 = 0;
+	tree_size(bst, var_261_1);
+	int var_261_2 = 0;
+	tree_size(bst_out, var_261_2);
+	bit var_260 = 0;
+	exists_lam_s2214(bst_out, var_260, val);
+	int var_261_3 = 0;
+	tree_size(bst_out, var_261_3);
+	bit var_259 = 0;
+	forall_lam_s01(bst, var_259, val);
+	out = (var_255 || var_260) || var_259;
+
+
+Property 3
+
+int var_314 = 0;
+	tree_size(bst_out, var_314);
+	bit var_308 = 0;
+	tree_equal(bst, bst_out, var_308);
+	int var_314_0 = 0;
+	tree_size(bst_out, var_314_0);
+	bit var_312 = 0;
+	forall_lam_s0112(bst, var_312, val);
+	out = var_308 || var_312;
+
+
+Property 4
+
+int var_374 = 0;
+	tree_size(bst_out, var_374);
+	bit var_373 = 0;
+	exists_lam_s2217(bst, var_373, val);
+	int var_374_0 = 0;
+	tree_size(bst, var_374_0);
+	bit var_372 = 0;
+	forall_lam_s0116(bst_out, var_372, val);
+	out = var_373 || var_372;
+
+
+Property 5
+
+int var_491 = 0;
+	tree_size(bst_out, var_491);
+	bit var_485 = 0;
+	tree_equal(bst_out, bst, var_485);
+	int var_491_0 = 0;
+	tree_size(bst_out, var_491_0);
+	bit var_489 = 0;
+	forall_lam_s0115(bst, var_489, val);
+	int var_491_1 = 0;
+	tree_size(bst_out, var_491_1);
+	bit var_490 = 0;
+	exists_lam_s2216(bst_out, var_490, val);
+	out = (var_485 || var_489) || var_490;
+
+
+Property 6
+
+int var_533 = 0;
+	tree_size(bst_out, var_533);
+	bit var_531 = 0;
+	forall_lam_s0113(bst_out, var_531, val);
+	int var_533_0 = 0;
+	tree_size(bst_out, var_533_0);
+	bit var_532 = 0;
+	exists_lam_s22(bst, var_532, val);
+	out = var_531 || var_532;
+
+

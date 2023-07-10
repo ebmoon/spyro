@@ -1,0 +1,30 @@
+Property 0
+
+int var_D1_0_s7 = 0;
+	hdist(l1, l2, var_D1_0_s7);
+	int var_D2_0_s9 = 0;
+	hdist(lout1, lout2, var_D2_0_s9);
+	bit var_101 = 0;
+	len(l1, var_101);
+	bit var_97 = 0;
+	len(l1, var_97);
+	bit var_98 = 0;
+	len(l2, var_98);
+	out = ((var_97 != var_98) || (var_D1_0_s7 > eps)) || (var_D2_0_s9 <= eps);
+
+
+Property 1
+
+int var_D1_0_s25 = 0;
+	hdist(l1, l2, var_D1_0_s25);
+	int var_D2_0_s27 = 0;
+	hdist(lout1, lout2, var_D2_0_s27);
+	bit var_174 = 0;
+	len(l1, var_174);
+	bit var_170 = 0;
+	len(l1, var_170);
+	bit var_171 = 0;
+	len(l2, var_171);
+	out = ((var_170 != var_171) || (var_D1_0_s25 > eps)) || (var_D2_0_s27 <= var_174);
+
+

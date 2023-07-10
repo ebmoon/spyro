@@ -1,0 +1,17 @@
+Property 0
+
+int var_CX_0_s5 = 0;
+	bvmul(0, x, var_CX_0_s5);
+	int var_CX_1_s7 = 0;
+	bvmul(7, x, var_CX_1_s7);
+	int var_CY_0_s9 = 0;
+	bvmul(0, y, var_CY_0_s9);
+	int var_CY_1_s11 = 0;
+	bvmul(9, y, var_CY_1_s11);
+	bit var_160 = 0;
+	bvadd3(var_CX_0_s5, var_CY_0_s9, 1, var_160);
+	bit var_161 = 0;
+	bvadd3(var_CX_1_s7, var_CY_1_s11, 1, var_161);
+	out = (!(b)) || (var_160 <= var_161);
+
+

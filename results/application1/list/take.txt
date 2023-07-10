@@ -1,0 +1,24 @@
+Property 0
+
+int var_138 = 0;
+	len(lout, var_138);
+	out = var_138 == n;
+
+
+Property 1
+
+int var_204 = 0;
+	len(l, var_204);
+	int var_204_0 = 0;
+	len(l, var_204_0);
+	int var_204_1 = 0;
+	len(lout, var_204_1);
+	int var_204_2 = 0;
+	len(l, var_204_2);
+	int var_204_3 = 0;
+	len(lout, var_204_3);
+	bit var_202 = 0;
+	equal_list(lout, l, var_202);
+	out = ((var_204 == (n + 1)) || (var_204_0 > (var_204_1 + 1))) || var_202;
+
+

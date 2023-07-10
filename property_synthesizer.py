@@ -468,8 +468,8 @@ class PropertySynthesizer:
 
             phi_list.append(phi)
 
+            funs = []
             for function_name, code in lam_functions.items():
-                funs = []
                 if function_name in phi:
                     funs.append((function_name, code))
             

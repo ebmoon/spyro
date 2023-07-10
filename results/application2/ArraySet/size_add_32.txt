@@ -1,0 +1,22 @@
+Property 0
+
+bit var_50 = 0;
+	contains(a, e, var_50);
+	bit var_52 = 0;
+	size(a, var_52);
+	out = (!(var_50)) || (size_out == var_52);
+
+
+Property 1
+
+ArraySet@ANONYMOUS var_95 = null;
+	newArraySet(var_95);
+	ArraySet@ANONYMOUS var_95_0 = null;
+	newArraySet(var_95_0);
+	bit var_93 = 0;
+	contains(a, e, var_93);
+	bit var_94 = 0;
+	size(a, var_94);
+	out = (!(!(var_93))) || (size_out == (var_94 + 1));
+
+

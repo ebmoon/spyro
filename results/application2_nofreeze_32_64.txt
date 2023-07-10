@@ -1,0 +1,13 @@
+benchmark_name,num_conjunct,num_synth_call,time_synth_call,num_soundness_call,time_soundness_call,num_precision_call,time_precision_call,time_last_call,time_last_iter,time_total
+application2/ArrayList/get_add,2,13,4.36,24,6.77,13,4.84,1.13,0.66,15.97
+application2/ArrayList/size_new,1,2,0.56,5,1.39,4,1.20,0.61,0.58,3.15
+application2/ArrayList/size_add,1,4,1.37,9,2.50,6,2.00,0.66,1.81,5.87
+application2/ArraySet/size_new,1,2,0.60,6,1.72,5,1.56,0.62,0.58,3.88
+application2/ArraySet/size_add,2,7,2.33,14,4.47,9,3.27,1.09,0.67,10.07
+application2/ArraySet/contains_new,1,2,0.60,6,1.82,5,1.57,0.64,0.63,3.98
+application2/ArraySet/contains_add,2,5,1.60,11,3.54,8,2.80,1.06,0.68,7.94
+application2/ArraySet/remove_new,1,1,0.32,5,1.01,5,1.75,0.69,0.52,3.09
+application2/ArraySet/remove_add,2,7,3.03,13,5.26,8,12.74,6.89,4.18,21.03
+application2/HashMap/get_new,1,2,0.63,5,1.84,4,1.60,0.84,0.76,4.07
+application2/HashMap/get_put,3,12,5.08,22,211.25,13,175.00,104.45,60.25,391.33
+application2/HashMap/put_put,1,4,1.65,9,220.47,6,437.83,328.97,222.94,659.95

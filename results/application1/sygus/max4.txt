@@ -1,0 +1,30 @@
+Property 0
+
+out = x1 <= o;
+
+
+Property 1
+
+out = x3 <= o;
+
+
+Property 2
+
+out = (((x2 == o) || (x1 == o)) || (x4 == o)) || (x3 == o);
+
+
+Property 3
+
+out = o >= x2;
+
+
+Property 4
+
+out = ((x4 < o) || (x4 == x2)) || (x2 < o);
+
+
+Property 5
+
+out = (((o == x2) || (x4 == o)) || (x4 < x3)) || (x1 > x4);
+
+

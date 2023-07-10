@@ -1,0 +1,92 @@
+Property 0
+
+int var_D1_0_s5 = 0;
+	hdist(l11, l21, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	hdist(l12, l22, var_D2_0_s7);
+	int var_D3_0_s9 = 0;
+	hdist(lout1, lout2, var_D3_0_s9);
+	bit var_273 = 0;
+	len(l11, var_273);
+	bit var_274 = 0;
+	len(l12, var_274);
+	bit var_266 = 0;
+	len(l11, var_266);
+	bit var_267 = 0;
+	len(l21, var_267);
+	bit var_268 = 0;
+	len(l12, var_268);
+	bit var_269 = 0;
+	len(l22, var_269);
+	out = ((((var_266 != var_267) || (var_268 != var_269)) || (var_D1_0_s5 > eps1)) || (var_D2_0_s7 > eps2)) || (var_D3_0_s9 <= (var_273 + eps2));
+
+
+Property 1
+
+int var_D1_0_s21 = 0;
+	hdist(l11, l21, var_D1_0_s21);
+	int var_D2_0_s23 = 0;
+	hdist(l12, l22, var_D2_0_s23);
+	int var_D3_0_s25 = 0;
+	hdist(lout1, lout2, var_D3_0_s25);
+	bit var_436 = 0;
+	len(l11, var_436);
+	bit var_437 = 0;
+	len(l12, var_437);
+	bit var_429 = 0;
+	len(l11, var_429);
+	bit var_430 = 0;
+	len(l21, var_430);
+	bit var_431 = 0;
+	len(l12, var_431);
+	bit var_432 = 0;
+	len(l22, var_432);
+	out = ((((var_429 != var_430) || (var_431 != var_432)) || (var_D1_0_s21 > eps1)) || (var_D2_0_s23 > eps2)) || (var_D3_0_s25 <= ((0 + eps1) + eps2));
+
+
+Property 2
+
+int var_D1_0_s5 = 0;
+	hdist(l11, l21, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	hdist(l12, l22, var_D2_0_s7);
+	int var_D3_0_s9 = 0;
+	hdist(lout1, lout2, var_D3_0_s9);
+	bit var_638 = 0;
+	len(l11, var_638);
+	bit var_639 = 0;
+	len(l12, var_639);
+	bit var_631 = 0;
+	len(l11, var_631);
+	bit var_632 = 0;
+	len(l21, var_632);
+	bit var_633 = 0;
+	len(l12, var_633);
+	bit var_634 = 0;
+	len(l22, var_634);
+	out = ((((var_631 != var_632) || (var_633 != var_634)) || (var_D1_0_s5 > eps1)) || (var_D2_0_s7 > eps2)) || (var_D3_0_s9 <= (var_639 + eps1));
+
+
+Property 3
+
+int var_D1_0_s5 = 0;
+	hdist(l11, l21, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	hdist(l12, l22, var_D2_0_s7);
+	int var_D3_0_s9 = 0;
+	hdist(lout1, lout2, var_D3_0_s9);
+	bit var_712 = 0;
+	len(l11, var_712);
+	bit var_713 = 0;
+	len(l12, var_713);
+	bit var_705 = 0;
+	len(l11, var_705);
+	bit var_706 = 0;
+	len(l21, var_706);
+	bit var_707 = 0;
+	len(l12, var_707);
+	bit var_708 = 0;
+	len(l22, var_708);
+	out = ((((var_705 != var_706) || (var_707 != var_708)) || (var_D1_0_s5 > eps1)) || (var_D2_0_s7 > eps2)) || (var_D3_0_s9 <= (var_712 + var_713));
+
+
