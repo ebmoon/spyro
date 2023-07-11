@@ -1,7 +1,0 @@
-Property 0
-
-int var_30 = 0;
-	stack_len(empty_out, var_30);
-	out = var_30 < 1;
-
-

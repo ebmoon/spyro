@@ -1,7 +1,0 @@
-Property 0
-
-int var_40 = 0;
-	tree_size(empty_out, var_40);
-	out = 0 >= var_40;
-
-

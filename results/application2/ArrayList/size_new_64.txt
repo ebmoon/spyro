@@ -1,5 +1,0 @@
-Property 0
-
-out = size_out == 0;
-
-

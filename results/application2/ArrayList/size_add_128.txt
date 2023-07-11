@@ -1,7 +1,0 @@
-Property 0
-
-bit var_26 = 0;
-	size(a, var_26);
-	out = size_out == (var_26 + 1);
-
-

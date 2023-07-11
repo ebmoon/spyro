@@ -1,5 +1,0 @@
-Property 0
-
-out = err;
-
-

@@ -1,7 +1,0 @@
-Property 0
-
-bit var_27 = 0;
-	exists_lam_s22(bst, var_27, target);
-	out = 0;
-
-

@@ -1,9 +1,0 @@
-Property 0
-
-list@ANONYMOUS var_L_0_s9 = null;
-	queue2list(empty_queue_out, var_L_0_s9);
-	bit var_64 = 0;
-	is_empty_list(var_L_0_s9, var_64);
-	out = var_64;
-
-
