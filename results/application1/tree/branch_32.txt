@@ -1,0 +1,114 @@
+Property 0
+
+int var_246 = 0;
+	tree_size(t_out, var_246);
+	int var_246_0 = 0;
+	tree_size(t_right, var_246_0);
+	int var_246_1 = 0;
+	tree_size(t_left, var_246_1);
+	out = var_246 == ((var_246_0 + var_246_1) + 1);
+
+
+Property 1
+
+int var_361 = 0;
+	tree_size(t_left, var_361);
+	bit var_360 = 0;
+	exists_lam_s2212(t_out, var_360, val);
+	out = var_360;
+
+
+Property 2
+
+bit var_447 = 0;
+	exists_lam_s22(t_left, var_447, val);
+	bit var_446 = 0;
+	forall_lam_s01(t_out, var_446, val);
+	bit var_447_0 = 0;
+	exists_lam_s22(t_right, var_447_0, val);
+	out = (var_447 || var_446) || var_447_0;
+
+
+Property 3
+
+int var_572 = 0;
+	tree_size(t_right, var_572);
+	int var_572_0 = 0;
+	tree_size(t_left, var_572_0);
+	int var_572_1 = 0;
+	tree_size(t_left, var_572_1);
+	bit var_570 = 0;
+	forall_lam_s0112(t_out, var_570, val);
+	int var_572_2 = 0;
+	tree_size(t_right, var_572_2);
+	bit var_571 = 0;
+	exists_lam_s2213(t_left, var_571, val);
+	bit var_571_0 = 0;
+	exists_lam_s2213(t_right, var_571_0, val);
+	out = (var_570 || var_571) || var_571_0;
+
+
+Property 4
+
+bit var_797 = 0;
+	forall_lam_s0115(t_left, var_797, val);
+	int var_799 = 0;
+	tree_size(t_left, var_799);
+	bit var_798 = 0;
+	exists_lam_s2217(t_out, var_798, val);
+	out = var_797 || var_798;
+
+
+Property 5
+
+bit var_904 = 0;
+	exists_lam_s2214(t_out, var_904, val);
+	int var_905 = 0;
+	tree_size(t_out, var_905);
+	bit var_903 = 0;
+	forall_lam_s0113(t_left, var_903, val);
+	out = var_904 || var_903;
+
+
+Property 6
+
+bit var_966 = 0;
+	exists_lam_s2215(t_out, var_966, val);
+	int var_967 = 0;
+	tree_size(t_right, var_967);
+	bit var_965 = 0;
+	forall_lam_s0114(t_right, var_965, val);
+	out = var_966 || var_965;
+
+
+Property 7
+
+bit var_1118 = 0;
+	forall_lam_s0118(t_right, var_1118, val);
+	int var_1120 = 0;
+	tree_size(t_left, var_1120);
+	bit var_1119 = 0;
+	exists_lam_s2220(t_out, var_1119, val);
+	out = var_1118 || var_1119;
+
+
+Property 8
+
+bit var_1233 = 0;
+	forall_lam_s0119(t_right, var_1233, val);
+	int var_1235 = 0;
+	tree_size(t_out, var_1235);
+	bit var_1234 = 0;
+	exists_lam_s2221(t_out, var_1234, val);
+	out = var_1233 || var_1234;
+
+
+Property 9
+
+bit var_1273 = 0;
+	forall_lam_s0116(t_left, var_1273, val);
+	bit var_1274 = 0;
+	exists_lam_s2218(t_out, var_1274, val);
+	out = var_1273 || var_1274;
+
+

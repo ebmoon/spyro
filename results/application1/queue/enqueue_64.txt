@@ -1,0 +1,13 @@
+Property 0
+
+list@ANONYMOUS var_AL_0_s13 = null;
+	queue2list(q_out, var_AL_0_s13);
+	list@ANONYMOUS var_AL_0_s13_0 = null;
+	queue2list(q, var_AL_0_s13_0);
+	list@ANONYMOUS var_97 = null;
+	snoc(var_AL_0_s13_0, val, var_97);
+	bit var_94 = 0;
+	equal_list(var_AL_0_s13, var_97, var_94);
+	out = var_94;
+
+

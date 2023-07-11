@@ -1,0 +1,14 @@
+Property 0
+
+bit var_49 = 0;
+	exists_lam_s22(l, var_49, val);
+	out = (!(elem_out)) || var_49;
+
+
+Property 1
+
+bit var_98 = 0;
+	forall_lam_s0110(l, var_98, val);
+	out = var_98 || elem_out;
+
+

@@ -1,0 +1,89 @@
+Property 0
+
+int var_126 = 0;
+	tree_size(bst_out, var_126);
+	bit var_120 = 0;
+	tree_equal(bst_out, bst, var_120);
+	int var_126_0 = 0;
+	tree_size(bst, var_126_0);
+	int var_126_1 = 0;
+	tree_size(bst_out, var_126_1);
+	out = var_120 || (var_126_0 == (var_126_1 + 1));
+
+
+Property 1
+
+int var_199 = 0;
+	tree_size(bst, var_199);
+	bit var_198 = 0;
+	exists_lam_s2212(bst, var_198, target);
+	int var_199_0 = 0;
+	tree_size(bst_out, var_199_0);
+	bit var_193 = 0;
+	tree_equal(bst, bst_out, var_193);
+	out = var_198 || var_193;
+
+
+Property 2
+
+int var_272 = 0;
+	tree_size(bst_out, var_272);
+	bit var_270 = 0;
+	forall_lam_s0112(bst_out, var_270, target);
+	int var_272_0 = 0;
+	tree_size(bst, var_272_0);
+	bit var_271 = 0;
+	exists_lam_s2213(bst, var_271, target);
+	out = var_270 || var_271;
+
+
+Property 3
+
+int var_334 = 0;
+	tree_size(bst, var_334);
+	bit var_333 = 0;
+	exists_lam_s2214(bst_out, var_333, target);
+	bit var_332 = 0;
+	forall_lam_s0113(bst, var_332, target);
+	out = var_333 || var_332;
+
+
+Property 4
+
+int var_460 = 0;
+	tree_size(bst_out, var_460);
+	bit var_458 = 0;
+	forall_lam_s0114(bst_out, var_458, target);
+	int var_460_0 = 0;
+	tree_size(bst_out, var_460_0);
+	bit var_459 = 0;
+	exists_lam_s2215(bst, var_459, target);
+	out = var_458 || var_459;
+
+
+Property 5
+
+int var_511 = 0;
+	tree_size(bst_out, var_511);
+	bit var_510 = 0;
+	exists_lam_s2216(bst_out, var_510, target);
+	int var_511_0 = 0;
+	tree_size(bst_out, var_511_0);
+	bit var_509 = 0;
+	forall_lam_s0115(bst, var_509, target);
+	out = var_510 || var_509;
+
+
+Property 6
+
+int var_560 = 0;
+	tree_size(bst, var_560);
+	int var_560_0 = 0;
+	tree_size(bst_out, var_560_0);
+	int var_560_1 = 0;
+	tree_size(bst_out, var_560_1);
+	bit var_558 = 0;
+	forall_lam_s0116(bst, var_558, target);
+	out = (var_560 == (var_560_0 + 1)) || var_558;
+
+

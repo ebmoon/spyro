@@ -1,0 +1,30 @@
+Property 0
+
+int var_132 = 0;
+	len(l, var_132);
+	int var_132_0 = 0;
+	len(l, var_132_0);
+	out = (var_132 == (idx + 1)) || (var_132_0 > 1);
+
+
+Property 1
+
+int var_245 = 0;
+	len(l, var_245);
+	bit var_244 = 0;
+	exists_lam_s22(l, var_244, val);
+	out = var_244;
+
+
+Property 2
+
+out = idx >= 0;
+
+
+Property 3
+
+int var_424 = 0;
+	len(l, var_424);
+	out = var_424 >= (idx + 1);
+
+

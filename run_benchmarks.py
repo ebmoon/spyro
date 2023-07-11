@@ -1,6 +1,9 @@
 import argparse
 import sys
 import os
+import numpy as np
+import statistics
+import shutil
 
 from property_synthesizer import PropertySynthesizer
 
@@ -60,6 +63,52 @@ def run_benchmark(files, outfile_name, seeds, nofreeze = False, write_result_fil
         for statistics in statistics_list:
             outfile.write(",".join(statistics) + "\n")
 
+def compute_median(filename, seeds, copyfile = False):
+    files = [f"results/{filename}_{seed}.csv" for seed in seeds]
+    benchmarks = {}
+
+    for path in files:
+        with open(path, 'r') as f:
+            lines = f.readlines()
+
+        for line in lines[1:]:
+            data = [s.strip() for s in line.split(',')]
+
+            name = data[0]
+            stat = data[1:]
+            stat = [float(x) for x in stat]
+
+            if name in benchmarks.keys():
+                benchmarks[name].append(stat)
+            else:
+                benchmarks[name] = [stat]
+
+    medians = {}
+    for name, stat in benchmarks.items():
+        data = []
+        stat = np.array(stat).T.tolist()
+
+        for column in stat:
+            if len(column) == 3:
+                data.append(statistics.median(column))
+
+        if len(data) == 0:
+            continue
+
+        medians[name] = data
+
+    with open(f"results/{filename}_median.csv", 'w') as f:
+        for name in benchmarks.keys():
+            for n, stat in enumerate(benchmarks[name]):
+                if stat[-1] == medians[name][-1]:
+                    stat = [str(x) for x in stat]
+                    f.write(','.join([name] + stat) + '\n')
+
+                    if copyfile:
+                        seed = seeds[n]
+                        shutil.copy(f"results/{name}_{seed}.txt", f"results/{name}_median.txt")
+
+
 def benchmark_application1():
     #path, num_atom_max, inline_bnd
     files = [
@@ -112,6 +161,8 @@ def benchmark_application1():
     seeds = [32, 64, 128]
     run_benchmark(files, "application1_default", seeds, False, True)
     run_benchmark(files, "application1_nofreeze", seeds, True, False)
+    compute_median("application1_default", seeds, True)
+    compute_median("application1_nofreeze", seeds)
 
 def benchmark_application2():
     files = [
@@ -132,6 +183,8 @@ def benchmark_application2():
     seeds = [32, 64, 128]
     run_benchmark(files, "application2_default", seeds, False, True)
     run_benchmark(files, "application2_nofreeze", seeds, True, False)
+    compute_median("application2_default", seeds, True)
+    compute_median("application2_nofreeze", seeds)
 
 def benchmark_application3():
     files = [
@@ -158,6 +211,8 @@ def benchmark_application3():
     seeds = [32, 64, 128]
     run_benchmark(files, "application3_default", seeds, False, True)
     run_benchmark(files, "application3_nofreeze", seeds, True, False)
+    compute_median("application3_default", seeds, True)
+    compute_median("application3_nofreeze", seeds)
 
 def benchmark_application4():
     files = [
@@ -175,6 +230,8 @@ def benchmark_application4():
     seeds = [32, 64, 128]
     run_benchmark(files, "application4_default", seeds, False, True)
     run_benchmark(files, "application4_nofreeze", seeds, True, False)
+    compute_median("application4_default", seeds, True)
+    compute_median("application4_nofreeze", seeds)
 
 def main():
     parser = argparse.ArgumentParser()

@@ -1,0 +1,77 @@
+Property 0
+
+int var_115 = 0;
+	len(l1, var_115);
+	int var_115_0 = 0;
+	len(l2, var_115_0);
+	bit var_113 = 0;
+	equal_list(l2, lout, var_113);
+	int var_115_1 = 0;
+	len(l1, var_115_1);
+	int var_115_2 = 0;
+	len(l2, var_115_2);
+	bit var_112 = 0;
+	is_empty(l1, var_112);
+	out = var_113 || (!(var_112));
+
+
+Property 1
+
+int var_233 = 0;
+	len(l1, var_233);
+	bit var_231 = 0;
+	equal_list(lout, l1, var_231);
+	int var_233_0 = 0;
+	len(l1, var_233_0);
+	bit var_230 = 0;
+	is_empty(l2, var_230);
+	out = var_231 || (!(var_230));
+
+
+Property 2
+
+int var_290 = 0;
+	len(l1, var_290);
+	int var_290_0 = 0;
+	len(l2, var_290_0);
+	int var_290_1 = 0;
+	len(l2, var_290_1);
+	bit var_287 = 0;
+	is_empty(lout, var_287);
+	out = (0 >= (var_290 + var_290_0)) || (!(var_287));
+
+
+Property 3
+
+int var_385 = 0;
+	len(l1, var_385);
+	int var_385_0 = 0;
+	len(l2, var_385_0);
+	int var_385_1 = 0;
+	len(l1, var_385_1);
+	int var_385_2 = 0;
+	len(l1, var_385_2);
+	bit var_384 = 0;
+	equal_list(lout, l1, var_384);
+	bit out_s1 = (var_385 >= (var_385_0 + var_385_1)) || (!(var_384));
+	out = out_s1;
+
+
+Property 4
+
+int var_435 = 0;
+	len(l2, var_435);
+	int var_435_0 = 0;
+	len(l1, var_435_0);
+	int var_435_1 = 0;
+	len(l2, var_435_1);
+	int var_435_2 = 0;
+	len(l1, var_435_2);
+	int var_435_3 = 0;
+	len(l2, var_435_3);
+	bit var_434 = 0;
+	equal_list(l2, lout, var_434);
+	bit out_s1 = (var_435 >= (var_435_0 + var_435_1)) || (!(var_434));
+	out = out_s1;
+
+

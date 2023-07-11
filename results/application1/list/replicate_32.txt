@@ -1,0 +1,16 @@
+Property 0
+
+int var_72 = 0;
+	len(lout, var_72);
+	bit var_70 = 0;
+	forall_lam_s0111(lout, var_70, val);
+	out = var_70;
+
+
+Property 1
+
+int var_131 = 0;
+	len(lout, var_131);
+	out = var_131 == n;
+
+

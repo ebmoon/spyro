@@ -1,0 +1,26 @@
+Property 0
+
+int var_D1_0_s5 = 0;
+	edist_dp(l1, l2, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s7);
+	bit var_120 = 0;
+	len(l1, var_120);
+	bit var_121 = 0;
+	len(l2, var_121);
+	out = (var_D1_0_s5 > eps) || (var_D2_0_s7 <= (2 * eps));
+
+
+Property 1
+
+int var_D1_0_s5 = 0;
+	edist_dp(l1, l2, var_D1_0_s5);
+	int var_D2_0_s7 = 0;
+	edist_dp(lout1, lout2, var_D2_0_s7);
+	bit var_168 = 0;
+	len(l1, var_168);
+	bit var_169 = 0;
+	len(l2, var_169);
+	out = (var_D1_0_s5 > eps) || (var_D2_0_s7 <= ((2 * var_168) + (2 * var_169)));
+
+

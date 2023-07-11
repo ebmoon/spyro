@@ -1,0 +1,19 @@
+Property 0
+
+bit var_43 = 0;
+	equal_list(lout, l, var_43);
+	int var_45 = 0;
+	len(l, var_45);
+	bit out_s1 = var_43 || (var_45 > 1);
+	out = out_s1;
+
+
+Property 1
+
+int var_122 = 0;
+	len(lout, var_122);
+	int var_122_0 = 0;
+	len(l, var_122_0);
+	out = var_122 == var_122_0;
+
+

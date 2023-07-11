@@ -1,0 +1,22 @@
+Property 0
+
+int var_99 = 0;
+	tree_size(bst, var_99);
+	int var_99_0 = 0;
+	tree_size(bst, var_99_0);
+	bit var_98 = 0;
+	exists_lam_s2216(bst, var_98, target);
+	out = (!(find_out)) || var_98;
+
+
+Property 1
+
+int var_185 = 0;
+	tree_size(bst, var_185);
+	bit var_183 = 0;
+	forall_lam_s0112(bst, var_183, target);
+	int var_185_0 = 0;
+	tree_size(bst, var_185_0);
+	out = var_183 || find_out;
+
+

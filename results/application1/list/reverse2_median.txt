@@ -1,0 +1,72 @@
+Property 0
+
+bit var_62 = 0;
+	is_empty(l1, var_62);
+	bit var_61 = 0;
+	is_empty(lout1, var_61);
+	out = (!(var_62)) || var_61;
+
+
+Property 1
+
+bit var_128 = 0;
+	is_empty(lout2, var_128);
+	bit var_129 = 0;
+	equal_list(lout2, l2, var_129);
+	out = (!(var_128)) || var_129;
+
+
+Property 2
+
+bit var_195 = 0;
+	equal_list(lout1, l2, var_195);
+	bit var_196 = 0;
+	equal_list(l1, lout2, var_196);
+	out = var_195 || (!(var_196));
+
+
+Property 3
+
+bit var_271 = 0;
+	equal_list(l1, l2, var_271);
+	bit var_270 = 0;
+	equal_list(lout2, lout1, var_270);
+	out = (!(var_271)) || var_270;
+
+
+Property 4
+
+bit var_320 = 0;
+	equal_list(l2, lout2, var_320);
+	bit var_319 = 0;
+	is_empty(l2, var_319);
+	out = var_320 || (!(var_319));
+
+
+Property 5
+
+bit var_369 = 0;
+	is_empty(lout1, var_369);
+	bit var_368 = 0;
+	is_empty(l1, var_368);
+	out = (!(var_369)) || var_368;
+
+
+Property 6
+
+bit var_412 = 0;
+	equal_list(lout1, l2, var_412);
+	bit var_411 = 0;
+	equal_list(l1, lout2, var_411);
+	out = (!(var_412)) || var_411;
+
+
+Property 7
+
+bit var_461 = 0;
+	equal_list(l1, l2, var_461);
+	bit var_462 = 0;
+	equal_list(lout2, lout1, var_462);
+	out = var_461 || (!(var_462));
+
+

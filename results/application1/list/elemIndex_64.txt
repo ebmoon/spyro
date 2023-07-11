@@ -1,0 +1,41 @@
+Property 0
+
+int var_116 = 0;
+	len(l, var_116);
+	int var_116_0 = 0;
+	len(l, var_116_0);
+	out = ((var_116 == (idx_out + 1)) || (0 == (idx_out + 1))) || (var_116_0 > 1);
+
+
+Property 1
+
+int var_189 = 0;
+	len(l, var_189);
+	bit var_188 = 0;
+	exists_lam_s2212(l, var_188, val);
+	out = var_188 || (-1 == idx_out);
+
+
+Property 2
+
+bit var_246 = 0;
+	forall_lam_s0111(l, var_246, val);
+	out = (-1 < idx_out) || var_246;
+
+
+Property 3
+
+int var_332 = 0;
+	len(l, var_332);
+	bit var_331 = 0;
+	exists_lam_s22(l, var_331, val);
+	out = ((idx_out == 0) || var_331) || (-1 == idx_out);
+
+
+Property 4
+
+int var_429 = 0;
+	len(l, var_429);
+	out = var_429 >= (idx_out + 1);
+
+

@@ -1,0 +1,20 @@
+Property 0
+
+int var_70 = 0;
+	len(l, var_70);
+	int var_70_0 = 0;
+	len(l, var_70_0);
+	bit var_69 = 0;
+	exists_lam_s2210(l, var_69, min_out);
+	out = var_69;
+
+
+Property 1
+
+int var_102 = 0;
+	len(l, var_102);
+	bit var_100 = 0;
+	forall_lam_s0111(l, var_100, min_out);
+	out = var_100;
+
+

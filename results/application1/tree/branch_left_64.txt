@@ -1,0 +1,62 @@
+Property 0
+
+bit var_81 = 0;
+	tree_equal(left_in, left_out, var_81);
+	out = !(var_81);
+
+
+Property 1
+
+bit var_181 = 0;
+	tree_equal(t_out, t_left, var_181);
+	out = !(var_181);
+
+
+Property 2
+
+bit var_279 = 0;
+	tree_equal(t_right, t_out, var_279);
+	out = !(var_279);
+
+
+Property 3
+
+bit var_397 = 0;
+	is_empty(left_in, var_397);
+	out = !(var_397);
+
+
+Property 4
+
+bit var_521 = 0;
+	tree_equal(t_out, left_in, var_521);
+	bit var_520 = 0;
+	tree_equal(left_out, t_left, var_520);
+	out = (!(var_521)) || var_520;
+
+
+Property 5
+
+bit var_557 = 0;
+	tree_equal(t_right, left_in, var_557);
+	bit var_557_0 = 0;
+	tree_equal(left_out, t_out, var_557_0);
+	out = (!(var_557)) || (!(var_557_0));
+
+
+Property 6
+
+bit var_615 = 0;
+	is_empty(t_out, var_615);
+	out = !(var_615);
+
+
+Property 7
+
+bit var_713 = 0;
+	tree_equal(t_out, left_out, var_713);
+	bit var_713_0 = 0;
+	tree_equal(t_left, left_in, var_713_0);
+	out = (!(var_713)) || (!(var_713_0));
+
+

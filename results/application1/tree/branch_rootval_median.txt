@@ -1,0 +1,36 @@
+Property 0
+
+bit var_89 = 0;
+	is_empty(rootval_in, var_89);
+	out = !(var_89);
+
+
+Property 1
+
+bit var_163 = 0;
+	tree_equal(t_left, t_out, var_163);
+	out = !(var_163);
+
+
+Property 2
+
+bit var_261 = 0;
+	tree_equal(t_out, t_right, var_261);
+	out = !(var_261);
+
+
+Property 3
+
+bit var_425 = 0;
+	is_empty(t_out, var_425);
+	out = !(var_425);
+
+
+Property 4
+
+bit var_479 = 0;
+	tree_equal(rootval_in, t_out, var_479);
+	bit out_s1 = (!(var_479)) || (val == rootval_out);
+	out = out_s1;
+
+

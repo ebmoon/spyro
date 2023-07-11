@@ -1,0 +1,25 @@
+Property 0
+
+out = ((o1 == o2) || (y1 != y2)) || (x2 != x1);
+
+
+Property 1
+
+out = ((x1 == y1) || (y2 != x2)) || (o1 != o2);
+
+
+Property 2
+
+out = ((y2 != x1) || (y1 != x2)) || (o2 == o1);
+
+
+Property 3
+
+out = ((y1 != x1) || (y2 == x2)) || (o1 != o2);
+
+
+Property 4
+
+out = ((x2 != y2) || (x1 != y1)) || (o2 == o1);
+
+

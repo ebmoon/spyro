@@ -1,0 +1,91 @@
+Property 0
+
+int var_110 = 0;
+	len(lout, var_110);
+	int var_110_0 = 0;
+	len(l, var_110_0);
+	out = var_110 == (var_110_0 + 1);
+
+
+Property 1
+
+int var_183 = 0;
+	len(lout, var_183);
+	bit var_182 = 0;
+	exists_lam_s22(lout, var_182, val);
+	out = var_182;
+
+
+Property 2
+
+int var_265 = 0;
+	len(l, var_265);
+	int var_265_0 = 0;
+	len(lout, var_265_0);
+	bit var_263 = 0;
+	forall_lam_s0112(lout, var_263, val);
+	int var_265_1 = 0;
+	len(lout, var_265_1);
+	int var_265_2 = 0;
+	len(lout, var_265_2);
+	bit var_264 = 0;
+	exists_lam_s2213(l, var_264, val);
+	out = var_263 || var_264;
+
+
+Property 3
+
+int var_369 = 0;
+	len(lout, var_369);
+	bit var_367 = 0;
+	forall_lam_s0113(lout, var_367, val);
+	int var_369_0 = 0;
+	len(lout, var_369_0);
+	int var_369_1 = 0;
+	len(lout, var_369_1);
+	bit var_368 = 0;
+	exists_lam_s2214(l, var_368, val);
+	out = var_367 || var_368;
+
+
+Property 4
+
+bit var_439 = 0;
+	exists_lam_s2212(lout, var_439, val);
+	int var_440 = 0;
+	len(lout, var_440);
+	int var_440_0 = 0;
+	len(lout, var_440_0);
+	bit var_438 = 0;
+	forall_lam_s01(l, var_438, val);
+	out = var_439 || var_438;
+
+
+Property 5
+
+int var_480 = 0;
+	len(l, var_480);
+	bit var_479 = 0;
+	exists_lam_s2215(lout, var_479, val);
+	int var_480_0 = 0;
+	len(lout, var_480_0);
+	bit var_478 = 0;
+	forall_lam_s0114(l, var_478, val);
+	out = var_479 || var_478;
+
+
+Property 6
+
+int var_520 = 0;
+	len(lout, var_520);
+	bit var_518 = 0;
+	forall_lam_s0116(l, var_518, val);
+	int var_520_0 = 0;
+	len(lout, var_520_0);
+	int var_520_1 = 0;
+	len(lout, var_520_1);
+	bit var_519 = 0;
+	exists_lam_s2217(lout, var_519, val);
+	out = var_518 || var_519;
+
+

@@ -1,0 +1,9 @@
+Property 0
+
+int var_63 = 0;
+	stack_len(s, var_63);
+	int var_63_0 = 0;
+	stack_len(s_out, var_63_0);
+	out = var_63 == (var_63_0 + 1);
+
+

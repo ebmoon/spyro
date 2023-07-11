@@ -1,0 +1,64 @@
+Property 0
+
+bit var_93 = 0;
+	stack_equal(push_s, pop_s, var_93);
+	bit var_93_0 = 0;
+	stack_equal(push_s_out, pop_s_out, var_93_0);
+	out = (!(var_93)) || (!(var_93_0));
+
+
+Property 1
+
+bit var_127 = 0;
+	is_empty(pop_s, var_127);
+	out = !(var_127);
+
+
+Property 2
+
+bit var_211 = 0;
+	is_empty(push_s_out, var_211);
+	out = !(var_211);
+
+
+Property 3
+
+bit var_300 = 0;
+	stack_equal(push_s, pop_s_out, var_300);
+	bit var_301 = 0;
+	stack_equal(pop_s, push_s_out, var_301);
+	out = var_300 || (!(var_301));
+
+
+Property 4
+
+bit var_329 = 0;
+	stack_equal(pop_s_out, pop_s, var_329);
+	out = !(var_329);
+
+
+Property 5
+
+bit var_411 = 0;
+	stack_equal(push_s_out, push_s, var_411);
+	out = !(var_411);
+
+
+Property 6
+
+bit var_463 = 0;
+	stack_equal(pop_s, push_s_out, var_463);
+	bit out_s1 = (!(var_463)) || (pop_val_out == push_val);
+	out = out_s1;
+
+
+Property 7
+
+bit var_539 = 0;
+	stack_equal(pop_s_out, push_s, var_539);
+	bit var_538 = 0;
+	stack_equal(push_s_out, pop_s, var_538);
+	bit out_s1 = ((!(var_539)) || (push_val != pop_val_out)) || var_538;
+	out = out_s1;
+
+

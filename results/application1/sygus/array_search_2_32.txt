@@ -1,0 +1,23 @@
+Property 0
+
+bit out_s1 = ((x1 < x2) || (o == 2)) || (o == 0);
+	out = out_s1;
+
+
+Property 1
+
+bit out_s1 = (k >= x1) || (o == 0);
+	out = out_s1;
+
+
+Property 2
+
+bit out_s1 = ((k < x1) || (k >= x2)) || (o == 1);
+	out = out_s1;
+
+
+Property 3
+
+out = ((k < x2) || (2 == o)) || (k < x1);
+
+

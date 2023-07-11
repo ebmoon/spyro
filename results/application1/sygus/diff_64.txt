@@ -1,0 +1,16 @@
+Property 0
+
+bit out_s1 = (x == (o + y)) || (y == (o + x));
+	out = out_s1;
+
+
+Property 1
+
+out = ((0 < (o + x)) || (x < (o + o))) || (o == (y + y));
+
+
+Property 2
+
+out = (o < (o + o)) || (y == x);
+
+

@@ -1,0 +1,39 @@
+Property 0
+
+bit var_68 = 0;
+	equal_list(l, lout, var_68);
+	int var_70 = 0;
+	len(lout, var_70);
+	int var_70_0 = 0;
+	len(l, var_70_0);
+	int var_70_1 = 0;
+	len(l, var_70_1);
+	bit out_s1 = (var_68 || (var_70 == (var_70_0 + 1))) || (var_70_1 > 1);
+	out = out_s1;
+
+
+Property 1
+
+bit var_127 = 0;
+	equal_list(l, lout, var_127);
+	int var_129 = 0;
+	len(l, var_129);
+	int var_129_0 = 0;
+	len(lout, var_129_0);
+	int var_129_1 = 0;
+	len(l, var_129_1);
+	bit out_s1 = (var_127 || (var_129 == 1)) || (var_129_0 > (var_129_1 + 1));
+	out = out_s1;
+
+
+Property 2
+
+bit var_182 = 0;
+	is_empty(l, var_182);
+	int var_186 = 0;
+	len(lout, var_186);
+	int var_186_0 = 0;
+	len(l, var_186_0);
+	out = var_182 || (var_186 > var_186_0);
+
+

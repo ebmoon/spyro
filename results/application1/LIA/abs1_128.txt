@@ -1,0 +1,17 @@
+Property 0
+
+bit out_s1 = (o > (-(o))) || (o == x);
+	out = out_s1;
+
+
+Property 1
+
+bit out_s1 = ((-(x)) < x) || ((-(o)) == x);
+	out = out_s1;
+
+
+Property 2
+
+out = (o == x) || (o == (-(x)));
+
+
