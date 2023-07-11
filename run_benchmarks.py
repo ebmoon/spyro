@@ -22,6 +22,7 @@ columns = [
 ]
 
 def run_benchmark(files, outfile_name, seeds, nofreeze = False, write_result_files = False):
+    os.makedirs("results", exist_ok=True)
     for seed in seeds:
         outfile_basename = outfile_name if len(seeds) <= 1 else f"{outfile_name}_{seed}"
         outfile = open(f"results/{outfile_basename}.csv", "w")
@@ -41,7 +42,9 @@ def run_benchmark(files, outfile_name, seeds, nofreeze = False, write_result_fil
             print(f"Done: {filename}, seed = {seed}, nofreeze = {nofreeze}")
 
             if write_result_files:
-                with open(f"results/{filename}_{seed}.txt", "w") as f:
+                path = f"results/{filename}_{seed}.txt"
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "w") as f:
                     for n in range(len(phi_list)):
                         phi = phi_list[n]
                         funs = fun_list[n]

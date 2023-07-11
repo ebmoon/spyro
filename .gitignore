@@ -130,5 +130,4 @@ dmypy.json
 # project temp file
 tmp/
 log/
-results/*.txt
-results/*.csv
+results/

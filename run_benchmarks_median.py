@@ -19,6 +19,7 @@ columns = [
 ]
 
 def run_benchmark(files, outfile_name, nofreeze = False, write_result_files = False):
+    os.makedirs("results", exist_ok=True)
     outfile = open(f"results/{outfile_name}_median.csv", "w")
     statistics_list = []
 
@@ -37,7 +38,9 @@ def run_benchmark(files, outfile_name, nofreeze = False, write_result_files = Fa
         print(f"Done: {filename}, seed = {seed}, nofreeze = {nofreeze}")
 
         if write_result_files:
-            with open(f"results/{filename}_median.txt", "w") as f:
+            path = f"results/{filename}_median.txt"
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
                 for n in range(len(phi_list)):
                     phi = phi_list[n]
                     funs = fun_list[n]
@@ -108,9 +111,8 @@ def benchmark_application1():
         (["application1/arithmetic/nonLinearSum2.sp"], 3, 5, 64, 128)
     ]
 
-    seeds = [32, 64, 128]
-    run_benchmark(files, "application1_default", seeds, False, True)
-    run_benchmark(files, "application1_nofreeze", seeds, True, False)
+    run_benchmark(files, "application1_default", False, True)
+    run_benchmark(files, "application1_nofreeze", True, False)
 
 def benchmark_application2():
     files = [
@@ -128,7 +130,6 @@ def benchmark_application2():
         (["application2/HashMap/put_put.sp", "application2/HashMap/map.sp"], 1, 5, 32, 32),
     ]
 
-    seeds = [32, 64, 128]
     run_benchmark(files, "application2_default", seeds, False, True)
     run_benchmark(files, "application2_nofreeze", seeds, True, False)
 
@@ -154,9 +155,8 @@ def benchmark_application3():
         (["application3/edit/tail.sp", "application3/edit/list.sp"], 1, 7, 32, 32),
     ]
 
-    seeds = [32, 64, 128]
-    run_benchmark(files, "application3_default", seeds, False, True)
-    run_benchmark(files, "application3_nofreeze", seeds, True, False)
+    run_benchmark(files, "application3_default", False, True)
+    run_benchmark(files, "application3_nofreeze", True, False)
 
 def benchmark_application4():
     files = [
@@ -171,9 +171,8 @@ def benchmark_application4():
         (["application4/squareIneq.sp"], 1, 5, 32, 128),
     ]
 
-    seeds = [32, 64, 128]
-    run_benchmark(files, "application4_default", seeds, False, True)
-    run_benchmark(files, "application4_nofreeze", seeds, True, False)
+    run_benchmark(files, "application4_default", False, True)
+    run_benchmark(files, "application4_nofreeze", True, False)
 
 def main():
     parser = argparse.ArgumentParser()
