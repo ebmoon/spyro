@@ -470,7 +470,7 @@ class PropertySynthesizer:
 
             funs = []
             for function_name, code in lam_functions.items():
-                if function_name in phi:
+                if phi.find(function_name) >= 0:
                     funs.append((function_name, code))
             
             fun_list.append(funs)
