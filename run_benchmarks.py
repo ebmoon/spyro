@@ -65,6 +65,8 @@ def run_benchmark(files, outfile_name, seeds, nofreeze = False, write_result_fil
         outfile.write(",".join(columns) + "\n")
         for statistics in statistics_list:
             outfile.write(",".join(statistics) + "\n")
+        
+        outfile.close()
 
 def compute_median(filename, seeds, copyfile = False):
     files = [f"results/{filename}_{seed}.csv" for seed in seeds]

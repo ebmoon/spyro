@@ -71,7 +71,7 @@ SKETCH_PATH=<PATH TO SKETCH-FRONTENT>/sketch
 
 ### Running Spyro[Sketch] for single example
 
-To run spyro on default setting, run `python spyro.py <PATH-TO-INPUT-FILE>`.
+To run spyro on default setting, run `python3 spyro.py <PATH-TO-INPUT-FILE>`.
 This will synthesize minimized properties from input file, and print the result to `stdout`.
 
 
@@ -188,10 +188,10 @@ must be true.
 
 ### Running Spyro[Sketch] for benchmark set
 
-Command `python run_benchmarks.py -a` will run Spyro[Sketch] for every benchmark problem with three differents random seeds `[32, 64, 128]`. You can execute only certain applications using the `-1`, `-2`, `-3` and `-4` arguments. For example, the command `python run_benchmarks_full.py -1 -3` only runs application 1 and application 3.
+Command `python3 run_benchmarks.py -a` will run Spyro[Sketch] for every benchmark problem with three differents random seeds `[32, 64, 128]`. You can execute only certain applications using the `-1`, `-2`, `-3` and `-4` arguments. For example, the command `python3 run_benchmarks_full.py -1 -3` only runs application 1 and application 3.
 
 This will generate files containing synthesized properties and CSV files containing statistics in the `results` directory. For example, `application1_default_32.csv` contains statistics for Application 1 with seed 32, and `application3_nofreeze_128.csv` contains statistics for Application 3 with seed 128, executed without freezing negative examples.
 It also generates files with suffix `_median`, which has median running time among three runs.
 
-`python run_benchmarks_median.py` does the same to `python run_benchmarks.py`, but only run each benchmark problem with single random seed value, which generated the median value on our local machine. The output file of `run_benchmarks_median.py` will have suffix `_median`.
+`python3 run_benchmarks_median.py` does the same to `python run_benchmarks.py`, but only run each benchmark problem with single random seed value, which generated the median value on our local machine. The output file of `run_benchmarks_median.py` will have suffix `_median`.
 
