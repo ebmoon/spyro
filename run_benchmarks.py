@@ -238,12 +238,38 @@ def benchmark_application4():
     compute_median("application4_default", seeds, True)
     compute_median("application4_nofreeze", seeds)
 
+def create_log(files):
+    for (paths, num_atom_max, inline_bnd, seed) in files:
+        path = paths[0]
+        filename = os.path.splitext(path)[0]
+
+        infiles = [open(f"benchmarks/{path}", 'r') for path in paths]
+
+        phi_list, fun_list, statistics = PropertySynthesizer(
+            infiles, outfile, False, True,
+            300, inline_bnd, seed,
+            num_atom_max, False, False).run()
+
+        print(f"Created detailed log: {filename}, seed = {seed}")
+
+        for infile in infiles:
+            infile.close()
+
+def create_logs():
+    files = [
+        (["application1/tree/branch.sp", "application1/tree/tree.sp"], 3, 5, 128),
+        (["application1/arithmetic/nonLinearSum2.sp"], 3, 5, 64)
+    ]
+
+    create_log(files)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--app1', '-1', dest='app1', action='store_true', default=False)
     parser.add_argument('--app2', '-2', dest='app2', action='store_true', default=False)
     parser.add_argument('--app3', '-3', dest='app3', action='store_true', default=False)
     parser.add_argument('--app4', '-4', dest='app4', action='store_true', default=False)
+    parser.add_argument('--log', '-l', dest='log', action='store_true', default=False)
     parser.add_argument('--all', '-a', dest='all', action='store_true', default=False)
 
     args = parser.parse_args(sys.argv[1:])
@@ -252,7 +278,8 @@ def main():
     app2 = args.app2 or args.all
     app3 = args.app3 or args.all
     app4 = args.app4 or args.all
-    
+    log = args.log or args.all
+
     if app1:
         benchmark_application1()
 
@@ -264,6 +291,9 @@ def main():
 
     if app4:
         benchmark_application4()
+
+    if log:
+        create_logs()
 
 if __name__=="__main__":
     main()
