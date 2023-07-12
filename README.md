@@ -37,7 +37,8 @@ This artifact may not support some claims of the paper. Specifically,
 
 The artifact requires dependencies if you try to run on your local machine
 
-* python (version >= 3.6)
+* python (version >= 3.6), including
+    * numpy (only for `run_benchmarks.py`)
 * [Sketch](https://people.csail.mit.edu/asolar/) (version >= 1.7.6)
 
 ### Setting Sketch Path
@@ -89,7 +90,7 @@ This will synthesize minimized properties from input file, and print the result 
 
 ### Understanding Spyro[Sketch] input
 
-Spyro[Sketch] takes one or more files as input and treats those files as concatenated into a single input file. Each set of input files must contain exactly one definition for `var`, `relation`, `generator`, and `example`. The following is an example of each section for list reverse function.
+Spyro[Sketch] takes one or more files as input and treats those files as concatenated into a single input file. Each set of input file must contain exactly one definition for `var`, `relation`, `generator`, and `example`. The following is an example of each section for list reverse function.
 
 #### Variables
 ```
@@ -188,10 +189,10 @@ must be true.
 
 ### Running Spyro[Sketch] for benchmark set
 
-Command `python3 run_benchmarks.py -a` will run Spyro[Sketch] for every benchmark problem with three differents random seeds `[32, 64, 128]`. You can execute only certain applications using the `-1`, `-2`, `-3` and `-4` arguments. For example, the command `python3 run_benchmarks_full.py -1 -3` only runs application 1 and application 3.
+Command `python3 run_benchmarks.py -a` will run Spyro[Sketch] for every benchmark problem with three differents random seeds `[32, 64, 128]`. You can execute only certain applications using the `-1`, `-2`, `-3` and `-4` arguments. For example, the command `python3 run_benchmarks_full.py -1 -3` only runs application 1 and application 3. Running `python3 run_benchmarks.py -a` will take about 30 hours.
 
 This will generate files containing synthesized properties and CSV files containing statistics in the `results` directory. For example, `application1_default_32.csv` contains statistics for Application 1 with seed 32, and `application3_nofreeze_128.csv` contains statistics for Application 3 with seed 128, executed without freezing negative examples.
-It also generates files with suffix `_median`, which has median running time among three runs.
+It also creates files with suffix `_median`, which has median running time among three runs.
 
-`python3 run_benchmarks_median.py` does the same to `python run_benchmarks.py`, but only run each benchmark problem with single random seed value, which generated the median value on our local machine. The output file of `run_benchmarks_median.py` will have suffix `_median`.
+`python3 run_benchmarks_median.py` does the same to `python3 run_benchmarks.py`, but only run each benchmark problem with single random seed value, which generated the median value on our local machine. The output file of `run_benchmarks_median.py` will have suffix `_median`. Running `python run_benchmarks_median.py -a` will take about 10 hours. 
 
