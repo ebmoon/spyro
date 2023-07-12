@@ -246,7 +246,7 @@ def create_log(files):
         infiles = [open(f"benchmarks/{path}", 'r') for path in paths]
 
         phi_list, fun_list, statistics = PropertySynthesizer(
-            infiles, outfile, False, True,
+            infiles, os.devnull, False, True,
             300, inline_bnd, seed,
             num_atom_max, False, False).run()
 
