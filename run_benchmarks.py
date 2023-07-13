@@ -103,6 +103,7 @@ def compute_median(filename, seeds, copyfile = False):
         medians[name] = data
 
     with open(f"results/{filename}_median.csv", 'w') as f:
+        f.write(",".join(columns) + "\n")
         for name in benchmarks.keys():
             for n, stat in enumerate(benchmarks[name]):
                 if stat[-1] == medians[name][-1]:
