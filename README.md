@@ -40,6 +40,7 @@ The artifact requires dependencies if you try to run on your local machine
 * python (version >= 3.6), including
     * numpy (only for `run_benchmarks.py`)
 * [Sketch](https://people.csail.mit.edu/asolar/) (version >= 1.7.6)
+    * Note: The tar-ball in the Sketch wiki is 1.7.5, which may not work
 
 ### Setting Sketch Path
 
