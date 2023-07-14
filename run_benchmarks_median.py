@@ -130,8 +130,8 @@ def benchmark_application2():
         (["application2/HashMap/put_put.sp", "application2/HashMap/map.sp"], 1, 5, 32, 32),
     ]
 
-    run_benchmark(files, "application2_default", seeds, False, True)
-    run_benchmark(files, "application2_nofreeze", seeds, True, False)
+    run_benchmark(files, "application2_default", False, True)
+    run_benchmark(files, "application2_nofreeze", True, False)
 
 def benchmark_application3():
     files = [
