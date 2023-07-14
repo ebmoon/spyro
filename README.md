@@ -30,6 +30,11 @@ This artifact may not support some claims of the paper. Specifically,
 
 2. Each conjunct synthesized by Spyro[Sketch] may be different to the Fig. 3, while the L-conjunctions are equivalent.
 
+#### Reason
+
+All the evaluation data of paper (including Table 1, 2 and Fig. 3) were generated from Apple M1 8-core CPU with 8GB RAM.
+Sketch binary compiled for different architecture / OS may produce different results.
+Spyro[Sketch] has a high variance in running time. To obtain reliable results, it is recommended to execute it with a minimum of three random seeds.
 
 ## Setup
 
