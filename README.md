@@ -1,40 +1,7 @@
-# Spyro[Sketch] OOPSLA 2023 Artifact
-
-This is the artifact for paper #481 "Synthesizing Specifications". 
+# Spyro[Sketch]
 
 Spyro synthesizes provably sound, most-precise specifications from given function definitions.
 
-
-## Claims
-
-### Claims supported by this artifact
-
-The artifact supports the following claims:
-
-1. Quantitative analysis:
-    * Application 1: Spyro[Sketch] can synthesize the best L-properties for 35/35 Spyro[Sketch] problems and guarantee that 34 out of 35 are the best L-conjunctions.
-    * Application 2: Spyro[Sketch] can synthesize the best algebraic properties for 12/12 Spyro[Sketch] problems from the ArrayList, ArraySet, and HashMap modules, and guarantee that all they are the best L-conjunctions.
-    * Application 3: Spyro[Sketch] can synthesize the best sensitivity L-properties for 18/18 Spyro[Sketch] problems about Hamming/edit distance on List functions, and guarantee that all they are the best L-conjunctions.
-    * Application 4: Spyro[Sketch] can synthesize the best 4-bit inequalities for 9/9 Spyro[Sketch] problems from bit-vector operations, and guarantee that 8/9 are the best L-conjunctions.
-
- for 35/35 benchmark problems, and guarantee 34/35 are best L-conjunction.
-
-2. The Algorithm 1 with line 12 is faster than the Algorithm 1 without line 12.
-
-
-### Claims not supported by this artifact
-
-This artifact may not support some claims of the paper. Specifically,
-
-1. The running time and number of SMT calls may be different to Table 1 or Table 2.
-
-2. Each conjunct synthesized by Spyro[Sketch] may be different to the Fig. 3, while the L-conjunctions are equivalent.
-
-#### Reason
-
-All the evaluation data of paper (including Table 1, 2 and Fig. 3) were generated from Apple M1 8-core CPU with 8GB RAM.
-Sketch binary compiled for different architecture / OS may produce different results.
-Spyro[Sketch] has a high variance in running time. To obtain reliable results, it is recommended to execute it with a minimum of three random seeds.
 
 ## Setup
 
@@ -58,25 +25,8 @@ SKETCH_PATH=<PATH TO SKETCH-FRONTENT>/sketch
 ```
 
 
-## Structure of this artifact
 
-* `config.ini` contains path to the Sketch binary or directory to store temporary files
-
-* `benchmarks` contains all the Spyro[Sketch] benchmarks.
-    * `benchmarks/application1` contains all the specification mining benchmarks from the section 5.1.
-    * `benchmarks/application2` contains all the algebraic specification synthesis benchmarks from the section 5.2.
-    * `benchmarks/application3` contains all the sensitivity analysis benchmarks from the section 5.3.
-    * `benchmarks/application4` contains all the bit-vector inequality benchmarks from the section 5.4.
-
-* `tmp` contains temporary files created during the running of Spyro[Sketch]
-
-* `results` contains the result of execution.
-
-
-
-## Running the evaluation
-
-### Running Spyro[Sketch] for single example
+## Running Spyro[Sketch]
 
 To run spyro on default setting, run `python3 spyro.py <PATH-TO-INPUT-FILE>`.
 This will synthesize minimized properties from input file, and print the result to `stdout`.
@@ -192,13 +142,3 @@ must be true.
 The property 1 means
 $$len(l_{out}) == len(l)$$
 must be true.
-
-### Running Spyro[Sketch] for benchmark set
-
-Command `python3 run_benchmarks.py -a` will run Spyro[Sketch] for every benchmark problem with three differents random seeds `[32, 64, 128]`. You can execute only certain applications using the `-1`, `-2`, `-3` and `-4` arguments. For example, the command `python3 run_benchmarks_full.py -1 -3` only runs application 1 and application 3. Running `python3 run_benchmarks.py -a` will take about 2-3 days.
-
-This will generate files containing synthesized properties and CSV files containing statistics in the `results` directory. For example, `application1_default_32.csv` contains statistics for Application 1 with seed 32, and `application3_nofreeze_128.csv` contains statistics for Application 3 with seed 128, executed without freezing negative examples.
-It also creates files with suffix `_median`, which has median running time among three runs.
-
-`python3 run_benchmarks_median.py` does the same to `python3 run_benchmarks.py`, but only run each benchmark problem with single random seed value, which generated the median value on our local machine. The output file of `run_benchmarks_median.py` will have suffix `_median`. Running `python run_benchmarks_median.py -a` will take less than 20 hours.
-
