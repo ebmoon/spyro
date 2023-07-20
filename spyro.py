@@ -29,10 +29,21 @@ def main():
     keep_neg_may = args.keep_neg_may
     slv_seed = args.slv_seed
 
-    PropertySynthesizer(
+    phi_list, fun_list, statistics = PropertySynthesizer(
         infiles, outfile, v, write_log,
         timeout, inline_bnd, slv_seed,
         num_atom_max, disable_min, keep_neg_may).run()
+
+    for n in range(len(phi_list)):
+        phi = phi_list[n]
+        funs = fun_list[n]
+
+        outfile.write(f"Property {n}\n\n")
+        outfile.write(str(phi) + "\n")
+        for function_name, code in funs:
+            outfile.write(function_name + "\n")
+            outfile.write(code + "\n")
+        outfile.write("\n\n")
 
     for f in infiles:
         f.close()
