@@ -3,6 +3,7 @@ import functools
 from spyro_parser import SpyroParser
 from util import *
 
+
 class InputGenerator:
     def __init__(self, code):
         # Input code
@@ -13,7 +14,7 @@ class InputGenerator:
 
     def enable_minimize_terms(self):
         self.__minimize_terms = True
-    
+
     def disable_minimize_terms(self):
         self.__minimize_terms = False
 
@@ -31,13 +32,13 @@ class InputGenerator:
         code += self.__template.get_variables_with_hole() + '\n\n'
         code += self.__template.get_relations() + '\n\n'
 
-        arguments = self.__template.get_arguments_call()
+        arguments = self.__template.get_visible_arguments_call()
         int_arguments = self.__template.get_integer_arguments_call()
 
         code += '\tboolean out;\n'
         code += '\tobtained_property(' + arguments + ',out);\n'
         code += '\tassert !out;\n'
-        
+
         code += '}\n\n'
 
         return code
@@ -46,7 +47,7 @@ class InputGenerator:
         code = 'harness void precision() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
 
-        arguments = self.__template.get_arguments_call()
+        arguments = self.__template.get_visible_arguments_call()
         int_arguments = self.__template.get_integer_arguments_call()
 
         code += '\tboolean out_1;\n'
@@ -67,8 +68,8 @@ class InputGenerator:
     def __improves_predicate_code(self):
         code = 'harness void improves_predicate() {\n'
         code += self.__template.get_variables_with_hole() + '\n\n'
-        
-        arguments = self.__template.get_arguments_call()
+
+        arguments = self.__template.get_visible_arguments_call()
 
         code += '\tboolean out_1;\n'
         code += '\tproperty_conj(' + arguments + ',out_1);\n'
@@ -77,7 +78,7 @@ class InputGenerator:
         code += '\tboolean out_2;\n'
         code += '\tobtained_property(' + arguments + ',out_2);\n'
         code += '\tassert !out_2;\n'
-        
+
         code += '}\n\n'
 
         return code
@@ -87,8 +88,8 @@ class InputGenerator:
             return ' || '.join([f'atom_{i}' for i in range(n)])
 
         property_gen_symbol = self.__template.get_generator_rules()[0][1]
-        arg_call = self.__template.get_arguments_call()
-        arg_defn = self.__template.get_arguments_defn()
+        arg_call = self.__template.get_visible_arguments_call()
+        arg_defn = self.__template.get_visible_arguments_defn()
         atom_gen = f'{property_gen_symbol}_gen({arg_call})'
 
         code = self.__generators() + '\n\n' + self.__compare() + '\n\n'
@@ -117,7 +118,7 @@ class InputGenerator:
 
     def __obtained_property_code(self, phi):
         code = 'void obtained_property('
-        code += self.__template.get_arguments_defn()
+        code += self.__template.get_visible_arguments_defn()
         code += ',ref boolean out) {\n'
         code += '\t' + phi + '\n'
         code += '}\n\n'
@@ -126,7 +127,7 @@ class InputGenerator:
 
     def __prev_property_code(self, i, phi):
         code = f'void prev_property_{i}('
-        code += self.__template.get_arguments_defn()
+        code += self.__template.get_visible_arguments_defn()
         code += ',ref boolean out) {\n'
         code += '\t' + phi + '\n'
         code += '}\n\n'
@@ -137,22 +138,23 @@ class InputGenerator:
         code = ''
 
         for i, phi in enumerate(phi_list):
-            code += self.__prev_property_code(i, phi) + '\n\n'      
+            code += self.__prev_property_code(i, phi) + '\n\n'
 
         code += 'void property_conj('
-        code += self.__template.get_arguments_defn()
+        code += self.__template.get_visible_arguments_defn()
         code += ',ref boolean out) {\n'
 
         for i in range(len(phi_list)):
             code += f'\tboolean out_{i};\n'
-            code += f'\tprev_property_{i}(' 
-            code += self.__template.get_arguments_call() 
-            code += f',out_{i});\n\n' 
+            code += f'\tprev_property_{i}('
+            code += self.__template.get_visible_arguments_call()
+            code += f',out_{i});\n\n'
 
         if len(phi_list) == 0:
             code += '\tout = true;\n'
         else:
-            code += '\tout = ' + ' && '.join([f'out_{i}' for i in range(len(phi_list))]) + ';\n'
+            code += '\tout = ' + \
+                ' && '.join([f'out_{i}' for i in range(len(phi_list))]) + ';\n'
         code += '}\n\n'
 
         return code
@@ -163,9 +165,9 @@ class InputGenerator:
         for i, pos_example in enumerate(pos_examples):
             code += '\n'
             code += 'harness void positive_example_{} ()'.format(i)
-            code += ' {\n' + pos_example + '\n}\n\n'   
+            code += ' {\n' + pos_example + '\n}\n\n'
 
-        return code       
+        return code
 
     def __neg_examples_synth(self, neg_must_examples, neg_may_examples):
         code = ''
@@ -180,7 +182,7 @@ class InputGenerator:
         for neg_example in neg_must_examples:
             code += '\n'
             code += 'harness void negative_example_{} ()'.format(i)
-            code += ' {\n' + neg_example + '\n}\n\n' 
+            code += ' {\n' + neg_example + '\n}\n\n'
             i += 1
 
         return code
@@ -192,13 +194,13 @@ class InputGenerator:
         for neg_example in neg_may_examples:
             code += '\n'
             code += 'void negative_example_{} ()'.format(i)
-            code += ' {\n' + neg_example + '\n}\n\n'   
+            code += ' {\n' + neg_example + '\n}\n\n'
             i += 1
 
         for neg_example in neg_must_examples:
             code += '\n'
             code += 'harness void negative_example_{} ()'.format(i)
-            code += ' {\n' + neg_example + '\n}\n\n' 
+            code += ' {\n' + neg_example + '\n}\n\n'
             i += 1
 
         return code
@@ -239,7 +241,7 @@ class InputGenerator:
         elif expr[0] == 'INT' or expr[0] == 'HOLE':
             return dict()
         elif expr[0] == 'VAR' or expr[0] == 'TYPE':
-            return {expr[1] : 1} if expr[1] in cxt else dict()
+            return {expr[1]: 1} if expr[1] in cxt else dict()
         elif expr[0] == 'FCALL':
             dicts = [self.__count_generator_calls(cxt, e) for e in expr[2]]
             return functools.reduce(sum_dict, dicts) if len(dicts) > 0 else dict()
@@ -249,7 +251,7 @@ class InputGenerator:
             raise Exception(f'Unhandled case: {expr[0]}')
 
     def __subcall_gen(self, cxt, num_calls_prev, num_calls):
-        arg_call = self.__template.get_arguments_call()
+        arg_call = self.__template.get_visible_arguments_call()
 
         code = ''
         for symbol, n in num_calls.items():
@@ -263,7 +265,6 @@ class InputGenerator:
         return code + '\n'
 
     def __subcall_gen_example(self, cxt, num_calls_prev, num_calls):
-        arg_call = self.__template.get_arguments_call()
         bnds = self.__template.get_bounds()
 
         code = ''
@@ -295,12 +296,12 @@ class InputGenerator:
         code += '\tif (t == 3) { return x < y; }\n'
         code += '\tif (t == 4) { return x > y; }\n'
         code += '\treturn x != y; \n'
-        
+
         code += '}'
 
         return code
 
-    def __expr_to_code(self, cxt, expr, out_type = 'boolean'):
+    def __expr_to_code(self, cxt, expr, out_type='boolean'):
         if expr[0] == 'BINOP':
             cxt1, code1, out1 = self.__expr_to_code(cxt, expr[2])
             cxt2, code2, out2 = self.__expr_to_code(cxt1, expr[3])
@@ -352,22 +353,22 @@ class InputGenerator:
         cxt = self.__template.get_context()
         num_calls_prev = dict()
 
-        arg_defn = self.__template.get_arguments_defn()
+        arg_defn = self.__template.get_visible_arguments_defn()
 
         code = f'generator {typ} {symbol}_gen({arg_defn}) {{\n'
         code += '\tint t = ??;\n'
-        
+
         for n, e in enumerate(exprlist):
             num_calls = self.__count_generator_calls(cxt, e)
             code += self.__subcall_gen(cxt, num_calls_prev, num_calls)
             num_calls_prev = max_dict(num_calls_prev, num_calls)
 
-            cxt_init = {k:0 for k in cxt.keys()}
+            cxt_init = {k: 0 for k in cxt.keys()}
             _, e_code, e_out = self.__expr_to_code(cxt_init, e, typ)
 
             if (n + 1 == len(exprlist)):
                 code += e_code
-                code += f'\treturn {e_out};\n'            
+                code += f'\treturn {e_out};\n'
             else:
                 code += f'\tif (t == {n}) {{\n'
                 code += e_code
@@ -388,7 +389,7 @@ class InputGenerator:
         exprlist = rule[1]
         bnd = rule[2]
 
-        cxt = {typ:typ for (typ, _, _) in self.__template.get_example_rules()}
+        cxt = {typ: typ for (typ, _, _) in self.__template.get_example_rules()}
         num_calls_prev = dict()
 
         if bnd > 0:
@@ -397,18 +398,18 @@ class InputGenerator:
         else:
             code = f'generator {typ} {typ}_gen() {{\n'
         code += '\tint t = ??;\n'
-        
+
         for n, e in enumerate(exprlist):
             num_calls = self.__count_generator_calls(cxt, e)
             code += self.__subcall_gen_example(cxt, num_calls_prev, num_calls)
             num_calls_prev = max_dict(num_calls_prev, num_calls)
 
-            cxt_init = {k:0 for k in cxt.keys()}
+            cxt_init = {k: 0 for k in cxt.keys()}
             _, e_code, e_out = self.__expr_to_code(cxt_init, e, typ)
 
             if (n + 1 == len(exprlist)):
                 code += e_code
-                code += f'\treturn {e_out};\n'            
+                code += f'\treturn {e_out};\n'
             else:
                 code += f'\tif (t == {n}) {{\n'
                 code += e_code
@@ -417,11 +418,12 @@ class InputGenerator:
 
         code += '}\n'
 
-        return code    
+        return code
 
     def __example_generators(self):
         rules = self.__template.get_example_rules()
-        code = '\n'.join([self.__example_rule_to_code(rule) for rule in rules]) + '\n'
+        code = '\n'.join([self.__example_rule_to_code(rule)
+                         for rule in rules]) + '\n'
 
         return code
 

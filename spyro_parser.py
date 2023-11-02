@@ -16,7 +16,8 @@ class SpyroParser():
             template, 'example')
 
         self.__implenetation = template
-        self.__var_decls = self.__split_var_section(variable_section)
+        self.__var_decls, self.__private_var_decls, self.__visible_var_decls = self.__split_var_section(
+            variable_section)
         self.__int_decls = [(typ, symbol)
                             for typ, symbol in self.__var_decls if typ == 'int']
         self.__relations = self.__split_relation_section(relation_section)
@@ -37,7 +38,18 @@ class SpyroParser():
 
     def __split_var_section(self, section_content):
         decls = [decl.strip().split() for decl in section_content.split(';')]
-        return [(decl[0], decl[1]) for decl in decls[:-1]]
+        vars = []
+        private_vars = []
+        visible_vars = []
+        for decl in decls[:-1]:
+            if len(decl) == 3:
+                assert decl[0] == "private", "Unrecognizable modifiers"
+                vars.append((decl[1], decl[2]))
+                private_vars.append((decl[1], decl[2]))
+            else:
+                vars.append((decl[0], decl[1]))
+                visible_vars.append((decl[0], decl[1]))
+        return vars, private_vars, visible_vars
 
     def __split_relation_section(self, section_content):
         return [rel.strip() for rel in section_content.split(';')[:-1]]
@@ -63,14 +75,23 @@ class SpyroParser():
     def get_implementation(self):
         return self.__implenetation + '\n\n'
 
-    def get_arguments_defn(self):
+    def get_all_arguments_defn(self):
         return ','.join([typ + ' ' + symbol for typ, symbol in self.__var_decls])
+
+    def get_visible_arguments_defn(self):
+        return ','.join([typ + ' ' + symbol for typ, symbol in self.__visible_var_decls])
 
     def get_integer_arguments_defn(self):
         return ','.join([typ + ' ' + symbol for typ, symbol in self.__int_decls])
 
-    def get_arguments_call(self):
+    def get_all_arguments_call(self):
         return ','.join([symbol for _, symbol in self.__var_decls])
+
+    def get_private_arguments_call(self):
+        return ','.join([symbol for _, symbol in self.__private_var_decls])
+
+    def get_visible_arguments_call(self):
+        return ','.join([symbol for _, symbol in self.__visible_var_decls])
 
     def get_integer_arguments_call(self):
         return ','.join([symbol for _, symbol in self.__int_decls])
