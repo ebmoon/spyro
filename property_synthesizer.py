@@ -136,12 +136,13 @@ class PropertySynthesizer:
                     '--slv-seed', str(self.__slv_seed),
                     '--slv-timeout', f'{self.__timeout / 60.0:2f}'],
                 stderr=subprocess.PIPE)
-
             end_time = time.time()
 
             return output, end_time - start_time
 
         except subprocess.CalledProcessError as e:
+            print(f"stdout：\n{e.stdout.decode()}")
+            print(f"stderr：\n{e.stderr.decode()}")
             end_time = time.time()
             return None, end_time - start_time
 
@@ -254,6 +255,7 @@ class PropertySynthesizer:
         if output != None:
             output_parser = OutputParser(output)
             e_pos = output_parser.parse_positive_example()
+            # print(f'e_pos: {e_pos}')
             lam = output_parser.get_lam_functions()
             return (e_pos, lam, False)
         else:
@@ -338,7 +340,9 @@ class PropertySynthesizer:
 
         while True:
             e_pos, lam, timeout = self.__check_soundness(phi_e, lam_functions)
+            print(f'phi_e: {phi_e}')
             if e_pos != None:
+                print(f'Unsound!\ne_pos: {e_pos}')
                 pos.append(e_pos)
                 lam_functions = union_dict(lam_functions, lam)
 
@@ -385,6 +389,7 @@ class PropertySynthesizer:
 
             # Check precision after pass soundness check
             else:
+                print(f"Sound! {phi_e}")
                 phi_last_sound = phi_e    # Remember the last sound property
 
                 if update_psi and len(neg_may) > 0:
@@ -399,10 +404,12 @@ class PropertySynthesizer:
                 e_neg, phi, lam = self.__check_precision(
                     phi_e, phi_list, pos, neg_must, neg_may, lam_functions)
                 if e_neg != None:   # Not precise
+                    print(f"Not Precise!\n\te_neg:{e_neg}\n\tphi:{phi}")
                     phi_e = phi
                     neg_may.append(e_neg)
                     lam_functions = lam
                 else:               # Sound and Precise
+                    print(f"Sound and Precise! ")
                     neg_delta = self.__filter_neg_delta(
                         phi_e, neg_delta, lam_functions)
                     return (phi_e, pos, neg_must + neg_may, neg_delta, lam_functions)

@@ -2,20 +2,27 @@ import lexer
 import generator_rule_parser
 import example_rule_parser
 
+
 class SpyroParser():
     def __init__(self, template):
         # Split input code into three parts
-        template, variable_section = self.__split_section_from_code(template, 'var')
-        template, relation_section = self.__split_section_from_code(template, 'relation')
-        template, generator_section = self.__split_section_from_code(template, 'generator')
-        template, example_section = self.__split_section_from_code(template, 'example')
+        template, variable_section = self.__split_section_from_code(
+            template, 'var')
+        template, relation_section = self.__split_section_from_code(
+            template, 'relation')
+        template, generator_section = self.__split_section_from_code(
+            template, 'generator')
+        template, example_section = self.__split_section_from_code(
+            template, 'example')
 
         self.__implenetation = template
         self.__var_decls = self.__split_var_section(variable_section)
-        self.__int_decls = [(typ, symbol) for typ, symbol in self.__var_decls if typ == 'int']
+        self.__int_decls = [(typ, symbol)
+                            for typ, symbol in self.__var_decls if typ == 'int']
         self.__relations = self.__split_relation_section(relation_section)
         self.__generators = self.__split_generator_section(generator_section)
-        self.__example_generators = self.__split_example_section(example_section)
+        self.__example_generators = self.__split_example_section(
+            example_section)
 
     def __split_section_from_code(self, code, section_name):
         target = section_name
@@ -45,7 +52,7 @@ class SpyroParser():
         return self.__int_decls
 
     def get_context(self):
-        return {rule[1]:rule[0] for rule in self.__generators}
+        return {rule[1]: rule[0] for rule in self.__generators}
 
     def get_generator_rules(self):
         return self.__generators
@@ -90,4 +97,4 @@ class SpyroParser():
         return '\n'.join(['\t' + rel + ';' for rel in self.__relations])
 
     def get_bounds(self):
-        return {rule[0]:rule[2] for rule in self.__example_generators}
+        return {rule[0]: rule[2] for rule in self.__example_generators}
