@@ -1,5 +1,5 @@
 var {
-    private int n;
+    int n;
     int p;
     Trace tr;
 }

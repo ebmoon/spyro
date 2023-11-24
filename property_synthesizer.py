@@ -42,6 +42,8 @@ class PropertySynthesizer:
         self.__minimize_terms = not disable_min
         self.__input_generator = InputGenerator(self.__code)
         self.__input_generator.set_num_atom(num_atom_max)
+        self.__visible_vars = self.__input_generator.get_visible_vars()
+        self.__private_vars = self.__input_generator.get_private_vars()
 
         # Synthesized property
         self.__phi_truth = "out = true;"
@@ -141,8 +143,8 @@ class PropertySynthesizer:
             return output, end_time - start_time
 
         except subprocess.CalledProcessError as e:
-            print(f"stdout：\n{e.stdout.decode()}")
-            print(f"stderr：\n{e.stderr.decode()}")
+            # print(f"stdout：\n{e.stdout.decode()}")
+            # print(f"stderr：\n{e.stderr.decode()}")
             end_time = time.time()
             return None, end_time - start_time
 
@@ -180,7 +182,7 @@ class PropertySynthesizer:
 
         # Return the result
         if output != None:
-            output_parser = OutputParser(output)
+            output_parser = OutputParser(output, self.__visible_vars, self.__private_vars)
             phi = output_parser.parse_property()
             lam = output_parser.get_lam_functions()
             return (phi, lam)
@@ -213,7 +215,7 @@ class PropertySynthesizer:
 
         # Return the result
         if output != None:
-            output_parser = OutputParser(output)
+            output_parser = OutputParser(output, self.__visible_vars, self.__private_vars)
             neg_may, delta = output_parser.parse_maxsat(neg_may)
             phi = output_parser.parse_property()
             lam = output_parser.get_lam_functions()
@@ -253,7 +255,7 @@ class PropertySynthesizer:
 
         # Return the result
         if output != None:
-            output_parser = OutputParser(output)
+            output_parser = OutputParser(output, self.__visible_vars, self.__private_vars)
             e_pos = output_parser.parse_positive_example()
             # print(f'e_pos: {e_pos}')
             lam = output_parser.get_lam_functions()
@@ -287,8 +289,9 @@ class PropertySynthesizer:
 
         # Return the result
         if output != None:
-            output_parser = OutputParser(output)
+            output_parser = OutputParser(output, self.__visible_vars, self.__private_vars)
             e_neg = output_parser.parse_negative_example_precision()
+            # print(f'e_neg: {e_neg}')
             phi = output_parser.parse_property()
             lam = output_parser.get_lam_functions()
             return (e_neg, phi, lam)
@@ -307,7 +310,7 @@ class PropertySynthesizer:
 
         # Return the result
         if output != None:
-            output_parser = OutputParser(output)
+            output_parser = OutputParser(output, self.__visible_vars, self.__private_vars)
             e_neg = output_parser.parse_improves_predicate()
             return e_neg
         else:

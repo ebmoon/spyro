@@ -12,6 +12,12 @@ class InputGenerator:
         self.__num_atom = 1
         self.__minimize_terms = False
 
+    def get_visible_vars(self):
+        return self.__template.get_visible_var_decls()
+    
+    def get_private_vars(self):
+        return self.__template.get_private_var_decls()
+
     def enable_minimize_terms(self):
         self.__minimize_terms = True
 

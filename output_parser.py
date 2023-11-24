@@ -7,8 +7,10 @@ def replace_last_argument(text, var):
     return text[:start] + ', out' + text[end:]
 
 class OutputParser:
-    def __init__(self, text):
+    def __init__(self, text, visible_var_decls, private_var_decls):
         self.__text = text.decode('utf-8')
+        self.__visible_var_decls = visible_var_decls
+        self.__private_var_decls = private_var_decls
 
     def __get_function_code_lines(self, function_name):
         lines = self.__text.splitlines()
@@ -62,7 +64,9 @@ class OutputParser:
         precision_code_lines = [line for line in precision_code_lines if 'minimize' not in line]
         precision_code_lines = ['\t' + line.strip() for line in precision_code_lines]
 
-        negative_example_code = '\n'.join(precision_code_lines[:-9])
+        lines_wo_private = [line for line in precision_code_lines[:-9] if all(symbol+'_' not in line for _, symbol in self.__private_var_decls)]
+
+        negative_example_code = '\n'.join(lines_wo_private)
 
         if precision_code_lines[-2].find("(") >= 0:
             property_call = replace_last_argument(precision_code_lines[-2], 'out')

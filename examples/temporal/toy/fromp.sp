@@ -18,7 +18,7 @@ generator {
 
 
 example {
-    int -> ??(3);
+    int -> ??(3) + ??(1);
     boolean -> ??;
     BoolArray -> randomBoolArray();
     Trace -> randomTrace();
@@ -94,7 +94,8 @@ void eqx(Trace tr, int x, ref BoolArray ret) {
 void prog(int p, BoolArray rd_bits, ref Trace tr) {
     for(int i=0;i<p;i++)
         tr.events[i].x = 0;
-    tr.events[p].x = 1;
+    if(p < 8)
+        tr.events[p].x = 1;
     for(int i=p+1;i<8;i++)
         tr.events[i].x = rd_bits.elements[i];// not truly non-deterministic
 }

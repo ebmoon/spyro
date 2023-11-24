@@ -74,6 +74,12 @@ class SpyroParser():
 
     def get_implementation(self):
         return self.__implenetation + '\n\n'
+    
+    def get_visible_var_decls(self):
+        return self.__visible_var_decls
+
+    def get_private_var_decls(self):
+        return self.__private_var_decls
 
     def get_all_arguments_defn(self):
         return ','.join([typ + ' ' + symbol for typ, symbol in self.__var_decls])
